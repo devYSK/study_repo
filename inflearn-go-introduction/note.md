@@ -400,3 +400,36 @@ func main()  {
 * 초기화 되는 작업 작성시 유용
 * 여러개의 init() 메서드가 있을 경우 먼저 선언한 순서대로(위에서 아래) 호출된다.
 * ![](img/d0a12f59.png)
+```go
+func init()  {
+	fmt.Println("Init Start")
+}
+
+func main()  {
+	fmt.Println("Main Start")
+}
+```
+* init()이 먼저 호출됨.
+
+# Go 데이터 타입 (자료형)
+
+## Bool(Boolean)
+* 암묵적 형변환이 안된다. 0,Nil -> false가 아님.
+  * false는 false로만 써야함
+  * 1 은 true가 아님 0도 false가 아님.
+
+## Numeric(1)
+
+* 정수, 실수, 복소수
+* 32bit, 64bit, unsigned
+* 8진수(0) 16진수(0x)
+* float32
+* https://go.dev/ref/spec#Numeric_types
+
+## 숫자형 연산
+* https://pkg.go.dev/math
+* 타입이 같아야 연산 가능하다
+* 다른 타입끼리는 반드시 형 변환 후 연산 (없을 경우 예외 발생) (여기서 연산은 +, -, *, % /, <<, >>, &, ^ 
+  * ex ) int16(10000) + uint8(100) = 에러 발생 / 다른 타입임
+
+
