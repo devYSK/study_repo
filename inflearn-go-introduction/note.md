@@ -610,4 +610,171 @@ fmt.Println("ex1 :", b, *a)
   ex1 : 0x14000130010 7
 * *로 변수를 감싸면 값이 나오고, 그냥 변수만 출력하면 주솟값이 나온다. 
 
+# 함수
+* https://go.dev/ref/spec#Function_types
+
+* 선언 : func 키워드
+  * func 함수명(매개변수) (반환타입 or 반환 값 변수명)
+* 반환값이 존재하지 않을경우
+  * func 함수명(매개변수)
+* 타 언어와 달리 반환 값(return value) 복수 사용 가능 
+* 함수도 전달할 수 있다.
+* 콜백 전달, 참조 전달, 값 전달
+```go
+
+func main()  {
+	say_one("1")
+	sum(100, add)
+}
+
+func say_one(m string) {
+	fmt.Println("ex2 : ", m)
+}
+
+func sum(i int, f func(int, int)){
+	f(i, 10)
+}
+
+func add(a , b int) { // a, b 둘다 int형일때 생략 가능
+	fmt.Println("ex1 :", a + b)
+}
+```
+* 함수 전달 패턴. 
+
+* reference by value (값 참조)
+```go
+func multi_referrence(i *int)  {
+	*i *= 10
+}
+```
+* 이렇게 포인터를 이용하면 참조해서 함수 외부의 변수 값도 바꿀 수 있다.
+
+* 여러 리턴 값
+```go
+func multifly(x, y int) (int, int)  {
+	return x * 10, y * 10;
+}
+
+func main()  {
+
+	c, d := multifly(10, 10)
+
+	fmt.Println(multifly(5, 5))
+	fmt.Println(c, d)
+}
+```
+* 여러개의 리턴 값을 받을 수 있다.
+
+### 함수 고급
+
+* 가변인자 
+  * 슬라이스도 전달 가능하다
+
+```go
+func main() {
+	x := multiply(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+	fmt.Println(x)
+	fmt.Println(sum(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+
+	slice1 := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
+	fmt.Println(sum(slice1...)) // 슬라이스를 전달하는법
+}
+
+func multiply(n ...int) int {
+	tot := 1
+	for _, value := range n {
+		tot *= value
+	}
+
+	return tot
+}
+
+func sum(n ...int) int {
+	tot := 0
+
+	for i := range n {
+		tot += i
+	}
+	return tot
+}
+```
+
+* 슬라이스 매개변수로 전달방법 : func(slice...)
+* 함수를 변수처럼 할당할 수 있다. 
+```go
+f := []func(int, int) int{multiply, sum}
+	
+a := f[0](10, 10) // a := multiply(10,10) 이랑 같음
+b := f[1](5, 5) // b := sum(5,5) 랑 같음 
+```
+
+### 익명함수
+```go
+func main() {
+	func() {
+          fmt.Println("익명함수")
+        }()
+}
+```
+## Defer
+* 흐름을 제어하기 위해 고에서 제공
+* Defer 함수 실행(지연)
+* Defer를 호출한 함수가 종료되기 직전에 호출 된다. 
+* 타언어의 Finally 문과 비슷
+* 주로 리소스 반환(DB 커넥션, File 닫기, mutex 잠금 해제)
+```go
+package main
+
+import "fmt"
+
+func ex_f1() {
+	fmt.Println("f1 : start!")
+	defer ex_f2() // 마지막에 호출
+	fmt.Println("f1 : end!")
+}
+
+func ex_f2() {
+	fmt.Println("f2 : called!")
+}
+
+func main()  {
+	ex_f1()
+}
+```
+* 결과
+> f1 : start!  
+f1 : end!  
+f2 : called!  
+
+* Stack구조 후입 선출 이라고 생각하면 된다.
+
+```go
+
+func main() {
+	a()
+}
+
+func a() {
+	defer end(start("b"))
+	fmt.Println("in a")
+}
+
+func end(s string) {
+	fmt.Println("end : ", s)
+}
+
+func start(s string) string {
+	fmt.Println("start : ", s)
+	return s
+}
+```
+* 결과
+> start :  b  
+in a  
+end :  b  
+
+* defer문은 defer문을 붙인 함수만 적용된다.
+  * 즉 end() 함수만 지연시키고, start() 함수는 먼저 실행한다.
 
