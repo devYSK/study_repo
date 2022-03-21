@@ -472,3 +472,123 @@ func main()  {
 }
 ```
 * 문자열에서 + 연산보다 strings.Join이 성능이 훨씬 좋다. (Java의 StringBuffer처럼)
+
+# 배열, 슬라이스, 맵
+
+## 배열
+* 배열은 용량, 길이 항상 같다
+* 길이 고정
+* cap() : 배열, 슬라이스 용량
+* len() : 배열, 슬라이스 개수
+```go
+func main()  {
+	var arr [5]int
+	var arr2 [5]int = [5]int{1, 2, 3, 4, 5}
+    var arr3 = [5]int{1, 2, 3, 4, 5}
+}
+```
+* 초기화가 안된 값은 0으로 초기화된다
+
+* 다음과 같이 for문으로 사용
+```go
+func main() {
+
+	var arr [5]int
+	var arr2 [5]int = [5]int{1, 2, 3, 4, 5}
+
+	for i, v := range arr2 {
+		fmt.Println(i, v)
+	}
+
+	//인덱스 생략
+	for _, v := range arr2 {
+		fmt.Println(v)
+	}
+
+	//인덱스 생략
+	for v := range arr2 {
+		fmt.Println(v)
+	}
+    for i := 0; i < 2; i++ {
+        for j := 0; j < 3; j++ {
+            arr[i][j] = i + j
+        }
+    }
+}
+```
+
+## 슬라이스
+
+* 배열과 비슷하지만, 길이가 가변적이다.
+* 참조 타입(레퍼런스)
+* 길이가 0인 빈 배열을 만들기 위해선 내장 함수 make를 사용
+  * > var slice []int 
+  * 이렇게도 선언 가능
+```go
+arr := make([]string, 3)
+```
+
+* 새로운 슬라이스를 사용하기위해선 append로부터 반환되는 값을 사용
+```go
+arr := make([]int, 3) // 길이가 3인 정수형 배열
+arr = append(arr, 5) // 원래 변수에 반환받아야함. -> 병합 후 리턴
+```
+
+* 정렬은 sort패키지
+  * golang.org/pkg/sort
+
+
+## Map (해시 또는 딕셔너리)
+* 레퍼런스 타입
+* key - value로 저장. 
+* key로는 레퍼런스(참조)타입 불가. 기본타입만.
+  * 값(value)으로는 모든 타입 사용 가능 
+```go
+var map1 map[string] int = make(map[string] int)
+var map1 = make(map[string] int)
+map1 := make(map[string] int)
+map1 := map[string] int{}
+```
+* 4가지 방법 모두 같다.
+* make 사용 make(map[key-type]val-type)
+* name[key] = val로 key/value 쌍을 저장
+```go
+func main()  {
+	map4 := map[string] int{}
+	map4["apple"] = 25
+	map4["banana"] = 40
+	map4["orange"] = 33
+
+	map5 := map[string] int {
+		"apple" : 15,
+		"banana" : 40,
+		"orange" : 23,
+	}
+	
+	fmt.Println(map4)
+	fmt.Println(map5)
+
+    value3, is = map5["kiwi"]
+    fmt.Println(value3, is) // 0 false
+}
+```
+* len을 맵에 사용하면 key/value 쌍의 갯수반환
+  * len(map4)
+* delete 내장 함수는 맵의 key/value 쌍을 삭제
+  * delete(map4, "apple")
+* key 값의 존재를 확인하는법
+```go
+value3, is = map5["kiwi"]
+fmt.Println(value3, is) // 0 false
+
+if value, key := map5["kiwi"]; key {
+	fmt.Println("존재")
+} else {
+	fmt.Println("존재하지 않음.")
+}
+```
+* 두번째 값으로 키가 존재하는지 알 수 있다.
+  * 존재하면 true 존재하지 않으면 false
+
+
+
