@@ -432,4 +432,43 @@ func main()  {
 * 다른 타입끼리는 반드시 형 변환 후 연산 (없을 경우 예외 발생) (여기서 연산은 +, -, *, % /, <<, >>, &, ^ 
   * ex ) int16(10000) + uint8(100) = 에러 발생 / 다른 타입임
 
+## 문자열
 
+* Go는 char 타입이 존재하지 않음 -> rune(int32)
+* "", `` 두가지 존재
+* 문자 : ''
+* 자주사용하는 escape : \\, \', \"
+```go
+var str1 string = "c:\\go\\src" // 둘다 같다
+str2 := `c:\go\src`             // 둘다 같다
+```
+* len(str) : 문자열 길이. 바이트 갯수.
+  * 실제길이 : len([]rune(str))
+
+## 문자열 연산
+* 문자열로 비교를 하게되면 아스키 코드에 대한 사전식 비교를 함 
+```go
+str1 := "Golang"
+str2 := "World"
+
+str1 == str2 // false
+str1 != str2 // true
+str1 > str2 // false
+str1 < str2 // true
+
+```
+
+```go
+
+func main()  {
+
+	str1 := "hi"
+	str2 := "hi"
+	strSet := []string{} // 슬라이스 연산
+	strSet = append(strSet, str1)
+	strSet = append(strSet, str2)
+	
+	fmt.Println(strings.Join(strSet, "-"))
+}
+```
+* 문자열에서 + 연산보다 strings.Join이 성능이 훨씬 좋다. (Java의 StringBuffer처럼)
