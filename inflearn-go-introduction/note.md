@@ -778,3 +778,46 @@ end :  b
 * defer문은 defer문을 붙인 함수만 적용된다.
   * 즉 end() 함수만 지연시키고, start() 함수는 먼저 실행한다.
 
+## Closure (클로져)
+
+* 익명함수 사용할 경우 함수를 변수에 할당해서 사용 가능하게 하는것
+* 함수 안에서 함수를 선언 및 정의 가능 -> 외부 함수에 선언된 변수에 접근 가능한 함수 
+* 함수가 선언되는 수간에 함수가 실행 될 때 실체의 외부 변수에 접근하기 위한 스냅샷
+* 함수를 호출할 때 이전에 존재했던 값을 유지하기 위해서 
+
+* Closure는 함수 바깥에 있는 변수를 참조하는 함수값(function value)를 일컫는데, 이때의 함수는 바깥의 변수를 마치 함수 안으로 끌어들인 듯이 그 변수를 읽거나 쓸 수 있게 된다.
+
+```go
+func main() {
+    m, n := 5, 10
+    sum := func(c int) int {
+        return m + n + c
+    }
+    r2 := sum(10)
+    fmt.Println(r2)
+}
+```
+
+```go
+
+func main() {
+	cnt := increaseCnt()
+	fmt.Println(cnt)
+}
+
+func increaseCnt() func() int {
+    n := 0
+    return func() int {
+        n += 1
+    return n
+    }
+}
+```
+* 내부 함수 func() int의 입장에서 외부 변수 n를 참조하여 호출할때마다 증가.
+* cnt2 := increaseCnt()와 같이 새로운 Closure함수를 생성한다면 변수n은 초기 0 을 갖게된다. 
+
+
+
+
+
+
