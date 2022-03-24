@@ -816,8 +816,150 @@ func increaseCnt() func() int {
 * 내부 함수 func() int의 입장에서 외부 변수 n를 참조하여 호출할때마다 증가.
 * cnt2 := increaseCnt()와 같이 새로운 Closure함수를 생성한다면 변수n은 초기 0 을 갖게된다. 
 
+# Go 객체 지향 
+
+## 사용자 정의 타입
+
+* Go에서는 객체지향 타입을 구조체로 정의한다.
+* 상속, 클래스 개념이 없다.
+* 객체지향의 특징을 가지고 있지 않지만, 인터페이스 -> 다형성 지원
+  * 구조체를 클래스 형태로 개발 가능.
+
+* struct는 필드 데이타만을 가지며, (행위를 표현하는) 메서드를 갖지 않는다.
+Go 언어는 객체지향 프로그래밍(Object Oriented Programming, OOP)을 고유의 방식으로 지원한다. 즉, Go에는 전통적인 OOP 언어가 가지는 클래스, 객체, 상속 개념이 없다. 전통적인 OOP의 클래스(class)는 Go 언어에서 Custom 타입을 정의하는 struct로 표현되는데, 전통적인 OOP의 클래스가 필드와 메서드를 함께 갖는 것과 달리 Go 언어의 struct는 필드만을 가지며, 메서드는 별도로 분리하여 정의한다.
+
+```go
+type Car struct {
+	name string
+	color string
+	price int64
+	tax int64
+}
+
+func Price(c Car) int64  { // 일반메서드
+	return c.price + c.tax
+}
+
+func (c Car) Price() int64 { // 구조체 <-> 메서드 바인딩
+	return c.price + c.tax
+}
+
+func main()  {
+	bmw := Car{name: "520d", price : 50000000, color: "white", tax: 5000000}
+	benz := Car{name: "220d", price : 60000000, color: "white", tax: 6000000}
+
+	fmt.Println(bmw, bmw.price, bmw.tax)
+	fmt.Println(benz.name, &benz)
+
+	fmt.Println(Price(bmw))
+	fmt.Println(bmw.Price())
+}
+```
+
+* struct를 정의하기 위해서는 Custom Type을 정의하는데 사용하는 type 문을 사용
+
+* struct 필드값을 순서적으로 { } 괄호안에 넣을 수 있으며, 순서에 상관없이 필드명을 지정하고(named field) 그 값을 넣을 수 도 있다. 
+* 필드명을 지정하는 경우, 만약 일부 필드가 생략될 경우 생략된 필드들은 Zero value (정수인 경우 0, float인 경우 0.0, string인 경우 "", 포인터인 경우 nil 등)를 갖는다.
+
+* 앞에 &를 붙이면 구조체 포인터를 생성
+
+* 닷(.)을 사용해 구조체 필드에 접근
+* 구조체 포인터에서도 닷(.)을 사용할 수 있습니다. 이 때 포인터는 자동으로 역참조됩니다.
+* 구조체는 수정이 가능(mutable)합니다.
+
+```go
+var bmw = new(Car)
+k5 := new(Car)
+
+var k5 *Car = new(Car) // 중요
+k5.price = 50000000
+```
+
+* 또 다른 객체 생성 방법으로 Go 내장함수 new()를 쓸 수 있다. 
+* new()를 사용하면 모든 필드를 Zero value로 초기화하고 person 객체의 포인터(*person)를 리턴한다. 
+* 객체 포인터인 경우에도 필드 엑세스 시 . (dot)을 사용하는데, 이 때 포인터는 자동으로 Dereference 된다
+
+* `인터페이스 메소드를 선언만 해둔 후 오버라이딩 해서 메서드에 포인터 리시버를 사용할 경우 반드시 &struct`
 
 
+```go
+package main
+ 
+type dict struct {
+    data map[int]string
+}
+ 
+//생성자 함수 정의
+func newDict() *dict {
+    d := dict{}
+    d.data = map[int]string{}
+    return &d //포인터 전달
+}
+ 
+func main() {
+    dic := newDict() // 생성자 호출
+    dic.data[1] = "A"
+}
+```
 
 
+* 생성자(constructor) 함수
+* 구조체(struct)의 필드가 사용 전에 초기화되어야 하는 경우struct 의 필드가 map 타입인 경우 map을 사전에 미리 초기화해 놓으면, 외부 struct 사용자가 매번 map을 초기화 해야 된다는 것을 기억할 필요가 없다. 
+
+* 익명구조체
+```go
+func main() {
+    car1 := struct {name, color string}{"520d", "red"}
+    
+    fmt.Println(car1)
+    fmt.Printf("%#v\n\n", car1)
+    
+    cars := []struct{name, color string} {
+        {"520d", "red"},
+        {"530i", "white"},
+        {"528i", "blue"}}
+    
+    for _, c := range cars {
+        fmt.Printf("(%s, %s) ----- (%#v)\n", c.name, c.color, c)
+    }
+}
+```
+
+* reflection으로 구조체 정보 가져오기
+```go
+package main
+
+import "fmt"
+import "reflect"
+
+type Car2 struct {
+	name string "차량명"
+	color string "색상"
+	company string "제조사"
+}
+
+func main()  {
+	tag := reflect.TypeOf(Car2{})
+
+	for i:=0; i < tag.NumField(); i++ {
+		fmt.Println(" ", tag.Field(i).Tag, tag.Field(i).Name, tag.Field(i).Type)
+	}
+}
+```
+
+* 구조체 내부에 구조체를 갖는 구조도 가능
+```go
+type Car2 struct {
+	name string "차량명"
+	color string "색상"
+	company string "제조사"
+	detail spec "상세"
+}
+
+type spec struct {
+	length int "전장"
+	height int "전고"
+	width int "전축"
+}
+```
 
