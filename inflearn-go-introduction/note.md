@@ -963,3 +963,97 @@ type spec struct {
 }
 ```
 
+## 구조체 심화
+```go
+type Account struct {
+	number string
+	balance float64
+	interest float64
+}
+
+func NewAccount(number string, balance float64, interest float64) * Account { // 포인터 반환 아닌 경우 값 복사
+	return &Account{number, balance, interest} // 구조체 인스턴스를 생성한 뒤 리턴
+}
+
+func main()  {
+
+	kim := Account{number: "245-901", balance: 10000, interest: 0.015}
+	lee := Account{"245-902", 10000, 0.025}
+
+	//park := NewAccount("245-903", 1000000, 134.134)
+	
+	CalculateD(kim)
+	CalculateP(&lee)
+
+	fmt.Println(kim.balance)
+	fmt.Println(lee.balance)
+}
+
+func CalculateD(a Account) {
+	a.balance = a.balance + (a.balance * a.interest)
+}
+
+func CalculateP(a *Account) {
+	a.balance = a.balance + (a.balance * a.interest)
+}
+```
+
+* NewAccount 메서드는 생성자가 되는것. 
+* *형으로 받으면 &형으로 전달해줘야 한다. 
+
+## 구조체 메소드 상속 패턴 - 구조체 임베디드 패턴
+```go
+type Employee struct {
+	name string
+	salary float64
+	bonus float64
+}
+
+func (e Employee) Calculate() float64 {
+	return e.salary + e.bonus
+}
+
+type Executives struct {
+	Employee
+	specialBonus float64
+}
+
+func main() {
+	// 구조체 임베디드 패턴. 다른 관점으로 메서드를 재 사용하는 장점 제공.
+	// 상속을 허용하지 않는 Go언어에서 메소드 상속 활용을 위한 패턴
+
+	ep1 := Employee{"kim", 2000000, 150000}
+	ep2 := Employee{"pack", 1500000, 200000}
+
+	ex := Executives{Employee{"lee", 5000000, 1000000}, 1000000}
+	
+	fmt.Println("ex1 :", int(ep1.Calculate()))
+	fmt.Println("ex2 : ", int(ep2.Calculate()))
+	fmt.Println("ex3 : ", int(ex.Calculate()) + int(ex.specialBonus)) // <<<<< 
+}
+```
+* 바로호출할 수 있다. 
+
+## 구조체 메소드 오버라이딩 패턴 
+
+```go
+type Employee struct {
+	name string
+	salary float64
+	bonus float64
+}
+
+type Executives struct {
+	Employee
+	specialBonus float64
+}
+
+func (e Employee) Calculate() float64 {
+	return e.salary + e.bonus
+}
+
+func (e Executives) Calculate() float64 { // 오버라이딩
+	return e.salary + e.bonus + e.specialBonus
+}
+```
+* 같은 이름을 가진 메서드이지만 사용 가능.
