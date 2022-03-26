@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-type Dog struct {
+type Dog2 struct {
 	name string
 	weight int
 }
@@ -12,15 +12,15 @@ type Cat struct {
 	weight int
 }
 
-func (d Dog) bite() {
+func (d Dog2) bite() {
 	fmt.Println(d.name, " : Dog bites!")
 }
 
-func (d Dog) sounds() {
+func (d Dog2) sounds() {
 	fmt.Println(d.name, " : Dog barks!")
 }
 
-func (d Dog) run() {
+func (d Dog2) run() {
 	fmt.Println(d.name, " : Dog run!")
 }
 
@@ -36,20 +36,20 @@ func (d Cat) run() {
 	fmt.Println(d.name, " : Cat run!")
 }
 
-type Behavior interface {
+type Behavior2 interface {
 	bite()
 	sounds()
 	run()
 }
 
-func act(animal Behavior) {
+func act(animal Behavior2) {
 	animal.bite()
 	animal.sounds()
 	animal.run()
 }
 
 func main()  {
-	dog := Dog{"poll", 10}
+	dog := Dog2{"poll", 10}
 	cat := Cat{"bob", 5}
 
 	// 개 행동 실행
