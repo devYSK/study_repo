@@ -1057,3 +1057,134 @@ func (e Executives) Calculate() float64 { // 오버라이딩
 }
 ```
 * 같은 이름을 가진 메서드이지만 사용 가능.
+
+# 인터페이스 기초
+
+* 객체의 동작을 표현, 골격. 
+* 동작에 대한 방법만 표시. 
+* 추상화 제공
+* 인터페이스의 메소드를 구현한 타입은 인터페이스로 사용 가능 
+* 덕타이핑 : Go언어의 독창적인 특성 
+* 클래스간의 결합도 감소 -> 유지보수성 향상, 개발 추가의 용이
+* 인터페이스 사용법 2가지
+* ``` go
+   type 인터페이스명 interface {
+    메서드1() 반환값 (타입형)
+    메서드2() // 반환값 없을 경우
+   }
+   ```
+  
+```go
+type test interface {
+
+}
+
+type Dog struct {
+	name string
+	weight int
+}
+
+//bite 메소드 구현
+func (d Dog) bite() {
+	fmt.Println(d.name, " 이 물었다!")
+}
+
+//동물의 행동 인터페이스 선언
+type Behavior interface {
+	bite()
+}
+
+func main() {
+
+	var t test
+	fmt.Println(t) // 빈(empty) 인터페이스인 경우 nil 리턴
+
+	dog1 := Dog{"poll", 10}
+
+	var inter1 Behavior
+	inter1 = dog1
+	inter1.bite()
+
+	dog1.bite()
+
+	dog2 := Dog{"marry", 12}
+	inter2 := Behavior(dog2)
+
+	inter2.bite()
+
+	inters := []Behavior{dog1, dog2}
+
+	for idx, _ := range inters {
+		inters[idx].bite()
+	}
+
+	//값 형태로 실행(인터페이스)
+	for _, val := range inters {
+		val.bite()
+	}
+}
+``` 
+* 이렇게도 가능하다
+```go
+
+type Dog struct {
+	name string
+	weight int
+}
+
+type Cat struct {
+	name string
+	weight int
+}
+
+func (d Dog) bite() {
+	fmt.Println(d.name, " : Dog bites!")
+}
+
+func (d Dog) sounds() {
+	fmt.Println(d.name, " : Dog barks!")
+}
+
+func (d Dog) run() {
+	fmt.Println(d.name, " : Dog run!")
+}
+
+func (d Cat) bite() {
+	fmt.Println(d.name, " : Cat bites!")
+}
+
+func (d Cat) sounds() {
+	fmt.Println(d.name, " : Cat barks!")
+}
+
+func (d Cat) run() {
+	fmt.Println(d.name, " : Cat run!")
+}
+
+type Behavior interface {
+	bite()
+	sounds()
+	run()
+}
+
+func act(animal Behavior) {
+	animal.bite()
+	animal.sounds()
+	animal.run()
+}
+
+func main()  {
+	dog := Dog{"poll", 10}
+	cat := Cat{"bob", 5}
+
+	// 개 행동 실행
+	act(dog)
+	//고양이 행동실행
+	act(cat)
+}
+```
+
+## 인터페이스 덕타이핑 예제
+* 구조체 및 변수의 값이나 타입은 상관하지 않고 오로지 구현된 메소드로만 판단하는 방식
+
+
