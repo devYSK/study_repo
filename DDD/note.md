@@ -599,3 +599,105 @@ public class CancelOrderSerivce {
 
 * 도메인이 복잡하면 도메인 모델과 도메인 서비스를 별도 패키지에 위치해도 된다. 
 
+# 애그리거트
+
+* 백 개 이상의 테이블을 한 장의 ERD에 모두 표시하면 개별 테이블 간의 관계를 파악하느냐 데이터 구조를 이해하는데 어려움을 겪게 된다. 
+  * 도메인 요소간의 관계를 파악하기 어렵다는 것은 코드를 변경하고 확장하는 것이 어려워 진다. 
+
+* 복잡한 도메인을 관리하기 쉽게 만들라면 애그리거트로 묶어서 바라보면 파악하기 쉽다. 
+
+* ![](img/79352aa9.png)
+
+* 애그리거트는 경계를 갖는다. 
+* 한 애그리거트에 속한 객체는 다른 애그리거트에 속하지 안흔ㄴ다. 
+* 애그리거트는 자기 자신은 관리하지만, 다른 애그리거트를 관리하지 않는다.
+  * 주문 애그리거트는 배송지를 변경하거나 주문 상품 개수를 변경하지만 주문 애그리거트에서 회원의 정보나 상품의 가격을 변경하지는 않는다. 
+
+* A가 B를 갖는다 로 설계 할 수 있는 요구사항이 있어도 반드시 A와 B가 한 애그리거트에 속하진 않는다.
+* 좋은 예로, 상품과 리뷰가 있다.
+  * 상품과 리뷰는 함께 생성되지 않고, 함께 변경되지도 않는다. 
+  * 상품을 변경하는 주체가 상품 담당자라면 리뷰를 생성하고 변경하는 주체는 고객이다. 
+  * 리뷰의 변경이 상품에 영향을 주지 않고, 상품의 변경이 리뷰에 영향을 주지 않는다. 
+  * 이 경우 서로 다른 애그리거트 이다. 
+
+* 다수의 애그리거트가 한 개의 엔티티 객체만 갖는 경우가 많았으며, 두 개 이상의 엔티티로 구성되는 애그리거트는 드물었다 라고 한다.
+
+
+## 애그리거트 루트
+* 애그리거트는 여러 객체로 구성되기 때문에 한 객체만 상태가 정상이면 안 된다. 
+
+#### ex 주문 애그리거트
+* 총 금액인 totalAmounts를 갖고있는 Order 엔티티
+* 개별 구매 상품의 개수인 quantity와 금액인 price를 갖고 잇는 OrderLine 밸류
+* 구매한 상품의 개수를 변경하면 한 OrderLine의 qunatity(개수)를 변경하고 더불어 Order의 totalAmounts도 변경해야 한다. 그렇지 않으면 데이터 일관성이 깨진다.
+* ![](img/30d1c59c.png)
+
+* 불필요한 중복을 피하고 애그리거트 루트 도메인을 통해서만 도메인 로직을 구현하게 만들어야 한다.
+* set 같은 메서드로 직접 정보를 변경할 경우 규칙을 무시하고 직접 DB 테이블의 데이터를 수정하는 것과 같은 결과가 나온다. 
+  * 논리적인 데이터 일관성이 깨지게 된다. 
+1. 단순히 필드를 변경하는 set 메서드를 공개(public) 범위로 만들지 않는다.
+   * 도메인의 의미나 의도를 표현하지 못하고 로직을 도메인 객체가 아닌 응용, 표현 영윽올 분산 시킨다. 
+   * set 대신 cancel이나 changePassword 처럼 의미가 더 잘드러나는 이름을 사용하자. 
+2. 밸류타입은 불변(immutable)로 만든다
+   * 밸류 객체의 값을 변경할 수 없으면 애그리거트 루트에서 밸류 객체를 구해도 애그리거트 외부에서 밸류 객체의 상태를 변경할 수 없다. 
+   * ```java
+     ShippingInfo si = order.getShippingInfo();
+     si.setAddress(newAddres); // ShippingInfo가 불변객체면 이 코드는 컴파일 에러 
+     ```
+   * 애그리거트 외부에서 내부 상태를 함부로 바꾸지 못하므로 일관성이 깨질 가능성이 줄어든다. 
+   * 밸류 객체가 불변이면 밸류 객체의 값을 변경하는 방법은 새로윤 밸류 객체를 할당하는 것뿐.
+```java
+public class Order { 
+    private ShippingInfo shippingInfo;
+    
+    public void changeShippingInfo(ShippingInfo newShippingInfo) {
+        verifyNotYetShipped();
+        setShippingInfo(newShippingInfo);
+    }
+    
+    // set 메서드를 허용 범위를 private으로.
+    private void setShippingInfo(ShippingInfo newShippingInfo) {
+        // 밸류가 불변이면 새로운 객체를 할당해서 값을 변경.
+        // 불변이므로 this.shippingInfo.setAddress(newShippingInfo.getAddress())와 같은 코드 사용 불가.
+        this.shippingInfo = newShippingInfo;
+    }
+}
+```
+
+## 트랜잭션 범위
+* 트랜잭션 범위는 작을수록 좋다. 한 트랜잭션이 한 개 테이블 수정하는 것과 세 개의 테이블을 수정하는 것을 비교하면 성능차이가 발생한다. 
+* 한 개 테이블을 수정하면 잠그는 대상은 한 테이블 이지만, 세 테이블을 수정하면 잠금 대상이 더많아진다. 그만큼 처리할 수 있는 트랜잭션 개수가 줄어들고 성능을 떨어뜨린다.
+* 동일하게 한 트랜잭션에서는 한 개의 애그리거트만 수정해야 한다. 
+  * 한 테이블이란 뜻이 아니고, 한 애그리거트에서 다른 애거리트를 수정하지 않는다.
+  * 애그리거트 내부에서 다른 애그리거트의 상태를 변경하는 기능을 실행하면 안된다.
+    * 예를 들어 배송지 정보를 변경하면서 동시에 배송지 정보를 회원의 주소로 설정하는 기능이 있는데, 이 때 주문 애그리거트는 회원 애그리거트의 정보를 변경하면 안된다. 
+  * 부득이하게 한 트랜잭션으로 두 개 이상의 애그리거트를 수정해야 한다면, 응용 서비스에서 두 애그리거트를 수정하도록 구현한다. 
+    * 애그리거트 끼리는 직접적으로 수정하지말고. 
+```java
+public class ChangeOrderService {
+    // 두 개 이상의 애그리거트를 변경해야 하면 응용 서비스에서 각 애그리거트의 상태를 변경한다. 
+  @Transactional
+  public void changeShippingInfo(OrderId id, ShippingInfo newShippingInfo, boolean useNewShippingAddrAsMemberAddr) {
+      Order order = orderRepository.findById(id);
+      
+      if (order == null) throw new OrderNotFoundException();
+      
+      order.shipTo(newShippingInfo);
+      
+      if (useNewShippingAddrAsMemberAddr) {
+          Member member = findMember(order.getOrderer());
+          member.changeAddress(newShippingInfo.getAddress());
+      }
+  }
+}
+```
+* 도메인이벤트를 사용하면 동기나 비동기로 다른 애그리거트의 상태를 변경하는 코드를 작성할 수 있다. 
+
+
+
+
+
+
+
+
+
