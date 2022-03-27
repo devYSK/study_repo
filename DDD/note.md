@@ -380,3 +380,222 @@ public class Order {
    }
 }
 ```
+
+# 아키텍처 
+* 표현, 응용, 도인, 인프라스트럭쳐는 아키텍처의 4가지 영역 .
+### 표현, 응용 영역
+* ![](img/80766c80.png)
+### 응용, 도메인영역
+* ![](img/6af417cf.png)
+* 도메인의 로직 구현은 도메인 모델에 위임하자! 
+### 인프라 스트럭쳐 영역
+* ![](img/ada62970.png)
+* 이 영역은 DBMS 연동 처리, 메시징 큐에 메시지를 전송하거나 수신하는 기능 구현, SMTP 이용한 메일 발송, REST API 호출 처리. 
+* 논리적인 개념을 표현하기 보다는 실제 구현을 다룬다. 
+
+## 계층 구조 아키텍처 
+* 계층 구조는 그 특성상 상위 계층에서 하위 계층으로의 의존만 존재하고, 하위 계층은 상위 계층에 의존하지 않는다. 
+
+## DIP (의존성 역전 원칙)
+
+* ![](img/ef9d84ec.png)
+* 고수준 모듈 : 의미있는 단일 기능을 제공하는 모듈
+* 저수준 모듈 : 하위 기능을 실제로 구현한 것.
+* 그러나 고수준 모듈이 저수준 모듈을 사용하면 구현 변경과 테스트가 어렵다. 
+  * 저수준 모듈이 고수준 모듈에 의존하도록 바꾸면 이 문제를 해결가능. 
+  * 인터페이스 추상화. 
+
+
+* 인프라스트럭쳐 영역 - 다음은 할인 금액을 계산하기 위해 Drools라는 룰 엔진을 사용해서 계산 로직을 수행하는 코드 
+```java
+public class DroolsRuleEngine {
+  private KieContainer kContainer;
+
+  public DroolsRuleEngineO {
+    KieServices ks = KieServices.Factory.getO;
+    kContainer = ks.getKieClasspathContainerO;
+  }
+
+  public void evalute(String sessionName^, List<?> facts) {
+    KieSession kSession = kContainer.newKieSession(sessionName);
+    try {
+      facts.forEach(x -> kSession.insert(x));
+      kSession.fireAllRulesO;
+    } finally {
+      kSession.disposeO;
+    }
+  }
+}
+```
+
+* 응용 영역 - 인프라 영역의 DroolsRuleEngine 사용
+```java
+public class CalculateDiscountService {
+  private DroolsRuleEngine ruleEngine;
+
+  public CalculateDiscountServiceO {
+    ruleEngine = new DroolsRuleEngine();
+  }
+
+  public Money calculateDiscount(List<OrderLine> orderliness, String customerld) {
+    Customer customer = findCustomer(customerld);
+    
+    MutableMoney money = new MutableMoney(0);           // Drools에 특화된 코드 : 연산 결과를 받기 위해 추가한 타입
+    List<?> facts = Arrays.asList(customers, money);    // Drools에 특화된 코드 : 룰에 필요한 데이터
+    facts.addAll(orderLines);
+    ruleEngine.evalute("discountCalculation", facts);   // Drools에 특화된 코드 : Drools의 세션 이름 
+    return money.toImmutableMoneyQ;
+
+  }
+}
+```
+이코드의 2가지 문제.
+* CalculateDiscountService만 테스트 하기 어렵다. RuleEngine이 완벽하게 동작해야 테스트 가능 
+
+### 인터페이스 추상화
+```java
+public interface RuleDiscounter {
+    Money applyRules(Customer customer, List<OrderLine> orderLines);
+}
+
+public class CalculateDiscountService {
+    private RuleDiscounter ruleDiscounter;
+    
+    public CalculateDiscountService(RuleDiscounter ruleDiscounter) {
+        this.ruleDiscounter = ruleDiscounter;
+    }
+    
+    public Money calculateDiscount(List<OrderLine> orderLines, String customerId) {
+        Customer customer = findCustomer(customerId);
+        return ruleDiscounter.applyRules(customer, orderLines);
+    }
+}
+
+public class DroolsRuleDiscounter implements RuleDiscounter {
+  
+    private KieContainer kContainer;
+
+    public DroolsRuleEngineO{
+      KieServices ks = KieServices.Factory.getO;
+      kContainer = ks.getKieClasspathContainerOj
+    }
+    
+    @Override
+    public Money applyRules(Customer customer, List<OrderLine> orderLines) {
+    KieSession kSession = kContainer.newKieSession("discountSession");
+        try {
+          ...코드 생략
+          kSession.fireAllRules;
+        } finally {
+          kSession.disposeO;
+        }
+        return money.toImmutableMoneyO;
+    }
+    
+}
+
+```
+* ![](img/792cd4da.png)
+* 더이상 CalculateDiscountService는 Drools에 의존하지 않게된다. 
+  * 저수준 모듈이 고수준 모듈에 의존하게 되어 DIP(의존성 역전 원칙) 이라고 한다.
+  * 교체가 가능하고 테스트가 쉬워진다. 
+  * 구현 기술(RuleDiscounter)를 변경 해도 CalculateDiscountService를 수정할 필요 없다
+  * ```java
+    RuleDiscounter ruleDiscounter = new SimpleRuleDiscounter(); // 다른 저수준 구현 객체. 교체
+    CalculateDiscounterService disService = new CalculateDiscounterService(ruleDiscounter); // 구현 객체(RuleDiscounter)를 생성하는 코드만 변경 
+    ```
+
+## DIP 주의사항
+* DIP를 잘못 생각하면 단순히 인터페이스와 구현 클래스를 분리하는 정도로 받아들일 수 있다. 
+* ![](img/e1c42aae.png)
+* 하위 기능을 추상화한 인터페이스는 저수준 모듈이 아니고 고수준 모듈에 위치한다. 
+* ![](img/ce84cd38.png)
+
+---
+* ![](img/2ca938f0.png)
+* 인프라스트럭처에 위치한 클래스가 도메인이나 응용 영역에 정의한 인터페이스를 상속받아 구현하는 구조가 되면, 도메인과 응용영역에 영향을 주지 않거나 최소화 하면서 구현 기술을 변경하는 것이 가능하다. 
+  * Notifier인터페이스를 상속받는 클래스는 주문 시 SMS를 추가해야 한다는 요구 사항이 들어왔을 때 응용 영역의 OrderService는 변경할 필요가 없다.
+    * 구현 클래스를 인프라 영역에 추가하면 된다. 
+  * 비슷하게 Mybatis 대신 JPA를 사용하고 싶다면 OrderRepository구현체를 인프라스트럭쳐 영역에 추가하면 된다.  
+* ![](img/8afcddf1.png)
+
+## 도메인 영역의 주요 구성요소
+  
+|요소|설명|
+|---|---|
+|엔티티(Entity)| 고유의 식별자를 갖는 객체. 주문, 회원, 상품 등 도메인의 고유한 개념. 도메인 모델의 데이터와 관련된 기능을 함께 제공|
+|밸류(Value)| 고유의 식별자를 갖지 않는 객체. 주로 '개념적'으로 하나인 값을 표현할때 사용. 주소, 금액 등|
+|애그리거트(Aggregate|연관된 엔티티와 벨류 객체를 하나로 묶은것. Order 엔티티, OrderLine 벨류 를 '주문' 애그리거트로 묶을 수 있다.|
+|레포지토리(Repository)| 도메인 모델의 영속성 처리. DBMS 테이블에서 엔티티 객체를 로딩하거나 저장 하는 기능 제공. |
+|도메인 서비스(Domain Service)| 특정 엔티티에 속하지 않은 도메인 로직을 제공. '할인 금액 계산'은 상품, 쿠폰, 회원 등급, 구매금액 등 여러 도메인을 이용해서 구현하는데, 도메인 로직이 여러 엔티티와 밸류를 필요로하면 도메인 서비스에서 로직을 구현한다.|
+
+## 엔티티와 밸류
+* 도메인 모델의 엔티티와 DB모델의 엔티티는 같지 않다.
+* 두 모델의 가장 큰 차이점은 도메인 모델의 엔티티는 데이터와 함께 기능(도메인 기능)을 제공.
+* 도메인 모델의 엔티티는 단순히 데이터를 담고 있는 데이터 구조라기 보다는 데이터와 함께 기능을 제공하는 객체 
+  * 도메인 관점에서 기능을 구현하고 캡슐화해서 데이터가 임의로 변경되는 것을 막아야한다! 
+* 도메인 모델의 엔티티는 벨류타입을 이용해서 표현할 수 있지만 DB모델의 엔티티는 표현하기 불편하다. 
+* ![](img/c92788df.png)
+  * 왼쪽 그림처럼 Orderer의 개별 데이터를 저장하거나 오른쪽 그림처럼 별도 테이블로 분리해서 저장해야함. 
+  * 왼쪽 테이블의 경우 ORDERER의 개념이 드러나지 않고 주문자의 개별 데이터만 드러난다. 
+  * 오른쪽 테이블의 경우 주문자 데이터를 별도 테이블에 저장했지만 엔티티에 까까우며 밸류 타입의 의미가 드러나지는 않는다. 
+
+* `밸류는 불변으로 구현할 것을 권장! ` -> 엔티티의 밸류 타입 데이터 변경시 객체 자체를 완전히 교체 (new)!!!
+
+## 애그리거트 
+* 연관된 엔티티와 벨류 객체를 하나로 묶은것.
+* ![](img/55ca49c9.png)
+* 대표적인 예 : 주문 
+  * 주문, 배송지정보, 주문자, 주문 목록, 총 겸제금액 의 하위모델로 구성 
+
+* 루트 엔티티는 애그리거트 내의서의 루트라고 생각하면 된다
+  * 애그리거트 루트가 제공하는 기능을 실행하고 간접적으로 애그리거트 내의 다른 엔티티나 밸류 객체에 접근한다. 
+  * ![](img/0a845be9.png)
+
+
+## 레포지토리(리포지터리)
+* 도메인 객체를 보관하고 사용하기 위한 모델 (RDBMS, NoSQL, 로컬 파일같은 물리적인 저장소 )
+* 엔티티가 밸류나 요구사항에서 도출되는 도메인 모델이라면 레포지토리는 구현을 위한 도메인 모델 
+* 도메인 모델을 사용해야 하는 코드는 레포지토리를 통해서 도메인 객체를 구한 뒤에 도메인 객체의 기능을 실행
+  * 예를 들어 주문 취소 기능을 제공하는 응용 서비스는 레포지토리를 이용해서 객체를 구하여 해당 기능 실행. 
+```java
+public class CancelOrderSerivce {
+    private OrderRepository orderRepository;
+    
+    public void cancel(OrderNumber number) {
+        Order order = orderRepository.findByNumber(number);
+        if (order == null) throw new NoOrderException(number);
+        order.cancel();
+    }
+}
+```
+* 레포지토리는 도매인 객체를 영속화 하는데 필요한 기능을 추상화한 것으로 고수준 모듈에 속한다. 
+* 레포지토리를 구현한 클래스는 저수준 모듈로 인프라 영역에 속한다. 
+* ![](img/bafb4ade.png)
+  * 응용 서비스와 레포지토리는 밀접한 연관이 있따. 
+    * 응용 서비스는 필요한 도메인 객체를 구하거나 저장할 때 레포지토를 사용
+    * 응용 서비스는 트랜잭션을 관리하는데, 트랜잭션 처리는 레포지토리 구현 기술의 영향을 받는다. 
+
+# 요청 처리 흐름
+* 표현 영역은 사용자가 전송한 데이터 형식이 올바른지 검사하고 문제가 없다면 데이터를 이용해서 응용서비스에 기능 실행을 위임. 
+* ![](img/cd3c728a.png)
+* '예매하기' 나'예매 취소' 같은 기능의 서비스는 도메인의 상태를 변경하므로 변경 상태가 물리 저장소에 올바르게 반영되도록 `트랜잭션 관리 필요`
+  * 스프링 에서의 @Transactional 애노테이션 같이.
+
+# 인프라 스트럭처 개요
+* 인프라는 표현 영역, 응용 영역, 도메인 영역을 지원한다. 
+* 도메인 객체의 영속성 처리, 트랜잭션, SMTP, REST 클라이언트 등 다른 영역에서 필요로 하는 프레임워크, 구현 기술, 보조 기능을 지원한다. 
+* DIP에서 언급한 것 처럼 도메인 영역과 응용 영역에서 인프라스트럭처의 기능을 직접 사용하는 것 보다 두 영역(도메인, 응용)에 정의한 인터페이스를 인프라영역에서 구현 하는것이 더 유연하고 테스트하기 쉽다. 
+
+
+## 모듈 구성 
+* 패키지 구성 규칙에 정답이 존재하는 것은 아니다.
+* 도메인이 크면 하위 도메인으로 나누고 각 하위 도메인마다 별도 패키지를 구성한다. 
+  * ![](img/2e6cf4a2.png)
+
+* 도메인 모듈은 도메인에 속한 애그리거트를 기준으로 다시 패키지를 구성한다. 
+* 예를들어 카탈로그 하위 도메인이 상품 애그리거트 + 카테고리 애그리거트로 구성될 경우 두 개의 하위 패키지로 구성 
+  * ![](img/bfeaae0f.png)
+
+* 도메인이 복잡하면 도메인 모델과 도메인 서비스를 별도 패키지에 위치해도 된다. 
+
