@@ -693,11 +693,149 @@ public class ChangeOrderService {
 ```
 * 도메인이벤트를 사용하면 동기나 비동기로 다른 애그리거트의 상태를 변경하는 코드를 작성할 수 있다. 
 
+## 레포지터리와 애그리거트 
+
+* 애그리거트는 개념상 한 개의 도메인 모델을 표현하므로 객체의 영속성을 처리하는 레포지토리는 애그리거트 단위로 존재. 
+  * 엔티티와 엔티티내의 밸류를 물리적으로 각각 별도의 DB에 저장한다고 해서 각각 레포지토리를 만들지 않는다. 
+
+* 애그리거트의 상태가 변경되면 모든 변경을 원자적으로 저장소에 반영해야한다.
+  * 애그리거트에서 두 개의 객체를 변경했는데 저장소에는 한 객체에 대한 변경만 반영되면 데이터 일관성이 깨지므로 문제가 된다. 
+
+## ID를 이용한 애그리거트 참조 
+```java
+public class Order {
+    private Orderer orderer;
+  ...
+}
+
+public class Orderer {
+    private Member member;
+    private String name;
+}
+```
+* 애그리거트 루트(엔티티)에 의한 직접 참조 
+> order.getOrderer().getMember().getId()
 
 
+* 애그리거트에서 다른 애그리거트를 참조하는것은 편리하지만 다음 문제를 일으킬 수 있다.
+  * 편한 탐색 '오용'
+  * 성능 문제
+  * 확장 어려움 
+* 다른 애그리거트 객체에 접근하여 상태를 쉽게 변경할 수 있게 되면 트랜잭션 범위에 벗어날 수 있다. 
+* 지연 로딩(lazy) 즉시 로딩(eager) 의 쿼리 전략을 고민해야 한다. 
 
+```java
+public class Order {
+    private Orderer orderer;
+  ...
+}
 
+public class Orderer {
+    private MemberId memberId; // 밸류타입이거나 Id(or Seq) 값 
+    private String name;
+}
+```
+* ID에 의한 직접 참조 
+* 애그리거트의 경계를 명확히 하고 애그리거트 간 물리적인 연결을 제거해준다. 
+  * 모델의 복잡도를 낮춰주고 의존을 제거하므로 응집도를 높혀준다 
+  * 지연로딩의 효과!
+* 중요한 데이터는 RDBMS에 저장하고 조회 성능이 중요한 애그리거트는 NoSQL에 나눠 저장할 수 있다. 
 
+```java
+Member member = memberRepository.findByld(ordererld)
+List<Order> orders = orderRepository.findByOrderer(ordererId);
+List<OrderView> dtos = orders.streamO
+    .map(order ->{
+        Productid prodid = order.getOrderLines().get(0).getProductId();
+        // 각 주문마다 첫 번째 주문 상품 정보 로딩 위한 쿼리 실행 
+        Product product = productRepository.findById(prodId);
+        return new OrderView(order, member, product);
+}).collect(toList());
+```
+* 코드 : N+1 문제.
+* 주문 개수가 10개면 주문을 읽어오기 위한 1번의 쿼리와 주문별로 각 상품을 읽어오기 위한 10번의 쿼리 실행 
+> 조회 대상이 N개일 때 N개를 읽어오는 한 번의 쿼리와 연관된 데이터를 읽어오는 쿼리를 N번 실행하는 문제 
+* 지연 로딩과 관련된 대표적인 문제
+  * `엄청난 성능 하락의 원인`
 
+### 이 문제를 발생하지 않도록 하려면 조인을 사용해야 한다. 
+* ID 참조가 아닌 객체(엔티티) 참조 방식으로 바꾸고 즉시 로딩을 사용하는것 
+* ID 참조 방식을 사용하려면 별도의 조회 전용 쿼리를 만들어 한번의 쿼리로 필요한 데이터를 로딩하면 된다. 
+
+```java
+^Repository
+public class JpaOrderViewDao implements OrderViewDao {
+  @PersistenceContext
+  private EntityManager em;
+
+  @Override
+  public List<DrderView> selectByOrderer(String ordererld) {
+    String selectQuery =
+            "select new com.myshop.order.application.dtp.OrderView(Oj m, p)" +
+                    "from Order o join o.orderLines ol. Member m. Product p " +
+                    "where o.orderer.memberld.id = :ordererld " +
+                    "and o.orderer.memberld = m.id " +
+                    "and index(ol) = 0 " +
+                    "and ol.productid = p.id " +
+                    "order by o.number.number desc";
+    TypedQuery<DrderView > query =
+            em.createQuery(selectQuery, OrderView.class);
+    query.setParameterC 'ordererld", ordererld);
+    return query.getResultListO;
+  }
+}
+```
+
+## 애그리거트간 집합 연관 관계(1:N관계 M:N 관계)
+
+### 1-N 예제
+* 특정 카테고리에 속한 상품 목록
+```java
+public class Category {
+    private Set<Prodcut> products;
+    
+    public List<Product> getProducts(int page, int size) {
+        List<Product> sortedProducts = sortById(products);
+        return sortedProducts.subList((page - 1) * size, page * size);
+    }
+}
+```
+* 이 코드는 Category에 속한 모든 Products를 조회하게 되어 성능에 심각한 문제를 야기한다. 
+* 카테고리에 속한 상품을 구할려면 `상품 입장에서 자신이 속한 카테고리를 N-1로 연관 지어 구하면 된다.`
+```java
+public class Product {
+    private CategoryId categoryId;
+  ...
+}
+
+public class ProductListService {
+    public Page<Product> getProductOfCategory(Long categoryId, int page, intsize) {
+        Category category = categoryRepository.findById(categoryId);
+        checkCategory(category);
+        
+        List<Product> products = productRepository.findByCategoryId(category.getId(), page, size);
+        
+        int totalCount = productRepository.contsByCategoryId(category.getId());
+        return new Page(page, size, totalCount, products);
+    }
+}
+```
+
+### M-N 예제
+* RDBMS를 이용해서 M-N(다대 다)관계를 구현하려면 조인 테이블을 사용한다. 
+* ex ) JPA 매핑 사용
+```java
+@Entity
+@Table(name = "product")
+public class Product {
+    @EmbeddedId
+    private ProductId id;
+    
+    @ElementCollection
+    @CollectionTable(name = "product_category", joinColumns = @JoinColumn(name = "product_id"))
+    private Set<CategoryId> categoryIds;
+}
+```
+> 목록이나 상세 화면과 같은 조회 기능은 조회 전용 모델을 이용해서 구현하는 것이 좋다. 
 
 
