@@ -834,8 +834,428 @@ public class Product {
     @ElementCollection
     @CollectionTable(name = "product_category", joinColumns = @JoinColumn(name = "product_id"))
     private Set<CategoryId> categoryIds;
-}
+}ㅐㅏㅔㅕㅓ  1ㅂ2ㅂ3ㄷ4ㄱ재ㅐㅓㅕㅜ!@interface 
 ```
 > 목록이나 상세 화면과 같은 조회 기능은 조회 전용 모델을 이용해서 구현하는 것이 좋다. 
+
+* 한 애그리거트가 다른 애그리거트를 생성해야 하는 구조라면, 팩토리로 사용하거나 팩토리 메서드를 이용하여 애그리거트 내에서 생성하자. 
+
+# 레포지토리와 모델 구현 
+
+* 보통 레포지토리 인터페이스는 domain 패키지에, 구현한 클래스는 infra 패키지에 둔다. 
+* 팀 표준에 따라 domain과 같은 패키지에 위치시킬 수도 있다. 
+  * 가능하면 레포지토리 구현 클래스는 인프라 영역에 위치 시켜서 인프라에 대한 의존을 낮춰야 한다. 
+
+## 스프링 데이터 JPA를 이용한 레포지토리 구현
+* 다음과 같이 선언
+```java
+public interface OrderRepository extends Repository<Order, OrderNo> { // <엔티티, PK>
+    Optional<Order> findById(OrderNo id);
+  ...
+}
+```
+
+* 식별자를 이용해서 엔티티 조회시 findById() 메서드 사용.
+* 저장 메서드는 void save(Entity) or Entity save(Entity)
+* 삭제시에는 void delete(Entity entity), void deleteById(pk id);
+
+## 매핑 구현 
+
+* 루트 엔티티는 @Entity로 매핑
+* 한 테이블에 엔티티와 밸류 데이터가 같이 있다면
+  * 밸류는 @Embeddable로 (클래스 상단)
+  * 밸류 타입 프로퍼티는 @Embedded (필드)
+
+* 밸류 타입 컬럼 이름을 변경하기 위해선 @AttributeOverride 어노테이션 사용 
+```java
+@Embeddable
+public class Orderer { // 밸류타입
+    @Embdded
+    @AttributeOverrides(
+        @AttributeOverride(name = "id", column = @Column(name = "orderer_id"))
+    )
+    private MemberId memberId;
+}
+
+@Embeddable
+public class ShippingInfo { // 밸류타입
+
+  @Embdded
+  @AttributeOverrides({
+          @AttributeOverride(name = "zipCode", column = @Column(name = "shipping_zipcode")),
+          @AttributeOverride(name = "address1", column = @Column(name = "shipping_addr1")),
+          @AttributeOverride(name = "address2", column = @Column(name = "shipping_addr2"))
+  })
+  private Address address;
+}
+```
+
+* 클래스가 불변 타입이면 기본 생성자를 추가할 필요가 없지만, JPA에서 @Entity와 @Embeddable로 클래스를 매핑하려면 기본 생성자를 제공해야 한다. 
+
+## 필드 접근 방식
+
+```java
+@Entity
+@Access(AccessType.PROPERTY)
+public class Order {
+  @Column(name = "state")
+  @Enumerated(EnumType.STRING)
+  public OrderState getState() {
+    return state;
+  }
+
+  public void setState(OrderState state) {
+    this.state = state;
+  }
+  ...
+}
+// 위 방식 말고 아래 방식 으로
+@Entity
+@Access(AccessType.FIELD) // 필드 접근 
+public class Order {
+}
+```
+
+* set 메서드 대신 의도가 잘 드러나는 기능(메서드)을 제공해야 하므로 AccessType을 FIELD로 한다.  
+> 하이버네이트는 @Access를 이용해서 명시적으로 접근 방식을 지정하지 않으면 @Id나 @EmbeddedId가 어디에 위치했느냐에 따라 접근방식을 결정한다.   
+> @Id나 @EmbeddedId가 필드에 위치하면 필드 접근 방식을 선택하고 get 메서드에 위치하면 메서드 접근 방식을 선택한다. 
+
+
+## attributeConverter를 이용한 밸류 매핑 처리 
+
+* 두 개 이상의 프로퍼티를 갖고 있는 밸류 타입의 프로퍼티를 한 컬럼에 매핑하고 싶다면 `AttributeConverter` 사용 
+```java
+public interface AttributeConverter<X,Y> {
+    public Y convertToDatabaseColumn(X attribute); // X to Y. 밸류타입을 DB칼럼값으로 
+    
+    public X convertToEntityAttribute(Y dbData);// DB칼럼값을 밸류로 변환
+}
+```
+
+* X는 밸류 타입
+* Y는 DB 타입
+
+* ex) Money 밸류 타입을 위한 AttributeConverter
+```java
+@Converter(autoApply = true)
+public class MoneyConverter implements AttributeConverter<Money, Integer>{
+    @Override
+    public Integer convertToDatabaseColumn(Money money){
+        return money==null ?null: money.getValueQ;
+    }
+    
+    @Override
+    public Honey convertToEntityAttribute(Integer value){
+        return value==null? null: new Money(value);
+    }
+}
+
+@Entity
+@Table(name = "purchase_order")
+public class Order {
+  @Column(narne = "total_amounts")
+  // @Convert(converter = MoneyConverter.class) // autoApply 속성이 false이면 직접 지정 
+  private Money totalAmounts; // MoneyConverter를 적용해서 값 변환
+
+}
+
+```
+
+* `AttributeConverter 인터페이스를 구현한 클래스는 @Converter 애노테이션을 사용하면 된다.`
+* @Converter - autoApply 속성
+  * true : 모델에 출현하는 모든 Money 타입의 프로퍼티에 MoneyConverter를 자동으로 적용
+  * false : 프로퍼티 값을 변환할 때 사용할 컨버터 직접 지정 : @Convert(converter = MoneyConverter.class)
+
+
+## 밸류 컬렉션 : 별도 테이블 매핑 - 밸류 컬렉션(리스트)를 별도 테이블에 매핑
+* @ElementCollection과 @CollectionTable을 사용
+
+```java
+
+@Entity
+@Table(name = "purchase_order")
+@Access(AccessType.FIELD)
+public class Order {
+  @EmbeddedId
+  private OrderNo number;
+
+  @Version
+  private long version;
+
+  @Embedded
+  private Orderer orderer;
+
+  @ElementCollection(fetch = FetchType.LAZY)
+  @CollectionTable(name = "order_line", joinColumns = @JoinColumn(name = "order_number"))
+  @OrderColumn(name = "line_idx")
+  private List<OrderLine> orderLines;
+
+}
+```
+
+* JPA는 @OrderColumn 애노테이션을 이용해서 지정한 컬럼에 리스트의 인덱스 값을 저장한다. 
+* @CollectionTable은 밸류를 저장할 테이블을 지정한다. 
+  * name : 테이블 이름 지정
+  * joinColumns: 외부키로 사용한 컬럼
+    * 두 개 이상인 경우 @JoinColumn의 배열을 이용해서 외부키 목록 지정 
+
+## 밸류 컬렉션 : 한개 컬럼 매핑 - 밸류 컬렉션(리스트)를 한개의 컬럼에 매핑
+ex ) 객체에는 이메일 주소 목록을 Set으로 보관하고, DB 컬럼에는 한개 칼럼에 콤마로 구분해서 저장. (kim206gh@naver.com, kim206gh@gmail.com, kim206gh@kakao.com... 등)
+* AttributeConverter 를 사용해서 구현하려면 밸류 컬렉션을 '표현'하는 새로운 밸류 타입을 추가해야 한다. 
+* 아래 코드처럼 목록을 위한 밸류 타입 추가로 작성.
+```java
+public class EmailSet{
+  private Set<Email> emails = new HashSet();
+  
+  public EmailSet(Set<Email> emails){
+    this.emails.addAll(emails);
+  }
+  
+  public Set<Email> getEmails(){
+    return Collections.unmodifiableSet(emails);
+  }
+}
+
+// AttributeConverter 구현
+
+public class EmailSetConverter implements AttributeConverter<EmailSet, String> {
+  @Override
+  public String convertToDatabaseColumn(EmailSet attribute) {
+    if (attribute == null) return null;
+    return attribute.getEmails().stream()
+            .map(email -> email.getAddress())
+            .collect(Collectors.joining(","));
+  }
+
+  @Override
+  public EmailSet convertToEntityAttribute(String dbData) {
+    if (dbData == null) return null;
+    String[] emails = dbData.split(",");
+    Set<Email> emailSet = Arrays.stream(emails)
+            .map(value -> new Email(value))
+            .collect(toSet());
+    return new EmailSet(emailSet);
+  }
+}
+
+// 컨버터 지정 
+@Convert(convert = EmailSetConvert.class)
+private EmailSet emailSet;
+
+```
+* autoApply = true로 안하면 어노테이션으로 지정. `@Convert`
+
+## 밸류를 이용한 ID 매핑
+* 식별자라는 의미를 '부각' 시키기 위해 식별자 자체를 밸류 타입으로 만들었을 때 사용.
+* 밸류 타입을 식별자로 매핑하면 @Id 대신 @EmbeddedId 애노테이션 사용 
+
+```java
+@Entity
+@Table(name = "purchase_order")
+@Access(AccessType.FIELD)
+public class Order {
+    @EmbeddedId
+    private OrderNo number;
+  ...
+}
+
+@Embeddable
+public class OrderNo implements Serializable {
+  @Column(name = "order_number")
+  private String number;
+  ...
+}
+```
+* JPA에서 식별자 타입은 Serializable 타입이어야 하므로 식별자로 사용할 밸류타입은 Serializable 인터페이스를 상속 받아야 한다. 
+* 밸류 타입으로 식별자(ID)를 구현하면 얻는 장점으로 식별자만의 기능을 추가할 수 있다. 
+
+## 별도 테이블에 저장하는 밸류 매핑. 
+* 보통 애그리거트에서 엔티티는 1개이고, 나머지는 대부분 밸류 타입이다. 
+* 별도 테이블에 데이터를 저장한다고해서 엔티티인 것은 아니다.  
+* 애그리거트에 속한 객체가 벨류인지 엔티티인지 구분하는 방법은 `고유식별자`를 갖는지다! 
+  * 별도 테이블로 저장하고 테이블에 PK가 있따고 해서 테이블과 매핑되는 애그리거트 구성요소가 항상 고유 식별자를 갖는 것은 아니기 때문이다 
+* 예를 들어, 게시글 데이터를 ARTICLE 테이블과 ARTICLE_CONTENT 테이블로 나눠서 저장하는 케이스를 보자.
+* ![](img/34a5ad1d.png)
+
+* ARTICLE_CONTENT와 매핑되는 ArticleContent를 엔티티로 생각해서 Article과 AtricleContent를 1-1 연관관계 라고 생각할수도있지만, ArticleContent는 밸류다.
+* Article_content의 id는 식별자이긴 하지만, ARTICLE 테이블의 데이터와 연결하기 위함이지 `ARTICLE_CONTENT를 위한 별도 식별자가 필요한 것은 아니기 때문`
+
+* ![](img/d46e7dae.png)
+* 밸류로 보고 접근하면 모델은 이렇게 바뀐다. 
+* 밸류를 매핑한 테이블을 지정하기 위해 @SecondaryTable 과 @AttributeOverride를 사용한다. 
+
+```java
+
+@Entity
+@Table(name = "article")
+@SecondaryTable(
+        name = "article_content",
+        pkJoinColumns = @PrimaryKeyJoinColumn(name = "id")
+)
+public class Article {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+
+  private String title;
+
+  @AttributeOverrides({
+          @AttributeOverride(
+                  name = "content",
+                  column = @Column(table = "article_content", name = "content")),
+          @AttributeOverride(
+                  name = "contentType",
+                  column = @Column(table = "article_content", name = "content_type"))
+  })
+  @Embedded
+  private ArticleContent content;
+}
+```
+
+* @SencondaryTable의 name 속성은 밸류를 저장할 테이블 지정
+* @pkJoinColumns속성은 밸류 테이블에서 엔티티 테이블로 조인할 때 사용할 칼럼ㅡㄹ 지ㅇ
+* @AttributeOverride의 name은 밸류의 필드명 지정(ArticleContent content)
+  * column은 밸류 필드내의 필드 지정.
+
+* 이러면 Article을 조회할 때 ArticleContent 테이블까지 조인해서 데이터를 읽어온다.
+  * ArticleContent 테이블의 데이터까지 조회해오기 싫다면 ArticleContent를 엔티티로 만들어 `지연로딩` 할 수도 있지만 좋은 방식은 아니다.
+  * `조회 전용 기능을 구현하면 된다.`
+
+## 밸류 컬렉션을 @Entity로 매핑하기. 
+ex ) 이미지 업로드 방식에 따라 이미지 경로와 섬네일 이미지 제공 여부가 달라지는 기능.
+* ![](img/60b9bdac.png)
+
+* JPA는 @Embeddable 타입의 클래스 상속 매핑을 지원하지 않는다. 
+* @Embeddable 대신 @Entity로 만들어 상속 매핑으로 처리해야 한다.
+  * 밸류 타입을 @Entity로 만드므로 식별자 매핑도 해야한다. 
+  * ![](img/6c51d7d4.png)
+
+* 한 테이블에 Image와 그 하위 클래스를 매핑하므로 Image 클래스에 다음 설정 사용 
+  * @Inheritance 애노테이션
+  * strategy(전략) 값으로 SINGLE_TABLE 사용
+  * @DiscriminatorColumn 애노테이션 사용하여 타입 구분용으로 사용할 컬럼 지정 
+
+* Image(밸류타입) 은 @Entity로 매핑했지만 모델에서 Image는 밸류이다.
+  * Image를 ExternalImage, InternalImage가 상속받는 구조.
+```java
+
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "image_type")
+@Table(name = "image")
+public abstract class Image {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "image_id")
+  private Long id;
+
+  @Column(name = "image_path")
+  private String path;
+
+  @Column(name = "upload_time")
+  private LocalDateTime uploadTime;
+  
+  protected String getPath() {
+    return path;
+  }
+
+  public LocalDateTime getUploadTime() {
+    return uploadTime;
+  }
+
+  public abstract String getUrl();
+  public abstract boolean hasThumbnail();
+  public abstract String getThumbnailUrl();
+
+}
+
+@Entity
+@DiscriminatorValue("EI")
+public class ExternalImage extends Image {
+    protected ExternalImage() {
+    }
+
+    public ExternalImage(String path) {
+        super(path);
+    }
+
+    @Override
+    public String getUrl() {
+        return getPath();
+    }
+
+    @Override
+    public boolean hasThumbnail() {
+        return false;
+    }
+
+    @Override
+    public String getThumbnailUrl() {
+        return null;
+    }
+}
+
+@Entity
+@DiscriminatorValue("II")
+public class InternalImage extends Image {
+  protected InternalImage() {
+  }
+
+  public InternalImage(String path) {
+    super(path);
+  }
+
+  @Override
+  public String getUrl() {
+    return "/images/original/" + getPath();
+  }
+
+  @Override
+  public boolean hasThumbnail() {
+    return true;
+  }
+
+  @Override
+  public String getThumbnailUrl() {
+    return "/images/thumbnail/" + getPath();
+  }
+}
+```
+
+* Image를 상속 받으므로 @Entity와 @Discriminator를 사용해서 매핑한다. 
+* Image가 @Entity 이므로 @OneToMany를 이용해서 매핑한다.
+
+```java
+@Entity
+@Table(name = "product")
+public class Product {
+    @EmbeddedId
+    private ProductId id;
+  ...
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE},
+            orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
+    @OrderColumn(name = "list_idx")
+    private List<Image> images = new ArrayList<>();
+    
+  public void changeImages(List<Image> newImages) {
+      images.clear();
+      images.addAll(newImages);
+    }
+  ...
+```
+* OneToMany의 속성
+  * casecade : 저장될 때 같이 저장되고, 삭제될때 같이 삭제 
+  * orphanRemoval : List에서 Image 객체 제거시 DB에서 함께 삭제
+
+* List.clear()를 사용하면 하이버네이트는 @Embeddable 타입에 대해서 컬렉션에(List)속한 객체를 로딩하지 않고 한 번의 delete 쿼리로 삭제 처리를 수행한다.
+
+
+## 애그리거트 로딩 전략(JPA에서)
+
+* 애그리거트 루트를 로딩하면 루트에 속한 모든 객체가 완전한 상태여야 한다. 
+* 조회 시점에서(SELECT) 완전한 상태가 되도록 하려면 조회 방식을 EAGER로 설정하면 된다. 
+  * 컬렉션(List, Set)에 대한 로딩 전략은 고민 해봐야 한다. - 성능문제
+
 
 
