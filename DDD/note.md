@@ -1287,6 +1287,327 @@ private List<Image> images = new ArrayList<>();
 
 * DIP를 완벽하게 지키면 좋겠지만, 개발 편의성상 못지키는 경우도 많다. 
 
+# 스프링 데이터 JPA를 이용한 조회 기능 
+
+## CQRS
+* 명령(Command) 모델과 조회(Query) 모델을 분리하는 패턴.
+* 명령 모델 : 상태를 변경하는 기능을 구현할떄 사용 - 회원 가입, 암호 변경 , 주문 취소 
+* 조회 모델 : 데이터 조회하는 기능 구현시 사용 - 주문 목록, 주문 상세
+
+## Spec (Specification) 스펙
+* 검색 조건을 다양하게 조합해야 할 때 사용하는 인터페이스.
+* 애그리거트가 특정 조건을 충족하는지를 검사할 때 사용하는 인터페이스. 
+```java
+public interface Speficiation<T> {
+    public boolean isSatisfiedBy(T agg);
+}
+```
+* agg : 검사 대상이 되는 객체
+* 스펙을 레포지토리에 사용하면 agg는 애그리거트 루트가 되고, DAO에 사용하면 검색결과로 리턴할 객체가 된다.
+* isSatisfiedBy() 메서드는 검사 대상 객체가 '조건을 충족하면 true를 리턴.'
+
+* 레포지토리나 DAO는 검색 대상을 걸러내는 용도로 스펙 사용.
+* 레포지토리가 스펙을 이용해서 검색 대상을 걸러주므로 특정 조건을 충족하는 애그리거트를 찾고 싶으면 원하는 스펙을 생성해서 레포지토리에 전달해주기만 하면 된다. 
+
+```java
+
+public class OrdererSpec implements Specification<Order>{
+  private String ordererld;
+  public OrdererSpec(String ordererld){
+    this.ordererld = ordererld;
+  }
+  public boolean isSatisfiedBy(Order agg){
+    return agg.getOrdererId().getMemberId().getId().equals(ordererId);
+  }
+}
+
+//검색 조건을 표현하는 스펙을 생성해서
+Specification<Order> ordererSpec = new OrdererSpec("madvirus");
+// 레포지토리에 전달
+List<Order> orders = orderRepository.findAll(ordererSpec);
+```
+
+## 스프링 데이터 JPA를 이용한 스펙 구현
+
+* 스프링 데이터 JPA는 Specification(스펙 인터페이스)를 제공한다.
+```java
+public interface Specification<T> extends Serializable {
+// not, where, and, or 메서드 생략.
+    @Nullable
+    Predicate toPredicate(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder cb);
+}
+```
+* T : JPA 엔티티 타입
+* toPredicate() : JPA Criteria 에서 조건을 표현하는 Predicate 생성.
+
+## 레포지토리 / DAO에서 스펙 사용  
+
+* 스펙을 충족하는 엔티티를 검색하고 싶다면 findAll() 메서드에 스펙 인터페이스를 파라미터로 받는다.
+  * List<Entity> findAll(Specification<Entity> spec);
+
+## 스펙 조합
+
+* Specification<T> 인터페이스는 스펙을 조합할 수 있는 or , and 메서드를 제공한다
+```java
+default Specification<T> and(@Nullable Specification<T> other) {...}
+default Specification<T> or(@Nullable Specification<T> other) {...}
+```
+* and() 메서드는 두 스펙을 모두 충족하는 조건을 표현하는 스펙을 생성한다.
+* or() 메서드는 두 스펙 중 하나 이상 충족하는 조건을 표현하는 스펙을 생성한다.
+```java
+Specfication<OrderSummary> spec1 = OrderSummarySpecs.ordererId("user1");
+Specfication<OrderSummary> sepc2 = OrderSummarySpecs.orderDateBetween(
+        LocalDateTime.of(2022, 1, 1, 0, 0, 0),
+        LocalDateTime.of(2022, 1, 2, 0, 0, 0));
+Specfication<OrderSummary> spec3 = sepc1.and(spec2);
+// 변수 선언 없이도 바로 사용가능하다.
+Specfication<OrderSummary> spec = OrderSummarySpecs.ordererId("user1").and(OrderSummarySpecs.orderDateBetween(from, to));
+```
+* not() 메서드도 제공한다. 정적 메서드로, 조건을 반대로 적용할 때 사용.
+```java
+Specification.not(other);
+```
+
+* where() 메서드 : null 여부를 판단해서 NullPointerException이 발생하는것을 방지해줌.
+  * where() 메서드는 null을 전달하면 아무 조건도 생성하지 않는 스펙 객체를 리턴하고 null이 아니면 인자로 받은 스펙 객체를 기대로 리턴. 
+
+```java
+Specfication<OrderSummary> nullableSpec = createNullableSpec();
+Specfication<OrderSummary> otherSpec = createOtherSpec();
+
+Specfication<OrderSummary> spec = nullableSpec == null ? otherSpec : nullableSpec.and(otherSpec);
+// 위의 코드를 방지 할 수 있다.
+Specfication<OrderSummary> spec = Specification.where(createNullableSpec()).and(createOtherSpec()); // 이렇게
+```
+
+## 정렬 지정
+
+* 스프링 데이터 JPA는 두 가지 방법을 사용해서 정렬을 지정할 수 있다
+  1.메서드 이름에 OrderBy를 사용해서 정렬 기준 지정
+  2.Sort를 인자로 전달.
+
+1. 메서드 이름에 OrderBy 사용
+```java
+public interface OrderSummaryDao extends Repository<OrderSummary, String> {
+    List<OrderSummary> findByOrdererIdOrderByNumberDesc(String ordererId);
+}
+```
+* findByOrdererIdOrderByNumberDesc() 메서드는 다음 조회 쿼리 생성
+  * ordererId 프로퍼티 값을 기준으로 where 지정
+  * number 프로퍼티 값 역순으로 정렬
+
+* 두 개 이상의 프로퍼티에 대한 정렬순서도 지정 가능
+  * findByOrdererIdOrderByOrderDateDescNumberAsc
+    * OrderDate를 먼저 내림차순 정렬 후에 Number 프로퍼티 기준으로 오름차순 정렬 
+
+2. Sort 타입을 파라미터로 넘겨준다.
+
+```java
+public interface OrderSummaryDao extends Repository<OrderSummary, String> {
+    List<OrderSummary> findByOrdererId(String ordererId, Sort sort);
+    List<OrderSummary> findAll(Specification<OrderSummary> spec, Sort sort);
+}
+
+Sort sort = Sort.by("number").ascending(); // number 기준으로 오름차순 정렬 
+// 다음과 같이 사용도 가능
+Sort sort1 = Sort.by("number").ascending();
+Sort sort2 = Sort.by("orderDate").descending();
+Sort sort = sort1.and(sort2);
+// 다음과 같이 변환
+Sort sort = Sort.by("number").ascending().and(Sort.by("orderDate").descending());
+```
+
+## 페이징 처리
+
+* 스프링 데이터 JPA는 페이징 처리를 위해 Pageable 타입 이용. 
+* Sort 타입과 마찬가지로 find 메서드에 Pageable 타입 파라미터를 사용하여 페이징 처리
+
+```java
+public interface MemberDataDao extends Repository<MemberData, String> {
+    List<MemberData> findByNameLike(String name, Pageable pageable);
+}
+
+import org.springfamework.data.domain.PageRequest
+
+PageRequest pageRequest = PageRequest.of(1, 10);
+List<MemberData> user = memberDataDao.findByNameLike("사용자%", pageReq);
+```
+* PageRequest.of(1, 10) : 첫번째 인자는 페이지 번호, 두 번째 인자는 페이지의 개수.
+  * 페이지 번호는 0번부터 시작이므로 두 번째 페이지의 10개 조회. 즉 11~20번째 데이터.
+
+* PageRequest.of(1, 10, sort) : 정렬 순서도 지정 가능 
+```java
+public interface MemberDataDao extends Repository<MemberData, String> {
+    Page<MemberData> findByNameLike(String name, Pageable pageable);
+}
+```
+* Page 타입을 사용하면 데이터 뿐만 아니라 조건에 해당하는 전체 개수도 구할 수 있다. 
+  * Count 쿼리도 실행해서 조건에 해당하는 데이터 개수를 구한다. 
+
+```java
+Pageable pageReq = PageRequest.of(2, 3);
+Page<MemberData> page = memberDataDao.findByBlocked(false, pageReq);
+List<MemberData> content = page.getContent();       // 조회 결과 목록
+long totalElements = page.getTotalElements();       // 조건에 해당하는 전체 개수
+int totalPages = page.getTotalPages();              // 전체 페이지 번호
+int number = page.getNumber();                      // 현재 페이지 번호
+int numberOfElements = page.getNumberOfElements();  // 조회 결과 개수
+int size = page.getSize();                          // 페이지 크기
+```
+
+> 조회 메서드에서 (findBy) Pageable 타입을 사용하더라도 리턴 타입이 Page가 아니면 COUNT 쿼리를 실행하지 않는다.  
+> 하지만 Spec을 사용하는 findAll 메서드에서는 Page 타입이 아니라도 COUNT 쿼리를 실행한다.  
+> 스펙을 사용하고 페이징 처리를 하면서 COUNT 쿼리는 실행하고 싶지 않다면 커스텀 레포지토리기능을 이용해서 직접 구현해야 한다.   
+> https://javacan.tistory.com/entry/spring-data-jpa-range-query 
+
+* 처음부터 N개의 데이터가 필요한데 Pageable을 사용하고 싶지 않다면 ? 
+* findFirstN() 형식의 메서드 와 findTop3()
+> List<Data> findFirst3ByNameOrderByName(String name);  
+> List<Data> findTop3ByNameORderByName(String name);
+  * name 기준으로 오름차순 정렬하여 처음부터 3개를 조회
+
+## 스펙 조건 조합을 위한 스펙 빌더 클래스
+
+```java
+Specification<MemberData> spec = Specification.where(null);
+if (searchRequest.isOnlyNotBlocked()){
+    spec = spec.and(MemberDataSpecs.nonBlocked());
+}
+if (StringUtils.hasText(searchRequest.getNaiiie())){
+    spec = spec.and(MemberDataSpecs.nanieLike(searchRequest.getName()));
+}
+List<MemberData> results = memberDataDao.findAll(spec, PageRequest.of(0, 5));
+        
+// 위 코드는 if와 스펙을 조합하는 코드가 섞여 있어 복잡한 구조를 갖는다. 아래처럼 빌더를 만들어 사용할 수 있다.
+        
+Speciflcation<MemberData> spec = SpecBuilder.builder(MemberData.class)
+    .ifTrue(searchRequest.isOnlyNotBlocked(),
+        () -> MemberDataSpecs.nonBlockedO))
+    .ifHasText(searchRequest.getName(),
+        name -> MemberDataSpecs.nameLike(searchRequest.getName()))
+    .toSpec();
+        
+List<MemberData> result = memberDataDao.findAll(spec, PageRequest.of(0, 5));
+```
+* if 블록을 사용할 때와 비교하면 코드 양은 비슷하지만 메서드를 사용해서 조건을 표현하고 메서드 호출 체인으로 변수 할당을 줄여 가독성을 높히고 구조가 단순해진다. 
+
+* 스펙 빌더 코드
+```java
+
+public class SpecBuilder {
+    public static <T> Builder<T> builder(Class<T> type) {
+        return new Builder<T>();
+    }
+
+    public static class Builder<T> {
+        private List<Specification<T>> specs = new ArrayList<>();
+
+        public Builder<T> and(Specification<T> spec) {
+            specs.add(spec);
+            return this;
+        }
+
+        public Builder<T> ifHasText(String str,
+                                    Function<String, Specification<T>> specSupplier) {
+            if (StringUtils.hasText(str)) {
+                specs.add(specSupplier.apply(str));
+            }
+            return this;
+        }
+
+        public Builder<T> ifTrue(Boolean cond,
+                                 Supplier<Specification<T>> specSupplier) {
+            if (cond != null && cond.booleanValue()) {
+                specs.add(specSupplier.get());
+            }
+            return this;
+        }
+
+        public Specification<T> toSpec() {
+            Specification<T> spec = Specification.where(null);
+            for (Specification<T> s : specs) {
+                spec = spec.and(s);
+            }
+            return spec;
+        }
+    }
+}
+```
+
+## 하이버네이트 @Subselect
+
+* @Subselect는 쿼리 결과를 @Entity로 맵핑해준다.
+```java
+@Entity
+@Immutable
+@Subselect(
+        """
+        select o.order_number as number,
+        o.version,
+        o.orderer_id,
+        o.orderer_name,
+        o.total_amounts,
+        o.receiver_name,
+        o.state,
+        o.order_date,
+        p.product_id,
+        p.name as product_name
+        from purchase_order o inner join order_line ol
+            on o.order_number = ol.order_number
+            cross join product p
+        where
+        ol.line_idx = 0
+        and ol.product_id = p.product_id"""
+)
+@Synchronize({"purchase_order", "order_line", "product"})
+public class OrderSummary {
+  ...
+}
+```
+* @Immutable, @Subselect, @Synchronize는 하이버 네이트 전용 애노테이션인데, 이 태그를 사용시 테이블이 아닌 쿼리 결과를 @Entity로 맵핑 같은.
+* 뷰랑 비슷한 기능이다.
+* 뷰를 수정할 수 없듯이 @Subselect로 조회한 @Entity 객체 역시 수정 할 수 없다.
+  * 실수로 @Subselect를 이용한 @Entity의 매핑 필드를 실행하면 하이버네이트는 변경 내역을 반영하는 update 쿼리를 실행하는데, 매핑한 테이블이 없으므로 에러가 발생한다. 
+  * @Immutable 애노테이션을 사용하면 하이버네이트는 해당 엔티티의 매핑 필드/프로퍼티가 변경되도 DB에 반영하지 않고 무시한다. -> 에러 방지 
+
+* 한 트랜잭션 내에서, 엔티티의 변경 내역이 반영되지도 않았는데 테이블에서 @Subselect 객체가 조회되면?
+  * 최신 값이 아닌 이전 값이 담기게 된다. 
+
+```java
+// purchase_order 테이블에서 조회
+Order order = orderRepository.findByld(orderNumber);
+order.changeShippinglnfo(newInfo); // 상태 변경
+// 변경 내역이 DB에 반영 되지도 않았는데 테이블에서 조회
+List<OrderSummary> summaries = orderSummaryRepository.findByOrdererld(userld);
+```
+
+* 이 문제를 해소하기 위해 @Synchronize이다.
+* @Synchronizes는 해당 엔티티와 관련된 테이블 목록을 명시
+  * 하이버네이트는 엔티티를 로딩하기 전에 지정한 테이블과 관련된 변경이 발생하면 변경내역을 플러시(flush)를 먼저 한다.
+  * 그러므로 트랜잭션 내에서 로딩하는 (조회) 시점에 변경 내역이 반영되어서 최신 값이 나온다. 
+
+* @Subselect는 이름처럼 지정한 쿼리를 from절의 `서브쿼리` 로 사용된다. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
