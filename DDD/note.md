@@ -1588,20 +1588,207 @@ List<OrderSummary> summaries = orderSummaryRepository.findByOrdererld(userld);
 
 * @Subselect는 이름처럼 지정한 쿼리를 from절의 `서브쿼리` 로 사용된다. 
 
+# 응용 서비스영역과 표현 영역 
+* ![](img/d6ac8f57.png)
+* 응용영역과 표현 영역은 사용자와 도메인을 연결해 주는 매개채 역할을 한다. 
+* 표현 영역은 사용자의 요청을 해석하고 URL, 쿠키, 요청 파라미터, 헤더 등을 응용 서비스에 전달하여 기능을 실행한다. 
+
+## 응용 서비스의 역할
+* 응용 서비스의 주요 역할은 도메인 객체를 사용해서 사용자의 요청을 처리.
+* 주로 도메인 객체간의 흐름을 제어한다.
+```java
+public Result doSomeFunc(SomeReq req){
+    // 1. 레포지터리에서 애그리거트를 구함
+    SomeAgg agg = someAggRepository.findByld(req.getldO);
+    checkNull(agg);
+    
+    // 2. 애그리거트의 도메인 기능(어떠한기능)을 실행
+    agg.doFunc(req.getValueO);
+    // 3. 결과 리턴 
+    return createSuccessResult(agg);
+}
+
+// 새로운 애그리거트를 생성하는 서비스 
+public Result doSomeCreation(CreateSomeReq request){
+    //1. 데이터 중복 등 데이터 유효한지 검사. 
+    validate(request)
+    //2. 애그리거트 생성
+    SomeAgg newAgg = createSomeAgg(request);
+    //3. 레포지토리에 저장
+    someAgeeRepository.save(newAgg);
+    //4. 결과 리턴
+    return createSuccessResult(newAgg);
+```
+
+* 응용 서비스가 복잡하다면 서비스 영역에서 도메인 로직의 일부를 구현하고 있을 가능성이 높다.
+  * 응용 서비스가 도메인 로직을 일부 구현하면 코드 중복, 로직 분산 등 코드 품질에 안 좋은 영향을 줄 수 있다.
+  * 도메인 로직은 도메인 영역에서 구현하도록 노력하자. 
+
+* 응용 서비스 영역은 트랜잭션 처리도 담당한다. 응용 서비스는 도메인의 상태 변경을 트랜잭션으로 처리해야 한다.
+  * 트랜잭션 범위 내에서 응용 서비스를 실행해야 데이터 일관성이 깨지지 않고 유지된다. 
+
+## 도메인 로직 넣지 않기 (응용 서비스 영역에 도메인 로직을 구현하지 말자.)
+
+* 도메인 로직은 도메인 영역에 위치하고 응용 서비스는 도메인 로직을 구현하지 않는다고 한다. 
+
+* 다음 예제코드를 보자. 암호 변경 기능이다. 
+```java
+public class ChangePasswordService1 {
+  public void changePassword(String memberld, String oldPWj, String newPw) {
+    Member member = memberRepository.findById(memberId);
+    checkMemberExists(member);
+    member.changePassword(oldPWj, newPw);
+  }
+  ...
+}
+
+public class Member {
+    
+    public void changePassword(String oldPw, String newPw) {
+        if (!matchPassword(oldPw)) throw new BadPasswordException();
+        
+        setPassword(newPw);
+    }
+    
+    // 현재 암호와 일치하는지 검사하는 로직
+    public boolean matchPassword(String pwd) {
+      return passwordEncoder.matches(pwd);
+    }
+    
+    private void setPassword(String newPw) {
+      if (isEmpty(newPw)) throw new IllegalArgumentException("no new password");
+      this.passwrod = newPw;
+    }
+}
+
+public class ChangePasswordService2 { // 이코드 주의
+  
+  public void changePassword(String memberld, String oldPw, String newPw){
+    Member member = memberRepository.findById(memberId);
+    checkMemberExists(member);
+    if (!passwordEncoder.matches(oldPw, member.getPasswordO){
+      throw new BadPasswordException();
+    }
+    member.setPassword(newPw);
+  }
+  ...
+}
+```
+> 기존 암호를 올바르게 입력했는지를 확인하는 것은 도메인의 핵심 로직이기 때문에 바로 위 코드( ChangePasswordService2 )처럼 응용서비스에서 이로직을 구현하면 안된다.  
+> Member.matchPassword() 메서드와 ChangePasswordService2.changePassword() 메서드의 passwordEncoder.matches()의 위치를 잘 보자   
+
+* 도메인 로직을 도메인 영역과 서비스 영역에 분산해서 구현하면 코드 품질에 문제가 발생한다.
+1. 코드의 응집성이 떨어진다.
+   * 도메인 데이터를 조작하는 로직이 한 영역에 위치하지 않고 다른 영역에 있다는 것은 도메인 로직을 파악하기 위해 여러 영역을 분석해야 한다는 것을 의미한다.
+2. 여러 응용 서비스에서 동일한 로직을 구현할 가능성이 높아진다. (코드의 중복!)
+   * 다른 서비스(ex: 비정상 계정 정지 서비스 )에서도 암호를 확인하는 로직을 중복으로 구현해야 한다. 
+   * 도메인 (Member)가 제공하는 도메인 로직을 사용하면 코드 중복 문제는 발생하지 않는다. 
+
+* 도메인 로직이 응용 서비스에 출현하면서 발생하는 두가지 문제는 결과적으로 코드 변경을 어렵게 만든다.
+* 변경 용이성이 떨어진다는 것은 SW의 가치가 떨어지는 것이므로 도메인 로직을 도메인 영역에 모아서 코드 중복을 줄이고 응집도를 높혀야 한ㅏ. 
+
+## 응용 서비스 구현
+
+* 응용 서비스 영역(서비스 영역)은 표현 영역과 도메인 영역을 연결하는 매개체 역할을 하는데 디자인 패턴에서의 퍼사드(facade)와 같은 역할이다. 
+* 응용 서비스 구현 할 때의 몇가지 고려 사항과 트랜잭션과 같은 구현기술의 연동에 대해 정리한다.
+
+## 응용 서비스의 크기 
+
+응용 서비스의 크기를 잘 고려 해야 한다.  
+회원 도메인을 예로, 회원 가입하기, 회원 탈퇴하기, 회원 암호 변경, 비밀번호 초기화 같은 기능을 구현하기 위해 도메인 모델을 사용한다.  
+이 경우 보통 2가지 방법 중 1가지를 사용한다.  
+
+1.한 서비스 클래스에 회원 도메인 모든 기능 구현
+
+2.구분되는 기능별로 모든 서비스 클래스 구현.
+
+### 1. 한 서비스 클래스
+* 동일한 로직을 위한 코드 중복을 제거하기 쉽다는 장점이 있지만, 클래스의 크기(코드 줄 수)가 커지는 단점이 있다.
+* 코드 크기가 커지면 연관성이 적은 코드가 한 클래스에 함께 위치할 가능성이 높아져 결과적으로 관련 없는 코드가 뒤섞여 코드를 이해하는 데 방해가 된다.
+
+### 2. 구분되는 기능별로 서비스 클래스 구현 
+* 클래스 수는 많아지지만 관련 기능을 모두 구현하는 것 보다 코드 품질이 좋다.
+* 각 클래스 별로 필요한 의존 객체만 포함하므로 다른 기능을 구현한 코드에 영향을 받지 않는다. 
+* 그러나 여러 클래스에 중복해서 동일한 코드를 구현할 가능성(중복)이 있으므로 별도 클래스에 로직을 구현해서 코드 중복 방지가 가능하다. 
+
+```java
+// 각 서비스 클래스에서 공통되는 로직을 별도 클래스로 구현
+public final class MemberServiceHelper {
+    public static Member findExistingMember(MemberRepository repo, String memberld){
+        Member member = memberRepository.findById(memberId);
+
+        if (member == null) throw new NoMemberException(memberld);
+        return member;
+    }
+}
+// 공통 로직 제공 메서드를 응용 서비스에서 사용
+import static com.myshop.member.application.MemberServiceHelper.*;
+
+public class ChangePasswordService {
+    private MemberRepository memberRepository;
+    
+    public void changePassword(String memberld, String curPw, String newPw) {
+      Member member = findExistingMember(memberRepository, memberld);
+      member.changePassword(curPw, newPw);
+    }
+  ...
+}
+```
+
+## 응용 서비스의 인터페이스와 클래스. 
+* 인터페이스가 필요한 몇 가지 상황이 있는데 그중 하나는 구현 클래스가 여러 개인 경우다. 
+* 구현 클래스가 다수 존재하거나 런타임에 구현 객체를 교체해야 할 때 인터페이스를 유용하게 사용할 수 있다.
+* 인터페이스가 명확하게 필요하기 전 까지는 응용 서비스에 대한 인터페이스를 작성하는 것이 좋은 선택이라고 볼 수는 없다.
+
+* 테스트 주도 개발(TDD)을 즐겨 하고 표현 영역부터 개발을 시작한다면 응용 서비스 클래스를 먼저 구현하지 않으므로 인터페이스부터 작성하여 컨트롤러의 구현을 완성해 갈 수 있다.
+* 표현 영역이 아닌 도메인 영역이나 응용 영역의 개발을 먼저 시작하면 서비스 클래스가 먼저 만들어진다. 
+  * 이렇게 되면 표현 영역의 단위 테스트를 위해 응용 서비스 클래스의 가짜 객체가 필요한데 이를 위해 인터페이스를 추가할 수도 있다.
+  * 하지만 Mockito와 같은 테스트 도구를 사용하면 대역 객체가 있으므로 인터페이스가 없어도 테스트 할 수 있다.
 
 
+## 메서드 파라미터와 값 리턴. 
+* 응용 서비스는 파라미터로 전달받은 데이터를(dto 등) 사용해서 필요한 기능을 구현하면 된다. 
+* 결과 데이터가 필요한 대표적인 예로 식별자(pk, seq)가 있다. 
+  * 애그리거트(엔티티) 객체를 그대로 리턴할 수도 있다.
+  * 하지만 코딩은 편하지만, 도메인의 로직 실행을 응용 서비스와 표현 영역 두 곳에서 할 수 있게 되므로 응집도를 낮추게 된다. 그러므로 필요한 데이터만 리턴하는것이 응집도를 높이는 방법이다.
 
+## 표현 영역에 의존하지 않기 (의존하지 말자!)
+* 서비스 영역의 메소드 파라미터 타입을 결정할 때 표현 영역과 관련된 타입(HttpServletRequest, HttpSession 등)을 사용하면 안된다. 
+  * 응용 서비스 만 단독으로 테스트하기 어려워진다.
+  * 표현 영역의 구현이 변경되면 응용 서비스 영역의 구현도 바뀌어야 한다. 
+  * 표현 영역의 상태(값)을 응용 서비스 영역에서 변경하면 표현 영역의 상태를 추적하기 어려워진다.
 
+## 트랜잭션 처리 
 
+* 스프링은 @Transactional이 적용된 메서드가 RuntimeException을 발생시키면 트랜잭션 을 롤백한다. 
 
+## 표현 영역
+* 표현 영역의 책임(역할)은 다음과 같다
+  * 사용자가 시스템을 사용할 수 있는 화면을 제공하고 제어한다. 
+  * 사용자의 요청을 알맞은 응용 서비스에 전달하고 결과를 사용자에게 제공한다. 
+  * 사용자의 세션을 관리한다. 
+* ![](img/72524154.png)
 
+## 값 검증.
+* 값 검증은 표현 영역과 응용 서비스 두 곳에서 모두 수행할 수 있다. 
+* 원칙적으로는 모든 값에 대한 검증은 응용서비스 영역에서 처리한다. 
 
+* 표현 영역 에서는 필수 값, 값의 형식, 범위 등을 검증하고
+* 응용 서비스 영역에서 데이터 존재 유무와 같은 논리적 오류를 검증할 수 있다.
 
+## 권한 검사 
 
+* 보통 다음 세 곳에서 권한검사
+  * 표현 영역
+  * 응용 서비스
+  * 도메인
 
+* 표현 영역 에서의 기본적인 검사 - 인증된 사용자인지 검사 
+  * 보통 서플릿 필터에서 인증정보 생성 및 인증여부 검사 
 
+## 조회 전용 기능과 응용 서비스
 
-
+* 서비스에서 수행하는 추가적인 로직이 없고 단일 쿼리만 실행하는 조회 전용 기능이면 표현 영역(컨트롤러) 바로 조회 해도 상관 없다.
 
 
 
