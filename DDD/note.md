@@ -1927,3 +1927,334 @@ public class CreateSurveyService {
   * 이를 통해 도메인 영역이 특정 구현에 종속되는 것을 방지할 수 있고 도메인 영역에 대한 테스트가 쉬워진다. 
 
 
+# 애그리거트 트랜잭션 관리 
+
+* 운영자와 고객이 동시에 한 주문 애그리거트를 수정 할 경우 애그리거트의 일관성이 깨질 수 있다.
+  * ex :운영자가 기존 배송지 정보를 이용해서 배송 상태로 변경했는데 그사이 고객은 배송지 정보를 변경한 것.
+
+* 일관성이 깨지지 않게 하려면 다음 두가지중 하나를 해야 한다.
+  * 운영자가 배송지 정보를 조회하고 상태를 변경하는 동안 고객은 애그리거트를 수정하지 못하게 하는것.
+  * 운영자가 배송지 정보를 조회한 이후에 고객이 정보를 변경하면 운영자가 애그리거트를 다시 조회한 뒤 수정하도록 한다. 
+
+* 선점 잠금과 비선점 잠금의 두 가지 방식이 있다.
+  * Pessimisitic Lock
+  * Optimistic Lock
+
+## 선점 잠금 (Pessimistic Lock)
+* 먼저 애그리거트를 구한 스레드가 애그리거트 사용이 끝날 떄까지 다른 스레드가 수정하지 못하도록 막는 방식. 
+* ![](img/d0ae3647.png)
+* 스레드2는 스레드1이 잠금 해제할 떄 까지 블로킹 된다. 
+* 선점 잠금은 보통 DBMS가 제공하는 행단위 잠금을 사용해서 구현한다. 
+  * for update와 같은 쿼리를 사용해서 특정 레코드에 한 커넥션만 접근할 수 있게 한다.
+
+* JPA EntityManager는 'LockModeType'을 인자로 받는 find() 메서드를 제공한다.
+* LockModeType.PESSIMISTIC_WRITE 값을 인자로 전달하면 해당 엔티티와 매핑된 테이블을 이용해서 선점 잠금 방식 적용 가능
+```java 
+Order order = entityMAnager.find(Order.class, orderNo, LockModeType.PESSIMISTIC_WRITE); 
+```
+
+* JPA 프로바이더와 DBMS에 따라 잠금 모드 구현이 다르다. 
+* 하이버네이트의 경우 PESSIMISTIC_WRITE를 잠금 모드로 사용하면 'for update' 쿼리를 이용해서 선점 잠금을 구현한다.
+
+* `스프링 데이터 JPA는 @Lock 애노테이션을 사용해서 잠금 모드 지정`
+
+```java
+public interface MemberRepository extends Repository<Member, MemberId> {
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select m from Member m where m.id = :id")
+  Optinal<Member> findByIdForUpdate(@Param("id") MemberId memberId);
+}
+```
+
+### 선점 잠금과 교착 상태 
+* 선점 잠금 기능을 사용할 떄는 잠금 순서에 따른 교착 상태(dead lock)가 발생하지 않도록 주의해야 한다.
+ex 다음과 같은 순서의 두 스레드 잠금 시도
+
+1. 스레드1 : A 애그리거트에 대한 선점 잠금 구함
+2. 스레드2 : B 애그리거트에 대한 선점 잠금 구함
+3. 스레드1 : B 애그리거트에 대한 선점 잠금 시도
+4. 스레드2 : A 애그리거트에 대한 선점 잠금 시도
+
+* 이순서에 따르면 스레드 1은 영원히 B 애그리거트에 대한 선점 잠금을 구할 수 없다 
+  * 스레드2가 B 애그리거트에 대한 잠금을 이미 선점하고 있기 때문
+  * 스레드2도 A 애그리거트에 대한 잠금 구할 수 없음
+
+* 더 많은 스레드가 교착상태에 빠지지 않게 잠금을 구할 때 `최대 대기시간`을 지정해야 한다.
+* JPA에서는 선점 잠금 시도시 최대 대기시간을 지정하려면 힌트 사용해야한다.
+```java
+Map<String, Object> hints = new HashMap<>();
+hints.put("javax.persistence.lock.timeout", 2000);
+Order order = entityManager.find(Order.class, LockModeType.PESSIMISTIC_WRITE, hints);
+```
+* javax.persistence.lock.timeout은 잠금을 구하는 대기 시간을 밀리초 단위로 지정
+  * DBMS마다 힌트가 적용되지 않을 수 있으므로 사용하는 DBMS가 관련 기능을 지원하는지 확인해야함
+
+* 스프링 데이터 JPA는 @QueryHints 애노테이션을 사용해서 쿼리 힌트 지정
+```java
+public interface MemberRepository extends Repository<Member, MemberId> {
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @QueryHints({
+    @QueryHint(name = "javax.persistence.lock.timeout", value = "2000")
+  })
+  @Query("select m from Member m where m.id = :id")
+  Optinal<Member> findByIdForUpdate(@Param("id") MemberId memberId);
+}
+```
+> 사용하는 DBMS마다 교착 상태에 빠진 커넥션을 처리하는 방식이 다르므로 어떤식으로 처리하는지 확인해야 한다. 
+
+
+## 비선점 잠금 
+
+* 선점 잠금이 강력해보이지만 모든 트랜잭션 충돌 문제가 해결되는 것은 아니다. 
+* 배송 상태 변경 전에 배송지를 한번 더 확인하지 않으면 운영자는 다른 배송지로 물건을 발송하고 고객은 배송지를 변경했음에도 불구하고 엉뚱한곳으로 가는 상황이 발생.
+* 비선점 잠금은 동시에 접근하는것을 막는 대신 변경한 데이터를 `실제 DBMS에 반영하는 시점에 변경 가능 여부를 확인하는 방식.`
+* 비선점 잠금을 구현하려면 애그리거트에 버전으로 사용할 숫자 타이 ㅂ프로퍼티를 추가해야 한다.
+  * 애그리거트를 수정할 때마다 버전으로 사용할 프로퍼티 값이 1씩 증가한다.
+```sql
+UPDATE aggtable SET version = version + 1, colx = ?, coly = ?
+WHERE aggid = ? and version = 현재버전
+```
+* 이 쿼리는 수정할 애그리거트와 매핑되는 테이블의 버전 값이 현재 애그리거트의 버전과 동일한 경우에만 데이터를 수정한다. 
+* 다른 트랜잭션이 먼저 데이터를 수정해서 버전 값이 바뀌면 데이터 수정에 실패한다. 
+
+* ![](img/0f4b6d50.png)
+
+* JPA는 버전을 이용한 비선점 잠금 기능을 지원한다
+```java
+@Entity
+@Table(name = "purchase_order")
+@Access(AccessType.FIELD)
+public class Order {
+  ...
+  @Version
+  private long version;
+  ...
+}
+```
+
+* JPA는 엔티티가 변경되어 UPDATE 쿼리를 실행할 때 @Version에 명시한 필드를 이용해서 비선전 잠금 쿼리를 실행한다.
+  * 트랜잭션 종료 시점에 비선점 잠금을 위한 쿼리를 실행한다.
+
+* 비선전 잠금을 위한 쿼리 실행 시 쿼리 실행 결과로 수정된 행의 개수가 0이면 이미 누군가 앞서 데이터를 수정한 것이다.
+
+```java 
+
+@Service
+public class ChangeShippingService {
+    private OrderRepository orderRepository;
+
+    @Transactional
+    public void changeShipping(ChangeShippingRequest changeReq) {
+        Optional<Order> orderOpt = orderRepository.findById(new OrderNo(changeReq.getNumber()));
+        Order order = orderOpt.orElseThrow(() -> new NoOrderException());
+        order.changeShippingInfo(changeReq.getShippingInfo());
+    }
+}
+```
+* 위 코드는 트랜잭션 범위를 정했으므로 메서드가 끝날 때 트랜잭션이 종료되고, 이 시점에 트랜잭션 충돌이 발생시 `OptimisticLockingFailureException`이 발생한다.
+* 다음 코드로 이 익셉션이 발생했는지에 따라 트랜잭션 충돌이 일어났는지 확인할 수 있다.
+```java
+try {
+  changeShippingService.changeShipping(changeRequest);
+  return "success"
+} catch(OptimisticLockingFailureException ex) {
+  return "fail"; // 트랜잭션이 충돌했다는 메시지를 보여줄 수 있다. 
+}
+```
+
+* 응용서비스에 전달할 요청 데이터로 `버전 값`을 같이 보내주고, 요청받을 때 버전값을 같이 받는다.
+* 응용 서비스는 전달받은 버전 값을 이용해서 애그리거트 버전과 일치하는지 확인하고 일치하는 경우에만 기능을 수행한다. 
+  * 전달받은 버전 값으로 응용 서비스 계층에서 검증을 하여 버전이 틀리면 Exception을 발생시키고 그 후에 예외처리를 한다. 
+
+### 강제 버전 증가
+
+* 애그리거트에 루트 엔티티 외에 다른 엔티티가 존재할 때 루트가 아닌 다른 엔티티의 값이 바뀌는 경우 문제가 된다.
+  * JPA는 루트 엔티티의 버전 값을 증가시키지 않는다. -> 루트 엔티티 자체의 값은 바뀌지 않으므로
+  * 애그리거트 관점에서는 구성요소가 바뀌었으므로 논리적으로는 바뀐건데 버전은 안바뀌었으므로 문제다.
+
+* JPA는 이 문제를 처리할 수 있게 EntityManager.find() 메서드로 강제로 버전 값을 증가시키는 잠금 모드를 지원한다. 
+```java
+@Repository
+public class JpaOrderRepository implements OrderRepository {
+  @PersistenceContext
+  private EntitiyManager entityManager;
+
+  @Override
+  public Order findByIdOptimisticLockMode(OrderNo id) {
+    return entityManager.find(
+      Order.class, id, LockModeType.OPTIMISTIC_FORCE_INCREMENT);
+    )
+  }
+}
+```
+* LockModeType.OPTIMISTIC_FORCE_INCREMENT : 엔티티 상태가 변경 되었는지 상관없이 트랜잭션 종료 시점에 버전 값 증가 처리
+* 스프링 데이터 JPA에서는 @Lock 애노테이션 이용해서 지정 
+
+## 오프라인 선점 잠금
+
+* 아틀라시안의 컨플루언스는 문서를 편집할 때 누군가 먼저 편집을 하는 중이면 다른 사용자가 문서를 수정하고 있다는 문구를 보여줌.
+  * 이 문구를 통해 여러 사용자가 접근하였을 때 발생하는 충돌을 사전 방지.
+
+* 충돌여부는 알려주지만 동시에 수정하는 것은 막지는 않는다. 
+  * 더 엄격하게 충돌을 막고 싶다면 누군가 수정 화면을 보고 있을 때 수정 화면 자체를 실행하지 못하도록 해야함.
+
+* 이때 필요한것이 오프라인 선점 잠금 방식(offline Pessimistic Lock)
+
+* 여러 트랜잭션에 걸쳐 동시 변경을 막는다.
+  1. 첫 번째 트랜잭션 시작 시 오프라인 잠금을 선점
+  2. 마지막 트랜잭션에서 잠금 해제
+  * 잠금을 해제하기 전 까지 다른 사용자는 잠금을 구할 수 없다. 
+
+
+* ![](img/4d602440.png)
+
+* 잠금 유효 시간을 가져야 한다
+  * 예를 들어 수정 폼에서 1분 단위로 Ajax 호출을 해서 잠금 유효 시간을 1분씩 증가 시키는 방법이 있다.
+
+### 오프라인 선점 잠금을 위한 LockManager 인터페이스와 관련 클래스
+
+* 오프라인 선점 잠금은 잠금 선점 시도, 잠금 확인, 잠금 해제, 잠금 유효시간 연장의 4가지 기능이 필요하다.
+```java
+public interface LockManager {
+
+  LockId tryLock(String type, String id) throws LockException;
+
+  void checkLock(LockId lockId) throws LockException;
+
+  void releaseLock(LockId lockId) throws LockException;
+
+  void extendLockExpiration(LockId lockId, long inc) throws LockExpception;
+}
+```
+
+* tryLock(String type, String id) : 각각 잠글 대상 타입과 식별자를 값으로 전달. 잠금을 식별할 때 사용할 LockId 리턴. 
+  * 잠금 성공시 LockId 리턴. 다음에 잠금을 해제할 때 사용. 없으면 해제 불가 
+
+* checkLock(LockId lockId) : 잠금 선점 확인
+  
+* releaseLock(LockId lockId) : 잠금 해제
+
+* 잠금 유효 시간이 지났으면 이미 다른 사용자가 잠금을 선점한다.
+* 잠금을 선점하지 않은 사용자가 기능을 실행했다면 기능 실행을 막아야 한다. 
+
+
+## DB(데이터베이스)를 이용한 LockManager 구현
+
+* 잠금 정보를 저장할 테이블과 인텍스
+```sql
+# Mysql 쿼리
+create table (
+  `type` varchar(255),
+  id varchar(255),
+  lockid varchar(255),
+  expiration_time datetime,
+  primary key (`type`, id)
+) character set utf8;
+
+create unique index locks_idx on locks(lockid);
+```
+
+
+* Order 타입의 1번 식별자를 갖는 애그리거트에 대한 잠금
+```sql
+insert into locks values('Order', '1', '생성한 lockid', '2016-03-28 09:10:00');
+```
+
+* 스프링 jdbcTemplate을 이용한 SpringLockManager의 tryLock 구현
+```java
+
+@Component
+public class SpringLockManager implements LockManager {
+    private int lockTimeout = 5 * 60 * 1000;
+    private JdbcTemplate jdbcTemplate;
+
+    private RowMapper<LockData> lockDataRowMapper = (rs, rowNum) ->
+            new LockData(rs.getString(1), rs.getString(2),
+                    rs.getString(3), rs.getTimestamp(4).getTime());
+
+    public SpringLockManager(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Override
+    public LockId tryLock(String type, String id) throws LockException {
+        checkAlreadyLocked(type, id);
+        LockId lockId = new LockId(UUID.randomUUID().toString());
+        locking(type, id, lockId);
+        return lockId;
+    }
+
+    private void checkAlreadyLocked(String type, String id) {
+        List<LockData> locks = jdbcTemplate.query(
+                "select * from locks where type = ? and id = ?",
+                lockDataRowMapper, type, id);
+        Optional<LockData> lockData = handleExpiration(locks);
+        if (lockData.isPresent()) throw new AlreadyLockedException();
+    }
+
+    private Optional<LockData> handleExpiration(List<LockData> locks) {
+        if (locks.isEmpty()) return Optional.empty();
+        LockData lockData = locks.get(0);
+        if (lockData.isExpired()) {
+            jdbcTemplate.update(
+                    "delete from locks where type = ? and id = ?",
+                    lockData.getType(), lockData.getId());
+            return Optional.empty();
+        } else {
+            return Optional.of(lockData);
+        }
+    }
+
+    private void locking(String type, String id, LockId lockId) {
+        try {
+            int updatedCount = jdbcTemplate.update(
+                    "insert into locks values (?, ?, ?, ?)",
+                    type, id, lockId.getValue(), new Timestamp(getExpirationTime()));
+            if (updatedCount == 0) throw new LockingFailException();
+        } catch (DuplicateKeyException e) {
+            throw new LockingFailException(e);
+        }
+    }
+
+    private long getExpirationTime() {
+        return System.currentTimeMillis() + lockTimeout;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Override
+    public void checkLock(LockId lockId) throws LockException {
+        Optional<LockData> lockData = getLockData(lockId);
+        if (!lockData.isPresent()) throw new NoLockException();
+    }
+
+    private Optional<LockData> getLockData(LockId lockId) {
+        List<LockData> locks = jdbcTemplate.query(
+                "select * from locks where lockid = ?",
+                lockDataRowMapper, lockId.getValue());
+        return handleExpiration(locks);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Override
+    public void extendLockExpiration(LockId lockId, long inc) throws LockException {
+        Optional<LockData> lockDataOpt = getLockData(lockId);
+        LockData lockData =
+                lockDataOpt.orElseThrow(() -> new NoLockException());
+        jdbcTemplate.update(
+                "update locks set expiration_time = ? where type = ? AND id = ?",
+                new Timestamp(lockData.getTimestamp() + inc),
+                lockData.getType(), lockData.getId());
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Override
+    public void releaseLock(LockId lockId) throws LockException {
+        jdbcTemplate.update("delete from locks where lockid = ?", lockId.getValue());
+    }
+
+    public void setLockTimeout(int lockTimeout) {
+        this.lockTimeout = lockTimeout;
+    }
+}
+```
