@@ -2339,6 +2339,340 @@ public class SpringLockManager implements LockManager {
 > 코드로 생각하면 마이크로서비스마다 프로젝트를 생성하므로 바운디드 컨텍스트마다 프로젝트를 만들게 된다.  
 
 
+## 바운디드 컨텍스트 간 관계
 
+* 바운디드 컨텍스트는 다양한 방식으로 관계를 맺는다.
+* 두 바운디드 컨텍스트간 관계 중 가장 흔한 관계는 한쪽에서 API를 제공하고 다른쪽에서 그 API를 호출하는 관계이다.
+* API를 사용하는 바운디드 컨텍스트는 API를 제공하는 바운디드 컨텍스트에 의존하게 된다. 
+
+
+# 이벤트
+
+## 시스템 간 강결합 문제
+
+* 쇼핑몰에서 구매 취소 시 환불. 
+* 환불 기능을 실행하는 주체는 주문 도메인 엔티티.
+
+```java
+public class Order {
+  // 외부 서비스를 실행하기 위해 도메인 서비스를 파라미터로 전달받음
+  public void cancel(RefundService refundService) {
+    verifyNotYetShipped();
+    this.state = OrderState.CANCELD;
+
+    this.refundStatus = State.REFUND_STARTED;
+
+    try {
+      refundService.refund(getPaymentId());
+      this.refuntStatus = State.REFUND_COMPLETED;
+    } catch(Exception e) {
+      ...
+    }
+  }
+}
+```
+
+* 응용 서비스에서 환불 기능을 실행할 수도 있다.
+
+```java
+public class CancelOrderService {
+  private RefundService refundService;
+
+  @Transactional
+  public void cancel(OrderNo orderNo) {
+    Order order = findOrder(orderNo);
+    order.cancel();
+
+    order.refundStarted();
+
+    try {
+      refundService.refund(order.getPaymentId());
+      order.refundCompleted();
+    } catch (Exception e) {
+      ...
+    }
+  }
+}
+```
+
+* 보통 결제 시스템은 외부에 존재하는데 이 때 두가지 문제가 발생 가능.
+  * 외부 서비스 비정상 시 트랜잭션 처리
+    * 롤백해야하는가? 일단 커밋?
+
+* 도메인 객체에 서비스를 전달할 시 다른 문제는 기능을 추가할 때 발생한다. 
+  * 영향을 주는 외부 서비스도 증가한다 
+
+* 이런 결합적인 부분을 없앨 수 있는것이 이벤트이다.
+  * 특히 비동기 이벤트
+
+
+## 이벤트 개요
+* 이벤트(Event) : 과거에 벌어진 어떤 것.
+* 이벤트가 발생한 다는 것은 상태가 변경됐다는 것. 
+
+* 도메인 모델에서도 도메인의 상태 변경을 이벤트로 표현할 수 있다.
+  * ex) 주문을 취소할 때 이메일을 보낸다 -> 주문 취소 상태 이벤트 
+
+## 이벤트 관련 구성요소
+1. 이벤트
+2. 이벤트 생성 주체
+3. 이벤트 디스패처(퍼블리셔)
+4. 이벤트 핸들러(구독자)
+
+* ![](img/00713e31.png)
+
+* 이벤트 생성 주체는 엔티티, 밸류, 도메인 서비스와 같은 도메인 객체.
+  * 도메인 객체는 도메인 로직을 실행해서 상태가 바뀌면 관련 이벤트를 발생시킨다.
+
+* 이벤트 핸들러(handler)는 이벤트 생성 주체가 발생한 이벤트에 반응.
+  * 핸들러는 생성 주체가 발생한 이벤트를 전달받아 원하는 기능 실해
+
+* 이벤트 디스패처(dispatcher) :  이벤트 생성 주체와 이벤트 핸들러를 연결해주는것
+  * 이벤트 생성 주체가 이벤트를 생성해서 디스패처에 이벤트 전달.
+  * 이벤트를 전달받은 디스패처는 해당 이벤트를 처리할 수 있는 핸들러에 이벤트 전파.
+  * 동기나 비동기로 실행
+
+## 이벤트의 구성
+이벤트는 발생한 이벤트에 대한 정보를 담는다.
+* 이벤트 종류 : 클래스 이름으로 이벤트 종류 표현
+* 이벤트 발생 시간
+* 추가 데이터 : 이벤트와 관련된 정보. 주문번호, 배송지, 주문자 등
+
+* ex ) 배송지 변경 이벤트
+
+```java
+public class ShippingInfoChangedEvent {
+  private String orderNumber;
+  private long timestamp;
+  private ShippingInfo newShippingInfo;
+}
+```
+* 클래스 이름이 과거 시제인 이유는 과거에 벌어진것을 표현하기 때문에 이벤트 이름에는 과거 시제 사용 
+
+* 이 이벤트 발생 주체는 Order
+```java
+public class Order {
+  public void changeShippingInfo(ShippingInfo newShippingInfo) {
+    verifyNotYetShipped();
+    setShippingInfo(newShippingInfo);
+    Events.raise(new ShippingInfoChangedEvent(number, newShippingInfo));
+  }
+}
+```
+
+* ShippingInfoChangedEvent를 처리하는 핸들러는 디스패처로부터 이벤트를 전달받아 필요한 작업 수행
+
+```java
+public class ShippingInfoChangedHandler {
+  @EventListener(ShippingInfoChangedEvent.class)
+  public void handle(ShippingInfoChangedEvent evt) {
+    shippingInfoSynchronizer.sync(evt.getOrderNumber(), evt.getNewShippingInfo());
+  }
+}
+```
+
+* 이벤트는 이벤트 핸들러가 작업을 수행하는데 필요한 데이터를 담아야 한다.
+  * 데이터가 부족하면 관련 API를 호출하거나 DB에서 데이터를 직접 읽어와야한다. 
+
+
+
+
+## 이벤트 용도
+
+이벤트는 크게 두 가지 용도로 쓰인다
+
+1. 트리거
+2. 서로 다른 시스템간의 데이터 동기화
+
+
+#### 1. 트리거
+* 도메인의 상태가 바뀔 때 다른 후처리가 필요하면 후처리를 실행하기 위해 사용.
+  * 주문 취소시 환불 처리해야 하는데, 이 떄 환불 처리를 위한 트리거로 주문 취소 이벤트 사용 가능
+
+* ![](img/fc160b6d.png)
+
+#### 2. 서로 다른 시스템간의 데이터 동기화
+
+* 배송지 변경 시 외부 배송 서비스에 바뀐 배송지 정보를 전송해야함.
+
+## 이벤트 장점
+* 이벤트 사용시 서로 다른 도메인 로직이 섞이는 것을 방지할 수 있다. 
+
+* ![](img/bd8032e8.png)
+
+## 이벤트, 핸들러, 디스패처 구현
+
+이벤트와 관련된 코드는 다음과 같다.
+
+1. 이벤트 클래스 : 이벤트를 표현
+2. 디스패처 : 스프링이 제공하는 ApplicationEventPublisher를 사용
+3. Events : 이벤트를 발행. 이벤트 발행을 위해 ApplicationEventPublisher를 사용
+4. 이벤트 핸들러 : 이벤트를 수신해서 처리
+
+> 이벤트 디스패처를 구현할 수도 있지만 스프링에서는 스프링이 제공하는 이벤트 관련 기능을 사용하면 편하다 ..
+
+
+## 이벤트 클래스.
+
+* 이벤트 자체를 위한 상위 타입은 존재하지 않는다.
+  * 모든 이벤트가 공통으로 갖는 프로퍼티(필드)가 존재하면 관련 상위 클래스를 만들어도 된다. 
+* 이벤트는 상태 변화나 사건을 의미하므로 이벤트 클래스의 이름을 결정할 때에 과거 시제만 사용.
+
+```java
+public class OrderCanceledEvent extends Event {
+  private String orderNumber;
+
+  public OrderCanceledEvent(String number) {
+    super();
+    this.orderNumber = number;
+  }
+}
+
+public class Evnets {
+  private static ApplicationEventPublisher publisher;
+
+  static void setPublisher(ApplicationEventPublisher publisher) {
+    Events.publisher = publisher;
+  }
+
+  public static void raise(Object event) {
+    if (publisher != null) {
+        publisher.publishEvent(event);
+    }
+  }
+}
+
+// 설정클래스 ApplicationEventPublisher를 전달하기위해
+@Configuration
+public class EventsConfiguration {
+  @Autowired
+  private ApplicationContext applicationContext;
+
+  @Bean
+  public InitializingBean eventInitializer() {
+    return () -> Events.setPublisher(appliactionContext);
+  }
+}
+
+// 이벤트를 처리할 핸들러
+@Service
+@RequiredArgumentsConstructor
+public class OrderCanceledEventHandler {
+  private RefundService refundService;
+
+  @EventListener(OrderCanceldEvent.class)
+  public void handler(OrderCanceledEvent event) {
+    refundService.refund(event.getOrderNumber());
+  }
+  
+}
+```
+
+* raise() : ApplicationEventPublisher.publishEvent()를 이용해 이벤트 발생. 
+
+* publishEvent() 메서드를 실행할 때 @EventListener 에 해당 class 값을 갖는 @EventListener 애너테이션을 붙인 메서드를 찾아 실행한다. 
+
+## 이벤트 처리 흐름
+
+* ![](img/fc85c169.png)
+
+1. 도메인 기능 실행
+2. 도메인 기능은 Events.raise()를 이용해서 이벤트 발생
+3. Events.raise()는 publisher를 이용해서 이벤트 출판
+4. ApplicationEventPublisher는 @EventListener(이벤트타입.class) 애너테이션이 붙은 메서드를 찾아 실행 
+
+* 응용 서비스와 동일한 트랜잭셤 범위에서 이벤트 핸들러를 실행.
+* 즉 도메인 상태 변경과 이벤트 핸들러는 같은 트랜잭션 범위에서 실행된다.
+
+
+## 동기 이벤트 처리 문제 
+
+* 외부 서비스에 영향을 받는 문제가 있다.
+
+```java
+//1. 응용 서비스 코드
+@Transcational // 외부 연동 과정에서 익셉션이 발생하면 트랜잭션 처리는?
+public void cancel(OrderNo orderNo) {
+  Order order = findOrder(orderNo);
+  order.cancel(); // order.cancel() 에서 OrderCanceledEvent 발생
+}
+
+
+//2. 이벤트를 처리하는 코드
+@Service
+public class OrderCanceledEventHandler {
+  @EventListener(OrderCanceledEvent.class)
+  public void handler(OrderCanceledEvent event) {
+    // refundService.refund()가 느려지거나 익셉션이 발생하면?
+    refundService.refund(event.getOrderNumber());
+  }
+}
+```
+
+* 외부 시스템과의 연동을 동기로 처리할 때 발생하는 성능, 트랜잭션 범위 문제를 해소하는 방법
+1. 이벤트를 비동기로 처리
+2. 이벤트와 트랜잭션 연계
+
+
+## 비동기 이벤트 처리
+
+* 구현해야 할 요구사항 중 'A 하면 이어서 B' 라는 건 실제로 'A 하면 최대 언제까지 B 하라' 인 경우가 있따.
+  * 일정 시간 안에만 후속 조치 처리하면 되는 기능
+
+* A 이벤트가 발생하면 별도 스레드로 B를 수행하는 핸들러를 실행하는 방식으로 요구사항을 구현 할 수 있다.
+
+* 이벤트를 비동기로 구현하는 다양한 방법  중 4가지
+
+1. 로컬 핸들러를 비동기로 실행
+2. 메시지 큐 사용
+3. 이벤트 저장소와 이벤트 포워더 사용
+4. 이벤트 저장소와 이벤트 제공 API 사용하기
+
+## 로컬 핸들러 비동기 실행
+* 이벤트 핸들러를 별도 스레드로 실행하는것
+* 스프링이 제공하는 @Async 애노테이션 사용
+  * @EnableAsync 애노테이션을 사용해서 홣성화
+  * 이벤트 핸들러 메서드에 @Async 애노테이션을 붙인다. 
+
+```java
+@Service
+public class OrderCanceledEventHandler {
+  @Async
+  @EventListener(OrderCanceledEvent.class)
+  public void handle(OrderCanceledEvent event) {
+    refundService.refund(event.getOrderNumber());
+  }
+}
+```
+
+## 메시징 시스템을 이용한 비동기 구현
+* 카프카(kafka)나 래빗MQ (RabbitMQ) 같은 메시지 큐 사용
+* 이벤트가 발생하면 이벤트 디스패처는 이벤트를 메시지 큐에 보냄
+* 메시지 큐는 이벤트를 메시지 리스너에 전달
+* 메시지 리스터는 알맞은 이벤트 핸들러를 이용해서 이벤트 처리 
+  * 이 때, 이벤트를 메시지 큐에 저장하는 과정과 메시지 큐에서 이벤트를 읽어와 처리하는 과정은 별도 스레드나 프로세스로 처리됨 
+
+* ![](img/98c699d8.png)
+
+* 필요하다면 이벤트를 발생시키는 또메인 기능과 메시지 큐에 이벤트를 저장하는 절차를 한 트랜잭션으로 묶어야 한다.
+* 도메인 기능을 실행한 결과를 DBd에 반영하고 이 과정에서 발생한 이벤트를 메시지 큐에 저장하는 것을 트랜잭션 범위에서 실행하려면 '글로벌 트랜잭션이 필요'  
+* 글로벌 트랜잭션을 사용하면 안전하게 이벤트를 메시지 큐에 전달할 수 있는 장점이 있지만, 반대로 그로인해 전체 성능이 떨어지는 장점도 있다.
+
+
+## 이벤트 저장소를 이용한 비동기 처리
+* 일단 이벤트를 DB에 저장한 뒤에 별도 프로그램을 이용해서 이벤트 핸들러에 전달
+
+* ![](img/065d0043.png)
+
+1. 이벤트가 발생하면 핸들러는 스토리지(저장소)에 이벤트 저장
+2. 포워더는 주기적으로 이벤트 저장소에서 이벤트를 가져와 이벤트 핸들러 실행.
+  * 포워더는 별도 스레드를 이용하기 때문에 이벤트 발행과 처리가 비동기로 처리 
+
+* ![](img/b3f8ee91.png)
+* 다른 방법은 ,이벤트를 외부에 제공하는 API 사용 
+
+* API 방식과 포워더 방식의 차이점은 이벤트를 전달하는 방식.
+  * 포워더는 포워더를 이용해서 이벤트를 외부에 전달
+  * API 방식은 외부 핸들러가 API 서버를 통해 이벤트 목록을 가져감. 
 
 
