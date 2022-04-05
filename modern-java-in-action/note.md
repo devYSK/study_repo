@@ -203,3 +203,134 @@ Runnable r = () -> System.out.println(portNumber);
 * 그래야 람다는 변수가 아닌 값에 국한되어 어떤 동작을 수행한다는 사실이 명확해짐.
 * 지역 변수값은 스택에 존재하므로 자신의 스레드와 생존을 같이해야 한다.
 
+## 메서드 참조
+* 기존의 메서드 정의를 재활용해서 람다처럼 전달할 수 있다.
+* 명시적으로 메서드명을 참조함으로써 가독성을 높일 수 있따.
+* 메서드명 앞에 구분자 ::를 붙이는 방식으로 활용 가능.
+```java
+(Apple apple) -> apple.getWeight(); -> Apple::getWeight
+(String s) -> System.out.println(s) -> System.out::println
+```
+* ![](.note_images/0cd19eaf.png)
+
+## 생성자 참조
+* ClassName::new
+```java
+Supplier<Apple> c1 = Apple::new;
+Apple a1 = c1.get(); // Supplier의 get 메서드를 통해 메서드 실행
+```
+
+* 인스턴스화 하지 않고도 생성자에 접근할 수 있는 기능을 만들 수 있다.
+    * Map으로 생성자와 문자열값을 관련시킬 수 있다.
+
+```java
+static Map<String, Function<Intger, Fruit>> map = new HashMap<>();
+static {
+    map.put("apple", Apple::new);
+    map.put("orange", Orange::new);
+}
+
+public static Fruit giveMeFruit(String fruit, Integer weight) {
+    return map.get(fruit.toLoWerCase())
+                .apply(weight);
+}
+```
+
+* 인수가 세개인 생성자 참조를 사용하려면?
+```java
+public interface TriFunction<T, U, V, R> {
+    R apply(T t, U u, V v);
+}
+
+TriFunction<Integer, Integer, Integer, Color> colorFactory = Color::new;
+```
+
+## 람다, 메서드 참조 활용하기
+
+### 1단계 : 코드 전달 방법
+```java
+void sort(Comparator<? super E> c);
+```
+* 이 코드는 Comparator 객체를 인수로 받아 두 사과를 비교한다.
+* sort의 동작은 파라미터화 되었다고 할 수 있다.
+```java
+public class AppleComparator implements Comparator<Apple> {
+    public int compare(Apple a1, Apple a2) {
+        return a1.getWeight().compareTo(a2.getWeight());
+    }
+}
+
+inventory.sort(new AppleComparator());
+
+// 람다 표현식으로 변환
+inventory.sort((a1, a2) -> a1.getWEight().compareTo(a2.getWeight()));
+
+// 정먹세더드 comparing 사용
+Comparator<Apple> c = Comparator.comparing((Apple a) -> a.getWeight());
+
+inventory.sort(comparing(apple -> apple.getWeight()));
+
+// 메서드 참조 사용
+inventory.sort(comparing(Apple::getWeight));
+```
+
+### Comperator 연결
+* 무게 비교시, 무게가 같은 두 사과가 존재한다면 어떻게 해야 할까? 
+    * 만약 무게로 두 사과를 비교한 다음에 무게가 같다면 원산지 국가별로 사과를 정렬한다면?
+
+* thenComparing 메서드로 체이닝 해서 두 번째 비교자를 만든다
+```java
+inventory.sort(comparing(Apple::getWeight)
+        .reversed()
+        .thenComparing(Apple::getCountry));
+```
+### Predicate 조합
+
+* Predicate 인터페이스는 복잡한 프레디케이트를 만들 수 있도록 `negate, and, or` 세가지 메서드 제공
+
+```java
+Predicate<Apple> notRedApple = redApple.negate; // 기존 프레디케이트 객체 redApple의 결과를 반대로 한 객체를 만듬 
+
+// and 메서드를 이용해서 조합
+Predicate<Apple> redAndHeavyApple = redApple.and(apple -> apple.getWeight > 150); 
+
+// or 메서드를 이용해서 조합
+
+Predicate<Apple> redAndHeavyAppleOrGreen = redApple.and(apple -> apple.getWeight() > 150)
+                                                    .or(apple -> GREEN.eqauls(a.getColor()));
+```
+
+### Function 조합
+
+* andThen, compose 두가지 디폴트 메서드 제공
+
+* andThen : 주어진 함수를 먼저 적용한 결과를 다른 함수의 입력으로 전달하는 함수를 반환
+* ex : (x -> x + 1) 시키는 f라는 함수가 있고 숫자에 2를 곱하는 g라는 숫자가 있따면?
+```java
+Function<Integer, Integer> f = x -> x + 1;
+Function<Integer, Integer> g = x -> x * 2;
+Function<Integer, Integer> h = f.andThen(g);
+```
+* f 먼저 연산 하고 g를 연산함.
+
+* compose : 인수로 주어진 함수를 먼저 실행한 다음에 그 결과를 외부 함수의 인수로 제공
+```java
+Function<Integer, Integer> f = x -> x + 1;
+Function<Integer, Integer> g = x -> x * 2;
+Function<Integer, Integer> h = f.compose(g);
+int result = h.apply(1); // 3을 반환
+```
+* f(g(x))가 되는것.
+    * 인수인 g함수가 먼저 실행되고 그 결괏값을 f함수로 넘겨줘서 연산한다.
+
+## 정리
+
+* 람다 표현식은 익명 함수의 일종. 파라미터 리스트, 바디, 반환형식을 가지며 예외를 던질 수 있음.
+* 함수형 인터페이스는 하나의 추상 메서드만을 정의하는 인터페이스
+* 함수형 인터페이스를 기대하는곳에서만 람다 표현식 사용 가능
+* 람다 표현식을 이용해서 함수형 인터페이스의 추상 메서드를 제공할 수 있으며, 람다 표현식 전체가 `함수형 인터페이스의 인스턴스` 로 취급됨
+
+
+
+
+
