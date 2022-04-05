@@ -2675,4 +2675,119 @@ public class OrderCanceledEventHandler {
   * 포워더는 포워더를 이용해서 이벤트를 외부에 전달
   * API 방식은 외부 핸들러가 API 서버를 통해 이벤트 목록을 가져감. 
 
+### 이벤트 저장소 클래스 다이어그램 
+* ![](img/cb8ea22a.png)
+  * EventEntry : 이벤트 저장소에 보관할 데이터.
+  * EventStore : 이벤트를 저장하고 조회하는 인터페이스 제공
+  * jdbcEventStore : JDBC를 이용한 EventStore 구현클래스
+  * EventApi : REST API를 이용해서 이벤트 목록 제공하는 컨트롤러 
+
+
+* 포워더 구현
+
+```java
+
+@Component
+@RequiredArgumentsContstructor
+public class EventForwarder {
+    private static final int DEFAULT_LIMIT_SIZE = 100;
+
+    private EventStore eventStore;
+    private OffsetStore offsetStore;
+    private EventSender eventSender;
+    private int limitSize = DEFAULT_LIMIT_SIZE;
+
+    @Scheduled(initialDelay = 1000L, fixedDelay = 1000L)
+    public void getAndSend() {
+        long nextOffset = getNextOffset();
+        List<EventEntry> events = eventStore.get(nextOffset, limitSize);
+        if (!events.isEmpty()) {
+            int processedCount = sendEvent(events);
+            if (processedCount > 0) {
+                saveNextOffset(nextOffset + processedCount);
+            }
+        }
+    }
+
+    private long getNextOffset() {
+        return offsetStore.get();
+    }
+
+    private int sendEvent(List<EventEntry> events) {
+        int processedCount = 0;
+        try {
+            for (EventEntry entry : events) {
+                eventSender.send(entry);
+                processedCount++;
+            }
+        } catch(Exception ex) {
+            // 로깅 처리
+        }
+        return processedCount;
+    }
+
+    private void saveNextOffset(long nextOffset) {
+        offsetStore.update(nextOffset);
+    }
+
+}
+```
+
+* 일정 주기로(@Scheduled) EventStore에서  이벤트를 읽어와 이벤트 핸들러에 전달
+
+자동 증가 컬럼(Seq, Identity) 사용시 주의 사항.
+* 자동 증가 컬럼은 insert 쿼리를 실행하는 시점에 증가하는게 아닌 `트랜잭션 커밋` 시점에 DB에 반영된다.
+* 즉 insert 쿼리가 실행해서 자동 증가 컬럼이 증가 했더라도 트랜잭션을 커밋하기 전에 조회하면 증가한 값을 가진 레코드는 조회되지 않는다.
+* 이 문제가 발생하지 않도록 하려면 ID를 기준으로 데이터를 지연 조회하는 방식을 사용해야 한다
+  * https://javacan.tistory.com/entry/MySQL-auto-inc-col-gotcha
+
+## 이벤트 적용시 추가 고려사항
+
+구현할 때 추가로 고려할 점이 있다.
+
+1. 이벤트에 발생 주체 정보를 넣지 않음
+2. 포워더에서 전송 실패를 얼마나 허용할 것인가. 
+  * 별도 실패용 DB나 메시지 큐에 저장하기도 함.
+
+3. 이벤트 손실. 이벤트 발생과 이벤트 저장을 한 트랜잭션으로 처리하기 때문에 트랜잭션에 성공해야 이벤트가 저장됨.
+  * 반면에 로컬 핸들러를 이용해서 이벤트를 비동기로 처리할 경우 이벤트 처리에 실패하면 이벤트 유실
+
+4. 이벤트 재처리
+  * 멱등으로 처리
+
+* 멱등성(idempotent)
+> 연산을 여러번 적용해도 결과가 달라지지 않는 성질.  
+> 시스템 장애로 인해 같은 버그가 중복해서 발생해도 결과적으로 동일상태가 되도록.
+
+## 이벤트 처리와 DB 트랜잭션 고려 
+
+이벤트를 처리할때는 트랜잭션을 함께 고려해야한다.
+
+* 주문 취소 기능은 주문 취소 이벤트를 발생시킨다.
+* 주문 취소 이벤트 핸들러는 환불 서비스에 환불 처리를 요청한다.
+* 환불 서비스는 외부 API를 호출해서 결제를 취소한다.
+
+* 다음 이미지를 비교해서 이벤트 발생과 처리를 동기와 비동기로 처리했을떄의 흐름을 보자.
+
+* ![](img/5650582a.png)
+
+* ![](img/30d415fd.png)
+
+* 이벤트 핸들러를 호출하는 과정 5번. 비동기로 실행
+
+* 만약12번 과정에서 외부 API 호출 실패시 DB는 주문 취소된 상태로 데이터가 바뀌었는데 결제는 취소되지 않은 상태로 남게됨.
+* 트랜잭션이 성공할 때만 이벤트 핸들러를 실행하는 방법이 있다.
+* 스프링의 @TransactionalEventListener 애노테이션 사용
+  * 트랜잭션 상태에 따라 이벤트 핸들러를 실행할 수 있게 한다.
+
+```java
+@TransactionalEventListener(
+  classes = OrderCanceldEvent.class,
+  phase = TransactionPhase.AFTER_COMMIT
+)
+public void handle(OrderCaceledEVent event) {
+  refundService.refund(event.getOrderNumber());
+}
+```
+
 
