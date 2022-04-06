@@ -130,7 +130,7 @@ String twoLine = processFile((BufferedReader br) -> br.readerLine() + br.readLin
 
 * <T> 형식의 객체를 사용하는 Boolean 표현식이 필요한 상황에서 Predicate 인터페이스를 사용할 수 있따.
 
-## Consumter
+## Consumer
 
 * java.util.function.Consumer
 * T객체를 받아 void를 반환한다.
@@ -159,7 +159,7 @@ String twoLine = processFile((BufferedReader br) -> br.readerLine() + br.readLin
 ## 람다의 형식 검사, 형식 추론, 제약
 
 * 람다가 사용되는 Context를 이용해서 람다의 type(형식)을 추론할 수 있따.
-* 어떤 context에서 기대되는 람다 ㅍ ㅛ현식의 형식을 대상 형식(target type)이라고 부른다.
+* 어떤 context에서 기대되는 람다 표현식의 형식을 대상 형식(target type)이라고 부른다.
 
 ```java
 List<Apple> heavierThan150g = filter(inventory, (Apple apple) -> apple.getWeight()  > 150);
