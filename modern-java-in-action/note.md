@@ -331,6 +331,384 @@ int result = h.apply(1); // 3을 반환
 * 람다 표현식을 이용해서 함수형 인터페이스의 추상 메서드를 제공할 수 있으며, 람다 표현식 전체가 `함수형 인터페이스의 인스턴스` 로 취급됨
 
 
+# 4장 스트림(Stream)
+
+* 스트림을 이용하면 선언형(데이터를 처리하는 임시 구현 코드 대신 질의로 표현)으로 컬렉션 데이터 처리를 할 수 있다.
+* 멀티스레드 코드를 구현하지 않아도 데이터를 투명하게 병렬로 처리 가능.
+
+* 스트림을 사용함으로써 이득
+    * 선언형으로 코드 구현 가능. 루프와 if 조건문 등의 제어 블록을 사용해서 동작을 구현할 필요 없이 동작의 수행 지정 가능.
+    * filter, sorted, map, collect와 같은 빌딩 블록 연산을 연결해서 복잡한 데이터 처리 파이프라인을 만들 수 있다.
+
+* 스트림 API는 매우 비싼 연산이다. 
+
+* 장점
+    * 선언형 : 더 간결하고 가독성이 좋아짐
+    * 유연성 : 조립할 수 있음
+    * 성능 : 병렬화로 성능이 좋아짐
+
+## 스트림 시작하기
+
+* 스트림 : 데이터 처리 연산을 지원하도록 소스에서 추출된 연속된 요소(Sequence of elements)
+    * 연속된 요소 : 특정 요소 형식으로 이루어진 연속된 값 집합의 인터페이스 제공. 컬렉션의 주제는 데이터, 스트림의 주제는 계산
+    * 소스 : 컬렉션, 배열 , I/O자원 등의 데이터 제공 소스로부터 데이터를 소비. 리스트로 스트림을 만들면 스트림의 요소는 리스트의 요소와 같은 순서 유지. 
+    * 데이터 처리 연산 : 함수형 프로그래밍 언어에서 일반적으로 지원하는 연사과 DB와 같은 연산 지원. filter, map, reduce, find, match
+
+* 스트림의 두 가지 중요 특징
+    * 파이프라이닝(Pipelining) : 대부분의 스트림 연산끼리 연결해서 커다란 파이프라인을 구성할 수 있도록 스트림 자신을 반환. 게으름(laziness), 쇼트서킷(short-circuiting) 같은 최적화도 얻을 수 있다.
+    * 내부 반복 : 반복자를 이용해서 명시적으로 반복하는 컬렉션과 달리 스트림은 내부 반복을 지원. 
+
+* filter : 람다를 인수로 받아 스트림에서 특정 요소를 제외시킴. 조건에 맞는 요소만 선택한다.
+* map : 람다를 이용해서 한 요소를 다른 요소로 변환하거나 정보를 추출.
+* limit : 정해진 개수 이상의 요소가 스트림에 저장되지 못하게 스트림 크기를 축소 (truncate) 한다.
+* collect : 스트림을 다른 형식으로 변환. 
+
+## 스트림과 컬렉션
+
+* 자바의 기존 컬렉션과 새로운 스트림 모두 연속된 요소 형식의 값을 저장하는 자료구조의 인터페이스를 제공.
+
+* 데이터를 언제 계싼하느냐가 컬렉션과 스트림의 가장 큰 차이.
+    * 컬렉션은 현재 자료구조가 포함하는 모든 값을 메모리에 저장하는 자료구조
+        * 즉 컬렉션의 모든 요소는 컬렉션에 추가하기 전에 계산되어야 한다. 
+    * 스트림은 이론적으로 요청할 때만 요소를 계산하는 고정된 자료구조(스트림에 요소를 추가하거나 요소를 제거할 수 없다.)
+        * 스트림은 사용자가 데이터를 요청할 때만 값을 계산한다.
+
+### 딱 한 번만 탐색할 수 있다.
+
+* 탐색된 스트림의 요소는 소비된다.
+    * 한 번 탐색한 요소를 다시 탐색하려면 초기 데이터 소스에서 새로운 스트림을 만들어야 한다.
+
+## 외부 반복과 내부 반복
+* 외부 반복 : 사용자가 직접 요소를 반복(for-each 등을 사용해서)하는것
+* 내부 반복 : 반복을 알아서 처리하고 결과 스트림값을 어딘가에 저장. 어떤 작업을 수행할지만 지정하면 모든 것이 알아서 처리된다.
+
+* 스트림은 내부반복.
+
+## 스트림 연산
+
+* 연결할 수 있는 스트림 연산을 중간 연산(intermediate operation)
+* 스트림을 닫는 연산을 최종 연산(terminal operation)
+* ![](.note_images/15a142b5.png)
+
+### 중간 연산
+
+* filter, sorted, map 같은 중간 연산은 다른 스트림을 반환. 
+* 연산을 스트림 파이프라인에서 실행하기 전까지는 아무 연산도 수행하지 않는다.
+    * 중간 연산들을 합친 다음에 합쳐진 중간 연산을 최종 연산으로 '한 번에'처리
+
+### 최종 연산
+* 결과를 도출하는 연산. List, Integer, void 등 스트림 이외에 결과가 반환.
+
+* ![](.note_images/cc12077b.png)
+
+# 5장 스트림 활용
+
+## 필터링
+
+* 스트림은 filter 메서드를 지원.
+* filter 메서드는 프레디케이트(Predicate)를 인수로 받아서 일치하는 모든 요소를 포함하는 스트림을 반환.
+
+* 고유 요소로 이루어진 스트림을 반환하는 distinct 메서드도 지원.(고유 여부는 스트림에서 만든 객체의 hashcode, equlas로 결정).
+    * 중복제거
+
+## 스트림 슬라이싱
+* 자바9는 스트림의 요소를 효과적으로 선택할 수 있도록 takeWhile, dropWhile 두가지 새로운 메서드 지원
+* takeWhile : 이미 정렬되어 있다는 사실을 이용해 반복 작업을 중단할 수 있다. 
+    * 스트림을 포함한 모든 스트림에 프레디케이트를 적용하는것. 
+* dropWhile : takeWhile과 정반대 작업 수행. 
+    * 프레디케이트가 처음으로 거짓이 되는 지점까지 발견된 모든 요소를 버린다.
+    * 프레디케이트가 거짓이 되면 그 지점에서 작업을 중단하고 남은 모든 요소 반환.
+
+### 요소 건너뛰기
+* skip(n) 메서드.
+    * 처음 n개 요소를 제외한 스트림을 반환. 
+
+## 매핑 (map, flatMap)
+
+* 함수를 인수로 받는 map 메서드 지원
+* 각 요소에 적용되며 함수를 적용한 결과가 새로운 요소로 매핑됨.
+    * 기존의 값을 고치는게(modify) 아닌 새로운 요소로 반환함.
 
 
+### map과 Arrays.stream 활성
+
+* map을 이용해서 단어 리스트에서 고유 문자를 찾는법
+
+```java
+String[] arrayOfWords = {"GoodBye", "World"};
+Stream<String> streamOfWords = Arrays.stream(arrayOfWords);
+
+words.stream()
+    .map(word -> word.split("")) // 각 단어를 개별 문자열 배열로 변환
+    .map(Arrays::stream)         // 각 배열을 별도 스트림으로 생성
+    .distinct()
+    .collect(toList());
+```
+
+* 스트림 리스트(`List<Stream<String>>`)가 만들어 지면서 문제는 해결되지 않음.
+    * 먼저 각 단어를 개별 문자열로 이루어진 배열로 만든 다음에 각 배열을 별도의 스트림으로 만들어야함.
+
+* flatMap 사용
+```java
+List<String> uniqueCharacters = 
+    words.stream()
+        .map(word -> word.split(""))
+        .flatMap(Arrays::stream)
+        .distinct()
+        .collect(toList());
+```
+* flatMap은 각 배열을 스트림이 아니라 스트림의 콘텐츠로 매핑. 하나의 평면화된 스트림을 반환.
+* 스트림의 각 값을 다른 스트림으로 만든 다음에 모든 스트림을 하나의 스트림으로 연결하는 기능 수행.
+
+
+* 두 개의 숫자 리스트가 있을 때 모든 숫자 쌍의 리스트를 반환하려면?
+    * `[1, 2, 3]과 [3, 4]가 주어지면 [(1, 3), (1, 4), (2, 3), (2, 4), (3, 3), (3, 4)]`를 반환해야 한다.
+
+```java
+List<Integer> numbersl = Arrays.asList(1, 2, 3);
+List<Integer> numbers2 = Arrays.asList(3, 4);
+List<int[]> pairs = numbersl.stream{)
+                .flatMap(i -> nutrbers2.stream()
+                                        .map{j -> new int[]{i, j})
+                )
+                .collect(toList());
+```
+
+
+## 검색과 매칭
+
+* allMatch, anyMAtch, noneMatch, findFirst, findAny 등
+
+### anyMatch
+
+* 프레디케이트가 적어도 한 요소와 일치하는지 확인
+
+* item.stream().anyMatch(Predicate());
+* 최종 연산
+
+### allAtch
+
+* 프레디케이트가 모든 요소와 일치하는지 검사
+
+* item.stream().allAtch(Predicate())
+
+* boolean 반환
+
+### noneMatch
+
+* allMatch와의 반대 연산.
+
+* 프레디케이트와 일치하는 요소가 없는지 확인
+
+* item.stream().noneMatch(Predicate())
+
+
+####
+* anyMatch, allMatch, noneMatch 세 메서드는 스트림 쇼트서킷 기법, 즉 자바의 &&, || 와 같은 연산을 활용한다
+
+* 쇼트서킷
+> 전체 스트림을 처리하지 않았더라도 결과를 반환할 수 있다.  
+> 표현식에서 하나라도 거짓이라는 결과가 나오면 나머지 표현식의 결과와 상관 없이 전체 결과도 거짓이 된다.  
+> 이런 상황을 쇼트서킷이라고 한다.  
+> 원하는 요소를 찾았으면 즉시 결과를 반환할 수 있다.  
+> 특히 무한한 요소를 가진 스트림을(무한스트림) 유한한 크기로 줄일 수 있는 유용한 연산
+
+### Optional
+
+* Optional<T>는 값의 존재나 부재 여부를 표현하는 컨테이너 클래스.
+    * isPresent() : 값을 포함하면 true, 없으면 false
+    * ifPresent(Consumer<T> block) : 값이 있으면 주어진 블록 
+    * T get() : 값이 있으면 값 반환, 없으면 NoSuchElementException()
+    * T orElse(T other) : 값이 있으면 값을 반환, 없으면 기본값 반환
+
+### 첫 번째 요소 찾기 findFirst()
+
+* Optional<T> 반환.
+
+* findFirst findAny는 언제 사용하는가?
+    * 병렬 실행에서는 첫 번째 요소는 찾기 어렵다.
+    * 요소의 반환 순서가 상관없다면 병렬 스트림에서는 제약이 적은 findAny를 사용한다.
+
+
+## 리듀싱
+
+* 리듀싱 연산 : 모든 스트림 요소를 처리해서 값으로 도출하는 것
+* reduce는 두개의 인수를 갖는다.
+    * 초깃값
+    * 두 요소를 조합해서 새로운 값을 만드는 BinaryOperator<T>. (a, b) -> a + b
+
+* reduce로 스트림의 모든 숫자 더하기
+```java
+int sum = numbers.stream().reduce(0, Integer::sum);
+```
+
+#### 초깃값 없는 reduce
+* 이 reduce는 Optional 객체를 반환한다.
+```java
+Optinal<Integer> sum = numbers.stream().reduce((a, b) -> (a + b));
+```
+
+### reduce - 최댓값과 최솟값
+```java
+Optional<Integer> max = numbers.stream().reduce(Integer::max);
+Optinal<Integer> min = numbers.stream().reduce(Integer::max);
+```
+ 
+* map과 reduce (맵 리듀스)를 이용해서 스트림의 갯수 구하는법
+```java
+int count = item.stream()
+                .map(d -> 1)
+                .reduce(0, (a, b) -> a + b);
+```
+
+#### reduce 메서드의 장점과 병렬화 
+> 기존의 단계적 반복(for문, for-each)로 구하는 것과 reduce를 이용하는것의 차이가 뭘까?  
+> reduce를 이용하면 내부 반복이 추상화 되면서 내부 구현에서 병렬로 reduce를 실행할 수 있다.  
+> 단계적 반복에서는 sum 변수를 공유해야 하므로 쉽게 병렬화하기 어렵다.  
+
+#### 스트림 연산 : 상태 없음과 상태 있음.
+* map, filter 등은 입력 스트림에서 각 요소를 받아 0 또는 결과를 출력 스트림으로 보낸다.
+    * 따라서 (사용자가 제공한 람다나, 메서드 참조가 내부적인 가변 상태를 갖지 않는다는 가정하에) 이들은 보통 상태가 없는, 내부 상태를 갖지 않는 연산이다.
+* reduce, sum, max 같은 연산은 결과를 누적할 내부 상태가 필요하다.
+    * 스트림에서 처리하는 요소 수와 관계없이 내부상태의 크기는 한정 되어있다.
+
+* sorted나 distinct 같은 연산은 filter와 map과는 다르다.
+    * 정렬하거나 중복을 제거하려면 과거의 이력을 알고 있어야 하기 때문에.
+    * 이러한 연산을 내부상태를 갖는 연산 이라고 한다.
+
+* ![](.note_images/2ef1d19b.png)
+
+## 실전 연습
+
+* 연습용 데이터
+```java
+Trader raoul = new Trader("Raoul", "Cambridge");
+Trader mario = new Trader("Mario", "Milan");
+Trader alan = new Trader("Alan", "Cambridge");
+Trader brian = new Trader("Brian", "Cambridge");
+
+List<Transaction> transactions = Arrays.asList(
+    new Transaction(brian, 2011, 300),
+    new Transaction(raoul, 2012, 1000),
+    new Transaction(raoul, 2011, 400),
+    new Transaction(mario, 2012, 710),
+    new Transaction(mario, 2012, 700),
+    new Transaction(alan, 2012, 950)
+)
+```
+
+1. 2011년에 일어난 모든 트랜잭션을 찾아 값을 오름차순으로 정렬 
+2. 거래자가 근무하는 모든 도시를 중복 없이 나열.
+3. 케임브리지에서 근무하는 모든 거래자를 찾아서 이름순으로 정렬.
+4. 모든 거래자의 이름을 알파벳 순으로 정렬해서 반환
+5. 밀라노에 거래자가 있는가?
+6. 케임브리지에 거주하는 거래자의 모든 트랜잭션값을 출력
+7. 전체 트랜잭션 중 최댓값은?
+8. 전체 트랜잭션 중 최솟값은?
+
+```java
+// 1. 2011년에 일어난 모든 트랜잭션을 찾아 값을 오름차순으로 정렬
+List<Transaction> lists = 
+    transactions.stream()
+                .filter(t -> t.getYear() == 2011)
+                .sorted(comparing(Transaction::getValue))
+                .collect(toList());
+
+//2. 거래자가 근무하는 모든 도시를 중복 없이 나열.
+List<String> cities =
+    transactions.stream()
+                .map(t -> t.getTrader().getCity())
+                .distinct()
+                .collect(toList());// collect(toSet()) 으로도 가능
+
+//3. 케임브리지에서 근무하는 모든 거래자를 찾아서 이름순으로 정렬.
+List<Trader> cambridgeTraders = 
+    transactions.stream()
+                .map(Transaction::getTrader)
+                .filter(trader -> trader.getCity().eqauls("Cambridge"))
+                .distinct()
+                .sorted(comparing(Trader::getName))
+                .collect(toList());
+
+//4. 모든 거래자의 이름을 알파벳 순으로 정렬해서 반환
+String traderStr =
+    transactions.stream()
+                .map(transaction -> transaction.getTrader().getName())
+                .distinct()
+                .sorted()
+                .reduce("", (name1, name2) -> name1 + name2); // collect(joining()); 도 가능 joining()은 내부적으로 StringBuilder 이용
+
+//5. 밀라노에 거래자가 있는가?
+boolean milanBased =
+    transactions.stream()
+                .anyMatch(t -> t.getTrader().getCity().eqauls("Milan"));
+
+//6. 케임브리지에 거주하는 거래자의 모든 트랜잭션값을 출력
+transactions.stream()
+        .filter(t -> t.getTrader().getCity().eqauls("Cambridge"))
+        .map(Transaction::getValue)
+        .forEach(System.out::println);
+
+//7. 전체 트랜잭션 중 최댓값은?
+
+Optinal<Integer> highestValue = transactions.stream()
+                    .map(Transaction::getValue)
+                    .reduce(Integer::max);
+
+//8. 전체 트랜잭션 중 최솟값은?
+
+Optinal<Integer> smallestTransaction = 
+    transactions.stream()
+                .reduce((t1, t2) -> t1.getValue() < t2.getValue() ? t1 : t2);
+
+Optinal<Transaction> smallestTransaction =
+    transactions.stream()
+                .min(comparing(Transaction::getValue));
+```
+
+## 숫자형 스트림
+
+```java
+int calories = menu.stream()
+                    .map(Dish::getCalories)
+                    .reduce(0, Integer::sum);
+```
+
+* 이 코드에는 박싱 비용이 숨어있다. 내부적으로 합계를 계산하기 전에 Integer를 기본형으로 언박싱 해야한다.
+* reduce 대신 바로 sum()을 호출하고 싶지만 호출 할 수 없다.
+* map 메서드가 Stream<T> 를 생성하기 때문이다.
+    * 스트림의 요소 형식은 Integer이지만 인터페이스에는 sum 메서드가 없다.
+* 스트림 API 숫자 스트림을 효율적으로 처리할 수 있도록 기본형 특화 스트림이 있다.
+
+## 기본형 특화 스트림(primitive stream specialization)
+
+* int : IntStream
+* double : DoubleStream
+* long : LongStream
+
+
+### 숫자 스트림으로 매핑
+
+* 스트림을 기본형 특화 스트림으로 변환할 때는 mapToInt, mapToDouble, mapToLong 세가지 메서드를 가장 많이 사용
+```java
+int calories = menu.stream()
+                    .mapToInt(Dish::getCalories)
+                    .sum();
+```
+
+* `Stream<Integer>` 가 아닌 IntStream을 반환.
+
+* IntStream은 max, min, average등 다양한 유틸 메서드도 지원
+
+
+### 숫자 스트림에서 객체 스트림으로 복원
+
+* boxed()
+
+```java
+IntStream intStream = menu.stream().mapToInt(Dish::getCalories);
+Stream<Integer> stream = intStream.boxed();
+```
+
+#### 기본형 특화 스트림의 숫자 스트림 기본값 : OptionalInt
 
