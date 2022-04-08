@@ -712,3 +712,73 @@ Stream<Integer> stream = intStream.boxed();
 
 #### 기본형 특화 스트림의 숫자 스트림 기본값 : OptionalInt
 
+* Optional을 OptinalInt, OptinalDobule, OptionalLong 등 참조 형식으로 파라미터화 할 수 있다.
+
+* 값이 없을 때 기본 최댓값을 명시적으로 설정 가능하다
+```java
+OptionalInt maxCalories = menu.stream().mapToInt(Dish::getCaloories).max();
+
+int max = maxCalories.orElse(1);
+```
+
+### 숫자 범위 - 숫자스트림
+
+* IntStream, LongStream 에서는 range()와 rangeClosed() 라는 두 가지 정적 메서드를 제공한다. 
+    * 첫 번째 인수로 시작값,
+    * 두 번째 인수로 종료값.
+* filter, map 등 체이닝 가능.
+
+## 스트림 만들기
+
+* 임의의 수를 인수로 받는 정적 메서드 Stream.of()
+
+* `Stream<String> emptyStream = Stream.empty()` // 스트림을 비우기
+
+* null이 될 수 있는 객체로 스트림 만들기
+    * Stream.ofNullable()
+
+```java
+String homeValue = System.getProperty("home"); // 제공된 키에 대응하는 속성이 없으면 null 반환
+Stream<String> homeValueStream = homeValue == null ? Stream.empty() : Stream.of(value);
+
+Stream<String> homeValueStream = Stream.ofNullable(System.getProperty("home"));
+```
+
+### 배열로 스트림 만들기
+
+* Arrays.stream()
+
+* int sum = Arrays.stream(numbers).sum();
+
+### 함수로 무한 스트림 만들기.
+
+* Stream.iterate(), Stream.generate()
+
+* 고정된 컬렉션에서 고정된 크기로 만들었던 것과는 달리 크기가 고정되지 않은 스트림.
+
+* 보통 무한한 값을 출력하지 않도록 limit(n)과 함께 사용
+
+* iterate 메서드
+
+```java
+Stream.iterate(0, n -> n + 2)
+        .limit(10)
+        .forEatch(System.out::println);
+```
+
+* 초깃값과 람다를 인수로 받아 새로운 값을 끊임없이 생산할 수 있다.
+
+* iterate는 요청할 때마다 값을 생산할 수 있으며 끝이 없으므로 무한 스트림 이라고 한다.
+    * 이러한 스트림을 언바운드 스트림 이라고 한다.
+    * 피보나치 수열도 생산할 수 있음. 
+
+* Predicate도 지원한다.
+* takeWhile를 이용해서 숫자 생성을 중단하는 코드
+```java
+IntStream.iterate(0, n -> n + 4)
+        .takeWhile(n -> n < 100)
+        .forEach(System.out::println)
+```
+
+
+
