@@ -772,6 +772,8 @@ Stream.iterate(0, n -> n + 2)
     * 이러한 스트림을 언바운드 스트림 이라고 한다.
     * 피보나치 수열도 생산할 수 있음. 
 
+* iterate는 생산된 각 값을 연속적으로 계산함.
+
 * Predicate도 지원한다.
 * takeWhile를 이용해서 숫자 생성을 중단하는 코드
 ```java
@@ -780,5 +782,94 @@ IntStream.iterate(0, n -> n + 4)
         .forEach(System.out::println)
 ```
 
+* generate 메서드
 
+* iterate와는 달리 각 값을 연속적으로 계산하지 않는다.
+
+# 6장 스트림으로 데이터 수집
+
+## 미리 정의된 컬렉터(Collectors)
+
+* Collectors에서 제공하는 메서드의 기능은 크게 세 가지로 구분할 수 있다.
+    * 스트림 요소를 하나의 값으로 리듀스 하고 요약
+    * 요소 그룹화
+    * 요소 분할
+
+## 리듀싱과 요약
+
+### 문자열 연결
+
+* Collect에 joining 팩토리 메서드.
+* 스트림의 각 객체에 toString 메서드를 호출해서 모든 문자열을 하나의 문자열로 연결해서 반환.
+    * item.stream().collect(joining());
+* 각 객체에 구분 문자열을 넣을 수 있도록 오버로드된 joining 팩토리 메서드
+    * item.stream().collect(joining(", "));
+
+### reducing(리듀싱) 팩토리 메서드
+
+```java
+int totalCalories = menu.stream().collect(reducing(0, Dish::getCAlories, (i, j) -> i + j));
+```
+
+* reducing은 인수 3개를 받는다.
+
+* 첫 번째 인수 : 리듀싱 연산의 시작값. 인수가 없을 때는 반환값.
+* 두 번째 인수 : 변환 함수
+* 세 번째 인수 : BinaryOperator
+
+## 그룹화
+
+* Collectors.groupingBy()
+
+* 인자로 전달해준 함수로 그룹화한다.
+
+```java
+Map<Dish.Type, List<Dish>> caloricDishesByType =
+    menu.stream().collect(groupingBy(Dish::getType, filtering(dish -> dish.getCalories() > 500, toList())));
+```
+* filtering 메소드는 Collectors 클래스의 정적 팩토리 메서드
+* 프레디케이트를 인수로 받는다.
+* 이 프레디케이트로 각 그룹의 요소와 필터링 된 요소를 재 그룹화.
+* 목록이 비어있다면, 빈 목록도 항목으로 추가된다.
+
+* 매핑 함수와 각 항목에 적용한 함수를 모으는 데 사용하는 mapping() 함수도 있다.
+    * flatMapping()
+
+## 분할 함수
+
+* 프레디케이트를 분류 함수로 사용한 특수한 그룹화 기능.
+* 불리언을 반환하므로 맵의 키 형식은 Boolean
+* ex) 채식 요리와 채식이 아닌 요리 분류
+
+```java
+Map<boolean, List<Dish>> partitionedMenu =
+    menu.stream().collect(partitioningBy(Dish::isVegetarian)); // 분할 함수
+
+List<Dish> vegetarianDishes = partitionedMenu.get(true); // 채식요리
+```
+
+### 숫자를 소수와 비소수로 분할
+
+```java
+public boolean isPrime(int candidate) {
+    return IntStream.range(2, candidate)
+                    .noneMatch(i -> candidate % i == 0); // 스트림의 모든 정수로 candidate를 나눌 수 없으면 참
+}
+// 다음처럼 소수의 대상을 주어진 수의 제곱근 이하의 수로 제한할 수도 있음.
+public boolean isPrime(int candidate) {
+    int candidateRoot = (int)Math.sqrt((double)candidate);
+    return IntStream.rangeClosed(2, candidateRoot)
+                    .noneMatch(i -> candidate % i == 0);
+}
+
+// partitioningBy 컬렉터로 리듀흐 해서 숫자를 소수와 비소수로 분류 가능.
+
+public Map<Boolean, List<Integer>> paritionPrimes(int n) {
+    return IntStream.rangeClosed(2, n).boxed()
+                        .collect(partitioningBy(candate -> isPrime(candidate)));
+}
+```
+
+* ![](.note_images/33de03b8.png)
+* ![](.note_images/8027f9f9.png)
 
