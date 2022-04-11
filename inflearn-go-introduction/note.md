@@ -1126,7 +1126,6 @@ func main() {
 ``` 
 * 이렇게도 가능하다
 ```go
-
 type Dog struct {
 	name string
 	weight int
@@ -1202,3 +1201,27 @@ func printContents(v interface{}) {
 * 실행(런타임) 시에는 인터페이스에 할당한 변수는 실제 타입으로 변환 후 사용해야 하는 경우에는? 
   * 형변환 : 인터페이스.(타입)
   * interfaceValue.(type)
+
+# 고루틴(goroutine)
+
+* Go루틴(goroutine)은 Go 런타임이 관리하는 Lightweight 논리적 (혹은 가상적) 쓰레드(주1)이다. Go에서 "go" 키워드를 사용하여 함수를 호출하면, 런타임시 새로운 goroutine을 실행
+
+* OS 쓰레드 보다 훨씬 가볍게 비동기 Concurrent 처리를 구현하기 위하여 만든 것.
+  * Go 런타임이 자체 관리. 
+* 메모리 측면에서도 몇 킬로 바이트의 스택을 가짐(필요시 동적으로 증가)
+  * 리소스 매우 적음
+
+* 비동기적 함수 루틴 실행 
+  * Go 채널을 통하여 통신
+
+* 공유메모리 사용 시에 정확한 동기화 코딩 필요.
+
+* 메인이 죽으면 다른 루틴도 끝난다.
+
+* `다중 CPU 처리`
+  * runtime.GOMAXPROCS(코어수)
+    * 내 컴퓨터의 코어 수 : runtime.NumCPU()
+
+* 반복문 클로저는 일반적으로 즉시 실행
+* 고루틴 클로저는 가장 나중에 실행(반복문 종료 후 막 실행)
+
