@@ -1,21 +1,22 @@
 import React from "react";
 import Todo from "./Todo";
 import AddTodo from "./AddTodo.js";
-import { Paper, List, Container } from "@material-ui/core";
+import {Paper, List, Container, AppBar, Toolbar, Grid, Typography, Button} from "@material-ui/core";
 import "./App.css";
-import { call } from "./ApiService";
+import {call, signout} from "./ApiService";
 
 class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             items: [],
+            loading: true,
         };
     }
 
     componentDidMount() {
         call("/todo", "GET", null).then((response) =>
-            this.setState({ items: response.data })
+            this.setState({ items: response.data, loading: false })
         );
     }
 
@@ -53,15 +54,40 @@ class App extends React.Component {
             </Paper>
         );
 
-        // 3. props로 넘겨주기
-        return (
-            <div className="App">
+        var navigationBar = (
+            <AppBar position="static">
+                <Toolbar>
+                    <Grid justify="space-between" container>
+                        <Typography variant="h6">오늘의 할일</Typography>
+                    </Grid>
+                    <Grid>
+                        <Button color="inherit" onClick={signout}>
+                            로그아웃
+                        </Button>
+                    </Grid>
+                </Toolbar>
+            </AppBar>
+        )
+
+        var todoListPage = (
+            <div>
+                {navigationBar}
                 <Container maxWidth="md">
-                    <AddTodo add={this.add} />
+                    <AddTodo add={this.add}/>
                     <div className="TodoList">{todoItems}</div>
                 </Container>
             </div>
-        );
+        )
+
+        var loadingPage = <h1>로딩중..</h1>
+        var content = loadingPage;
+
+        if (!this.state.loading) {
+            content = todoListPage;
+        }
+
+        return <div className="App">{content}</div>;
+
     }
 }
 
