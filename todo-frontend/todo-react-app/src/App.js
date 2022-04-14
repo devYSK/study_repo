@@ -15,32 +15,41 @@ class App extends React.Component {
     }
 
     componentDidMount() {
-        call("/todo", "GET", null).then((response) =>
-            this.setState({ items: response.data, loading: false })
-        );
+
+        const accessToken = localStorage.getItem("ACCESS_TOKEN");
+
+        if (accessToken === "null") {
+            window.location.href = "/login";
+        }else {
+            call("/todo", "GET", null).then((response) =>
+                this.setState({items: response.data, loading: false})
+            );
+        }
     }
 
     add = (item) => {
         call("/todo", "POST", item).then((response) =>
-            this.setState({ items: response.data })
+            this.setState({items: response.data})
         );
     };
 
     delete = (item) => {
         call("/todo", "DELETE", item).then((response) =>
-            this.setState({ items: response.data })
+            this.setState({items: response.data})
         );
     };
 
     update = (item) => {
         call("/todo", "PUT", item).then((response) =>
-            this.setState({ items: response.data })
+            this.setState({items: response.data})
         );
     };
 
     render() {
+
+
         var todoItems = this.state.items.length > 0 && (
-            <Paper style={{ margin: 16 }}>
+            <Paper style={{margin: 16}}>
                 <List>
                     {this.state.items.map((item, idx) => (
                         <Todo
@@ -58,16 +67,19 @@ class App extends React.Component {
             <AppBar position="static">
                 <Toolbar>
                     <Grid justify="space-between" container>
-                        <Typography variant="h6">오늘의 할일</Typography>
-                    </Grid>
-                    <Grid>
-                        <Button color="inherit" onClick={signout}>
-                            로그아웃
-                        </Button>
+                        <Grid item>
+                            <Typography variant="h6">오늘의 할일</Typography>
+                        </Grid>
+                        <Grid>
+                            <Button color="inherit" onClick={signout}>
+                                로그아웃
+                            </Button>
+                        </Grid>
                     </Grid>
                 </Toolbar>
             </AppBar>
-        )
+        );
+
 
         var todoListPage = (
             <div>
@@ -86,7 +98,9 @@ class App extends React.Component {
             content = todoListPage;
         }
 
-        return <div className="App">{content}</div>;
+        return (
+        <div className="App">{content}</div>
+    )
 
     }
 }

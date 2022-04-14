@@ -10,6 +10,11 @@ class Login extends React.Component {
     constructor(props) {
         super(props);
         this.handleSubmit = this.handleSubmit.bind(this);
+
+        const accessToken = localStorage.getItem("ACCESS_TOKEN");
+        if (accessToken && accessToken !== null) {
+            window.location.href = "/";
+        }
     }
 
     handleSubmit(event) {

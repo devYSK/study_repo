@@ -11,6 +11,7 @@ export function call(api, method, request) {
     if (accessToken && accessToken !== null) {
         headers.append("Authorization", "Bearer " + accessToken);
     }
+    console.log("!!! " + accessToken);
 
     let options = {
         headers: headers,
@@ -22,6 +23,7 @@ export function call(api, method, request) {
         // GET method
         options.body = JSON.stringify(request);
     }
+
     return fetch(options.url, options)
         .then((response) =>
             response.json().then((json) => {
