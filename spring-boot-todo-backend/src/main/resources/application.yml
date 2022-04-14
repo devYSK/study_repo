@@ -1,3 +1,10 @@
-
 spring:
-    profiles:
+  profiles:
+    active: local
+    include:
+      - db
+
+  devtools:
+    restart:
+      enabled: true
+

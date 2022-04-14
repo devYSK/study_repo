@@ -10,7 +10,7 @@ import javax.persistence.Table;
 
 @Entity @Table(name = "Todo")
 @Builder @NoArgsConstructor @AllArgsConstructor
-@Getter
+@Getter @ToString
 public class TodoEntity {
     @Id
     @GeneratedValue(generator = "system-uuid")

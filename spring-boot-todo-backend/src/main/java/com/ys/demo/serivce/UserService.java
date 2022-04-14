@@ -5,6 +5,7 @@ import com.ys.demo.pesistence.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -29,9 +30,19 @@ public class UserService {
     }
 
 
-    public UserEntity getByCredentials(String email, String password) {
-        return userRepository.findByEmailAndPassword(email, password).orElseThrow(() -> {
+    public UserEntity getByCredentials(final String email, final String password, final PasswordEncoder encoder) {
+
+        UserEntity originalUser = userRepository.findByEmail(email).orElseThrow(() -> {
             throw new UsernameNotFoundException("not found");
         });
+        System.out.println("UserService.getByCredentials");
+        if (encoder.matches(password, originalUser.getPassword())) {
+            log.info("matched!");
+            return originalUser;
+        }
+        else {
+            log.info("not match return null");
+            return null;
+        }
     }
 }
