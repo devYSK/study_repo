@@ -873,3 +873,144 @@ public Map<Boolean, List<Integer>> paritionPrimes(int n) {
 * ![](.note_images/33de03b8.png)
 * ![](.note_images/8027f9f9.png)
 
+## Collector 인터페이스
+
+```java
+public interface Collector<T, A, R> {
+    Supplier<A> supplier();
+    BiConsumer<A, T> accumulator();
+    Function<A, R> finisher();
+    BinaryOperator<A> combiner();
+    Set<Chracteristics> characteristics();
+}
+```
+
+* T : 수집될 스트림 항목의 제네릭 형식
+* A : 누적자. 수집 과저정에서 중간 결과를 누적하는 객체의 형식.
+* R : 수집 연산 결과 객체의 형식.
+
+* ex : `Stream<T>의 요소를 List<T>로 수집하는 ToListColecctor<T>`
+```java
+public class ToListCollector<T> implements Colecctor<T, List<T>, List<T>>
+```
+
+## supplier 메서드 : 새로운 결과 만들기
+
+* supplier 메서드는 빈 결과로 이루어진 Supplier를 반환해야 한다.
+* 즉 수집 과정에서 빈 누적자 인스터르를 만드는 파라미터가 없는 함수
+```java
+public Supplier<List<T>> supplier() {
+    return () -> new ArrayList<T>();
+    // or  return ArrayList::new;
+}
+```
+## accumulator 메서드
+
+* 리듀싱 연산을 수행하는 함수 반환.
+* 스트림에서 n번째 요소를 탐색할 때 두 인수, 누적자(스트림의 첫 n-1개 항목을 수집한 상태)와 n번째 요소를 함수에 적용
+* 반환값은 void
+```java
+public BiConsumer<List<T>, T> accumullator() {
+    return (list, item) -> list.add(item);
+    // or return List::add;
+}
+```
+
+## finisher 메서드 : 최종 변환값을 결과 컨테이너로 적용
+
+* 스트림 탐색을 끝내고 누적자 객체를 최종 결과로 변환하면서 누적 과정을 끝낼 때 호출함 함수를 반환해야 한다.
+
+```java
+public Fnction<List<T>, List<T>> finisher() {
+    return Function.identity();
+}
+```
+
+* ![](.note_images/c620bb86.png)
+
+## combiner 메서드 : 두 결과 컨테이너 병합
+
+* 스트림의 서로 다른 서브파트를 병렬로 처리할 때 이 결과를 어떻게 처리할지 정의
+```java
+public BinaryOperator<List<T>> combiner() {
+    return (list1, lsit2) -> {
+        list1.addAll(list2);
+        return list1;
+    }
+}
+```
+
+## Characterisitics 메서드
+* 컬렉터의 연산을 정의하는 Characterisitcs 형식의 불변 집합 반환.
+* 다음 세 항목을 포함하는 열거 형
+
+1. UNORDERED : 리듀싱 결과는 스트림 요소의 방문 순서나 누적 순서에 영향을 받지 않는다.
+2. CONCURRENT : 다중 스레드에서 accmulator 함수를 동시에 호출할 수 있으며 이 컬렉터는 스트림의 병렬 리듀싱 수행 가능. 
+3. IDENTITY_FINISH : finisher 메서드가 반환하는 함수는 단순히 identity를 적용할 뿐이므로 이를 생략 가능. 
+    * 리듀싱 과정의 최종 결과로 누적자 객체를 사용하거나 누적자 A를 결과 R로 안전하게 형변환 가능.
+
+
+
+## 마치며
+
+* collect는 스트림의 요소를 요약 결과로 누적하는 다양한 방법을 인수로 갖는 최종 연산.
+
+* 스트림의 요소를 하나의 값으로 리듀스하고 요약하는 컬렉터뿐 아니라 최솟값, 최댓값, 평균값을 계산하는 컬렉터 등이 미리 정의되어 있다.
+
+* 미리 정의된 컬렉터인 groupingBy로 스트림의 요소를 그룹화 하거나, partitioningBy로 스트림의 요소를 분할할 수 있다.
+
+* 컬렉터는 다수준의 그룹화, 분할, 리듕신 연산에 적합하게 설계되어 있다.
+
+* collector 인터페이스에 정의된 메서드를 구현해서 커스텀 컬렉터를 개발할 수 있다. 
+
+# 7장 병렬 데이터 처리와 성능
+
+## 병렬 스트림
+
+* 컬렉션에 parallelStream을 호출하면 병렬 스트림이 생성된다.
+* 병렬 스트림 : 각각의 스레드에서 처리할 수 있도록 스트림 요소를 여러 청크로 분할한 스트림.
+
+* 숫자 n을 인수로 받아서 1부터 n까지의 모든 숫자의 합계를 반환하는 메서드
+
+```java
+public long sequentialSum(long n) {
+    return Stream.iterate(1L, i -> i + 1) 
+                .limit(n)
+                .reduce(0L, Long::sum);
+}
+```
+
+###  순차 스트림을 병렬 스트림으로 변환
+* 순차 스트림에 parallel 메서드를 호출하면 기존의 리듀싱 연산이 병렬로 처리된다.
+
+```java
+public long sequentialSum(long n) {
+    return Stream.iterate(1L, i -> i + 1) 
+                .limit(n)
+                .parallel()
+                .reduce(0L, Long::sum);
+}
+```
+
+* 반대로 병렬 스트림에서 순차 스트림으로 변환하려면?
+* sequential 사용.
+```java
+stream.parallel()
+        .filter(...)
+        .sequential()
+        .map()
+        .reduce();
+```
+
+## !! 병렬 스트림에서 사용하는 스레드 풀 설정
+
+> 병렬 스트림은 내부적으로 FockJoinPool을 사용 .  
+> ForkJoinPool은 프로세서 수, 즉 Runtime.getRuntime().availableProcessors()가 반환하는 값에 상응하는 스레드를 갖는다.
+
+* 전역 설정 방법 : System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "12"); 
+    * 특별한 이유가 없다면 기본값을 그대로 사용할 것을 권장.
+
+
+
+
+
