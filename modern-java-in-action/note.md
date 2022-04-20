@@ -1161,3 +1161,47 @@ public interface Spliterator<T> {
 * ![](.note_images/06876b46.png)
 
 * ![](.note_images/f8ed2cd6.png)
+
+
+
+# 스트림과 람다를 이용한 효과적 프로그래밍
+
+## 컬렉션 팩토리
+* 자바 9 에서 제공
+* 짝은 컬렉션 객체를 쉽게 만들 수 있는 방법
+* Arrays.asList(...)
+    * 요소를 갱신(수정)할 순 있지만 추가하거나 삭제할 순 없다.
+    * UnsupportedOperationException
+        * Arrays.asList()는 내부적으로 고정된 크기의 변환할 수 있는 배열로 구현되었기 때문에 발생.(고정 크기)
+
+* Set
+    * `Set<String> friends = new hashSet<>("1", "2", "3");`
+    * Stream.of("1", "2", "3").collect(Collectors.toSet());
+
+* 그러나 두 방법 모두 매끄럽지 못하고 내부적으로 불필요한 객체 할당을 필요로 한다. 
+
+### 리스트 팩토리 List Factory
+
+* List.of 팩토리 메소드
+    * .add로 요소를 추가할 순 없다.
+    * UnsupportedOperationException 발생
+    * .set 메서드로 요소도 바꿀 순 없다.
+
+### 집합 팩토리 Set Factory
+
+* Set.of("1, "2, "3);
+
+### 맵 팩토리
+
+* Map.of("1", "s", "2", "a");
+* 열 개 이하의 키와 값 쌍을 가진 작은 맵을 만들 때는 이 메소드가 유용.
+
+### 리스트와 집합 처리
+
+* removeIf : 프레디케이트를 만족하는 요소를 제거.
+
+* replaceAll : UnaryOperator 함수를 이용해 요소를 바꾼다. 
+
+* sort : List 정렬
+
+
