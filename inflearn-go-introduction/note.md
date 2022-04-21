@@ -1225,3 +1225,199 @@ func printContents(v interface{}) {
 * 반복문 클로저는 일반적으로 즉시 실행
 * 고루틴 클로저는 가장 나중에 실행(반복문 종료 후 막 실행)
 
+# Go 채널
+
+* GoRoutine 간의 상호 정보 교환 및 실행 흐름 동기화 위해 사용
+* 실행 흐름 제어 가능(동기, 비동기) -> 일반 변수로 선언 후 사용 가능
+* interface{} 전달을 통해서 자료형 상관없이 전송 및 수신 가능.
+
+* Go 채널은 그 채널을 통하여 데이타를 주고 받는 통로라 볼 수 있는데, 채널은 make() 함수를 통해 미리 생성되어야 하며, 채널 연산자 <- 을 통해 데이타를 보내고 받는다. 채널은 흔히 goroutine들 사이 데이타를 주고 받는데 사용되는데, 상대편이 준비될 때까지 채널에서 대기함으로써 별도의 lock을 걸지 않고 데이타를 동기화하는데 사용된다.
+
+* <-, -> 사용. (채널 <- 데이터, 데이터 <- 채널) 
+  * 채널로 전송, 채널에서 수신
+
+* 채널은 데이터가 올때까지 대기함.
+  * time.Sleep() 메서드로 기다릴 필요가 없음.
+
+```go
+func main()  {
+	c := make(chan int)
+
+	go rangeSum(1000, c)
+	go rangeSum(700, c)
+	go rangeSum(500, c)
+	
+	result1 := <- c
+	result2 := <- c
+	result3 := <- c
+
+	fmt.Println(result1, result2, result3)
+}
+
+func rangeSum(rg int, c chan int) {
+	sum := 0
+	for i:=0; i <=rg; i++ {
+		sum += i
+	}
+
+	c <- sum
+}
+```
+
+* 순서대로 데이터 수신 : 채널에서 값 수신 완료 될 때 까지 대기 
+
+* 채널에서 버퍼 사용
+  * ch = make(chan bool, 2)
+
+* make(chan type, N) 함수를 통해 생성.  두번째 파라미터 N에 사용할 버퍼 갯수
+
+* 버퍼 : 발신 -> 가득차면 대기, 비어있으면 작동, 수신 -> 비어있으면 대기, 가득 차있으면 작동 
+
+* 채널을 사용하면 반드시 닫아줘야 한다. 
+
+* close()
+* 채널 수신에 사용되는 <- ch 은 두개의 리턴값을 갖는데, 첫째는 채널 메시지이고, 두번째는 수신이 제대로 되었는가를 나타낸다(boolean, true or false).
+* 닫힌 채널에 값 전송 시 패닉(예외) 발생 
+
+
+* Range : 채널 안에서 값을 순회하면서 꺼냄. 채널 닫아야(close) 반복문 종료 -> 채널이 열려 있고 값 전송하지 않으면 계속 대기 
+
+* Unbuffered Channel과 Buffered Channel
+  * Unbuffered : 이 채널에서는 하나의 수신자가 데이타를 받을 때까지 송신자가 데이타를 보내는 채널에 묶여 있게 된다.
+  * Buffered Channel : 비록 수신자가 받을 준비가 되어 있지 않을 지라도 지정된 버퍼만큼 데이타를 보내고 계속 다른 일을 수행할 수 있다
+
+* 버퍼 채널을 이용하지 않는 경우, 아래와 같은 코드는 에러 (fatal error: all goroutines are asleep - deadlock!) 를 발생시킨다. 왜냐하면 메인루틴에서 채널에 1을 보내면서 상대편 수신자를 기다리고 있는데, 이 채널을 받는 수신자 Go루틴이 없기 때문이다.
+
+```go
+package main
+import "fmt"
+ 
+func main() {
+  c := make(chan int)
+  c <- 1   //수신루틴이 없으므로 데드락 
+  fmt.Println(<-c) //코멘트해도 데드락 (별도의 Go루틴없기 때문)
+}
+```
+* 하지만 아래와 같이 버퍼채널을 사용하면, 수신자가 당장 없더라도 최대버퍼 수까지 데이타를 보낼 수 있으므로, 에러가 발생하지 않는다.
+```go
+package main
+import "fmt"
+ 
+func main() {
+    ch := make(chan int, 1)
+    //수신자가 없더라도 보낼 수 있다.
+    ch <- 101
+ 
+    fmt.Println(<-ch)
+}
+```
+
+* 채널을 함수의 파라미터도 전달할 때, 일반적으로 송수신을 모두 하는 채널을 전달하지만, 특별히 해당 채널로 송신만 할 것인지 혹은 수신만할 것인지를 지정할 수도 있다. 송신 파라미터는 (p chan<- int)와 같이 chan<- 을 사용하고, 수신 파라미터는 (p <-chan int)와 같이 <-chan 을 사용한다. 만약 송신 채널 파라미터에서 수신을 한다거나, 수신 채널에 송신을 하게되면, 에러가 발생한다.
+
+* 발신 전용 : channel <- 데이터형
+* 수신 전용 : 데이터형 <- channel
+* 매개 변수를 통해 전용 채널 확인 가능 
+
+```go
+
+func main()  {
+
+	c := make(chan int)
+
+	go sendOnly(c, 10)
+	go receiveOnly(c)
+
+	time.Sleep(2 * time.Second)
+}
+
+func receiveOnly(c <- chan int) {
+	for i := range c{
+		fmt.Println("received : ", i)
+	}
+
+	fmt.Println(<- c)
+}
+
+func sendOnly(c chan <- int, cnt int) {
+	for i:= 0; i < cnt; i++{
+		c <- i
+	}
+
+	c <- 777
+}
+```
+
+* 채널을 함수의 반환값으로 사용 
+```go
+package main
+
+import "fmt"
+
+func sum(cnt int) <- chan int {
+	sum := 0
+	total := make(chan int)
+	go func() {
+		for i:= 0; i < cnt; i++ {
+			sum += i
+		}
+		total <- sum
+	}()
+	return total
+}
+
+func main() {
+	// 채널 함수의 반환 값으로 사용
+	c := sum(100)
+	fmt.Println(c)
+}
+```
+
+* 채널 select문
+* 채널에 값이 수신되면 해당 case 문 실행
+* 일회성 구문이므로 for 안에서 수행
+* default 구문 처리 주의 
+
+* 복수 채널들을 기다리면서 준비된 (데이타를 보내온) 채널을 실행하는 기능을 제공한다. 즉, select문은 여러 개의 case문에서 각각 다른 채널을 기다리다가 준비가 된 채널 case를 실행하는 것이다
+
+* select문은 case 채널들이 준비되지 않으면 계속 대기하게 되고, 가장 먼저 도착한 채널의 case를 실행한다. 만약 복수 채널에 신호가 오면, Go 런타임이 랜덤하게 그 중 한 개를 선택한다. 하지만, select문에 default 문이 있으면, case문 채널이 준비되지 않더라도 계속 대기하지 않고 바로 default문을 실행한다.
+
+* 아래 예제는 for 루프 안에 select 문을 쓰면서 두개의 goroutine이 모두 실행되기를 기다리고 있다. 
+* 첫번째 run1()이 1초간 실행되고 done1 채널로부터 수신하여 해당 case를 실행하고, 다시 for 루프를 돈다. 
+* for루프를 다시 돌면서 다시 select문이 실행되는데, 다음 run2()가 2초후에 실행되고 done2 채널로부터 수신하여 해당 case를 실행하게 된다.
+
+* done2 채널 case문에 break EXIT 이 있는데, 이 문장으로 인해 for 루프를 빠져나와 EXIT 레이블로 이동하게 된다
+  * Go에서는 해당 레이블로 이동한 후 자신이 빠져나온 루프 다음 문장을 실행하게 된다
+```go
+
+func main() {
+    done1 := make(chan bool)
+    done2 := make(chan bool)
+ 
+    go run1(done1)
+    go run2(done2)
+ 
+EXIT:
+    for {
+        select {
+        case <-done1:
+            println("run1 완료")
+ 
+        case <-done2:
+            println("run2 완료")
+            break EXIT
+        }
+    }
+}
+ 
+func run1(done chan bool) {
+    time.Sleep(1 * time.Second)
+    done <- true
+}
+ 
+func run2(done chan bool) {
+    time.Sleep(2 * time.Second)
+    done <- true
+}
+```
+
+
