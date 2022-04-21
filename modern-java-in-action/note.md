@@ -1011,6 +1011,197 @@ stream.parallel()
     * 특별한 이유가 없다면 기본값을 그대로 사용할 것을 권장.
 
 
+### 병렬 스트림을 효과적으로 사용하기
 
+ * 확신이 서지 않으면 직접성능을 측정 해봐야 한다
+
+ * `박싱` 을 주의하자. 자동 박싱, 자동 언박싱은 성능을 크게 저하시킬 수 있는 요소다.
+    * 기본형 특화 스트림(IntStream, LongStream, DoubleStream)을 사용할 수 있으면 사용하자.
+
+* 순차 스트림보다 병렬 스트림에서 성능이 떨어지는 연산 : limit, findFirst 등 요소의 '순서'에 의존하는 연산.
+* 소량의 데이터에서는 병렬 스트림이 도움 되지 않는다.
+* 스트림을 구성하는 자료구조가 적절한지 확인하자.
+    * ArrayList를 LinkedList보다 효율적으로 분할 할 수 있다.
+        * LinkedList를 분할하려면 모든 요소를 탐색해야 하지만, ArrayList는 탐색하지 않고도 분할할 수 있다.
+
+* 최종 연산의 병합 과정(ex: Collector의 combiner 메서드) 비용을 살펴보자.
+    * 병합 과정의 비용이 비싸다면 병렬 스트림으로 얻은 성능의 이익이 서브스트림의 부분 결과를 합치는 과정에서 상쇄될 수 있다.
+    * 이러면 순차 스트림을 사용하는 것이 낫다.
+
+* 스트림의 분해와 관련해서 스트림 소스의 병렬화 친밀도.
+    * ![](.note_images/e9bb2e54.png)
+
+## 7.2 포크/조인 프레임워크
+포크/조인 프레임워크는 병렬화 할 수 있는 작업을 재귀적으로 작은 작업으로 분할한 다음에 서브태스크의 각각의 결과를 합쳐 전체 결과를 만들도록 설계되었다.  
+포크/조인 프레임워크에서는 서브태스크를 스레드 풀의 작업자 스레드에 분산 할당하는 ExecutorService인터페이스를 구현한다.
+
+### RecursiveTask 활용
+
+* 스레드 풀을 이용하려면 `RecursiveTask<R>`의 서브클래스를 만들어야 한다.
+    * R은 병렬화된 태스크가 생성하는 결과 형식 또는 결과가 없을 때 RecursiveAction 형식.
+* RecursiveTask를 정의하려면 추상 메서드 compute를 구현해야 한다
+    * protected abstract R compute();
+
+* compute() 메서드 : 태스크를 서브 태스크로 분할하는 로직과 더 이상 분할할 수 없을 때 개별 서브태스크의 결과를 생산할 알고리즘을 정의
+
+```java
+if (태스크가 충분히 작거나 더 이상 분할할 수 없으면) {
+    순차적으로 태스크 계산
+} else {
+    태스크를 두 서브태스크로 분할
+    태스크가 다시 서브태스크로 분할되도록 이 메서드를 재귀적으로 호출
+    모든 서브태스크의 연산이 완료될때까지 대기
+    각 서브태스크의 결과를 합침.
+}
+
+```
+
+* 이 알고리즘은 분할 후 정복 알고리즘의 병렬화 버전이다.
+
+* ![](.note_images/e44b72bc.png)
+
+```java
+
+public class ForkJoinSumCalculator extends RecursiveTask<Long> { // RecursiveTask를 상속 받아 사용할 태스크 생성
+
+  public static final long THRESHOLD = 10_000; // 이 값 이하의 서브태스크는 더 이상 분할 불가.
+
+  private final long[] numbers;
+  private final int start;  // 이 서브 태스크에서 처리할 배열의 초기 위치와 최종 위치 
+  private final int end;
+
+  public ForkJoinSumCalculator(long[] numbers) {
+    this(numbers, 0, numbers.length);
+  }
+
+  private ForkJoinSumCalculator(long[] numbers, int start, int end) { // 메인 태스크의 서브 태스크를 재귀적으로 만들 때 사용
+    this.numbers = numbers;
+    this.start = start;
+    this.end = end;
+  }
+
+  @Override
+  protected Long compute() {
+    int length = end - start;   // 이 태스크에서 더할 배열의 길이
+    if (length <= THRESHOLD) {
+      return computeSequentially(); // 기준값과 같거나 작으면 순차적으로 결과를 계산.
+    }
+    ForkJoinSumCalculator leftTask = new ForkJoinSumCalculator(numbers, start, start + length / 2); // 배열의 첫 번째 절반을 더하도록 서브 태스크 생성
+    leftTask.fork();
+    ForkJoinSumCalculator rightTask = new ForkJoinSumCalculator(numbers, start + length / 2, end); // 배열의 나머지 절반을 더하도록 서브태스크 생성.
+    Long rightResult = rightTask.compute(); // 두 번째 서브태스크를 동기 실행. 추가 분할이 일어날 수 있음.
+    Long leftResult = leftTask.join();      // 첫 번째 서브태스크의 결과를 읽거나 결과가 없으면 기다림. 
+    return leftResult + rightResult;        // 두 서브태스크의 결과를 조합한 값이 이 태스크의 결과.
+  }
+
+  private long computeSequentially() {      // 더 분할할 수 없을 때 서브태스크의 결과를 계산하는 단순한 알고리즘. 
+    long sum = 0;
+    for (int i = start; i < end; i++) {
+      sum += numbers[i];
+    }
+    return sum;
+  }
+
+  public static long forkJoinSum(long n) {
+    long[] numbers = LongStream.rangeClosed(1, n).toArray();
+    ForkJoinTask<Long> task = new ForkJoinSumCalculator(numbers);
+    return FORK_JOIN_POOL.invoke(task);
+  }
+
+}
+```
+
+### 포크/조인 프레임워크를 제대로 사용하는 방법. 주의할점.
+
+* join 메서드를 태스크에 호출하면 테스크가 생산하는 결과가 준비될 때까지 호출자를 '블록'시킨다.
+    * 두 서브태스크가 모두 시작된 다음에 join을 호출해야 한다. 
+
+* RecursiveTask 내에서는 ForkJoinpool의 invoke 메서드를 사용하지 말아야 한다. 대신 compute나 fork 메서드를 직접 호출할 수 있다.
+    * 순차 코드에서 병렬 계산을 시작할 때만 invoke 사용.
+
+* 서브태스크에 foke 메서드를 호출해서 FokrJoinPool의 일정 조절.
+    * 왼쪽 작업과 오른쪽 작업 모두에 foke 메서드 호출 보다는 한쪽에는 compute 다른 한쪽에는 foke를 호출하는 것이 효율적이다.
+    * 그러면 두 서브태스크의 한 태스크에는 같은 스레드를 재 사용 할 수 있다.
+        * 불필요한 오버헤드를 줄일 수 있다.
+
+* 포크/조인 프레임워크를 이용하는 병렬 계산은 디버깅하기 어렵다. 스택트레이스가 도움이 되지 않는다.
+
+
+### 작업 훔치기.
+작업 훔치기 알고리즘. 
+
+* 포크/조인 프레임워크에서는 작업 훔치기 라는 기법으로 FokeJoinPool의 모든 스레드를 거의 공정하게 분할할 수 있다.
+* 각각의 스레드는 자신에게 할당된 태스크를 포함하는 이중 연결 리스트를 참조하면서 작업이 끝날 때 마다 큐의 헤드에서 다른 태스크를 가져와서 작업을 처리
+* 할일이 없어진 스레드가 유휴 상태가 아닌 다른 스레드 큐의 꼬리(tail)에서 작업을 훔쳐오게 한다.
+    * 모든 태스크가 작업을 끝낼 때 까지, 즉 모든 큐가 빌 때까지 이 과정을 반복한다.
+
+* 즉 풀에 있는 작업 스레드의 태스크를 재분배하고 균형을 맞출 때 사용
+
+
+### Spliterator 인터페이스
+
+* Spliterator : 분할할 수 있는 반복자
+* 병렬 작업에 특화되어 있음.
+
+```java
+public interface Spliterator<T> {
+    boolean tryAdvance(Consumer<? supter T> action);
+    Spliterator<T> trySplit();
+    long estimateSize();
+    int characterisitcs();
+}
+```
+* T : 탐색하는 요소의 형식
+* tryAdvance : 요소를 순차적으로 소비하면서 탐색해야 할 요소가 남아있으면 참(true) 반호나
+* trySplit : 일부 요소(자신이 반환한요소)를 분할해서 두번째 Spliterator를 생성
+* estimateSize : 탐색해야 할 요소 수 정보 제공
+
+* chracteristics : Spliterator 자체의 특성 집합을 포함하는 int 반환. 
+
+* ![](.note_images/06876b46.png)
+
+* ![](.note_images/f8ed2cd6.png)
+
+
+
+# 스트림과 람다를 이용한 효과적 프로그래밍
+
+## 컬렉션 팩토리
+* 자바 9 에서 제공
+* 짝은 컬렉션 객체를 쉽게 만들 수 있는 방법
+* Arrays.asList(...)
+    * 요소를 갱신(수정)할 순 있지만 추가하거나 삭제할 순 없다.
+    * UnsupportedOperationException
+        * Arrays.asList()는 내부적으로 고정된 크기의 변환할 수 있는 배열로 구현되었기 때문에 발생.(고정 크기)
+
+* Set
+    * `Set<String> friends = new hashSet<>("1", "2", "3");`
+    * Stream.of("1", "2", "3").collect(Collectors.toSet());
+
+* 그러나 두 방법 모두 매끄럽지 못하고 내부적으로 불필요한 객체 할당을 필요로 한다. 
+
+### 리스트 팩토리 List Factory
+
+* List.of 팩토리 메소드
+    * .add로 요소를 추가할 순 없다.
+    * UnsupportedOperationException 발생
+    * .set 메서드로 요소도 바꿀 순 없다.
+
+### 집합 팩토리 Set Factory
+
+* Set.of("1, "2, "3);
+
+### 맵 팩토리
+
+* Map.of("1", "s", "2", "a");
+* 열 개 이하의 키와 값 쌍을 가진 작은 맵을 만들 때는 이 메소드가 유용.
+
+### 리스트와 집합 처리
+
+* removeIf : 프레디케이트를 만족하는 요소를 제거.
+
+* replaceAll : UnaryOperator 함수를 이용해 요소를 바꾼다. 
+
+* sort : List 정렬
 
 
