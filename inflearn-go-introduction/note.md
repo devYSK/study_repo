@@ -1420,4 +1420,53 @@ func run2(done chan bool) {
 }
 ```
 
+# 고루틴 동기화
+
+* 실행 흐름 제어 및 변수 동기화 가능
+* `공유 데이터가 보호가 가장 중요`
+* 뮤텍스(mutex) : 여러 고루틴에서 작업하는 공유데이터 보호 
+* sync.Mutex 선언 후 Lock(), UnLock() 사용
+
+```go
+
+import (
+	"sync"
+)
+
+func (c *count) increment() {
+	c.mutex.Lock()
+	c.num +=1
+	c.mutex.Unlock()
+}
+```
+
+* Lock(), UnLock() 으로 공유데이터 보호
+* 뮤텍스 : 상호 배제 -> 고루틴(Thread)들이 running time에 서로 영향을 주지 않게 함
+* RWMutex : 쓰기 Lock : 쓰기 시도 중에는 다른 곳에서 이전 값을 읽으면 안됌. 읽기 (read), 쓰기(write) 락 전부 방지
+* RMutex : 읽기 Lock -> 읽기 시도 중에 값이 변경 방지. 쓰기(write) 락 방지 
+
+```go
+mutex := new(sync.RWMutex)
+
+mutex.Lock()
+
+mutex.Unlock()
+```
+
+* Wait, Signal(1개만 깨울 때), Broadcas(전체) 함수로 멈춘 쓰레드를 깨움.
+```go
+var mutex = new(sync.Mutex)
+var condition = sync.NewCond(mutex)
+condition.Wait()
+```
+
+
+
+
+
+
+
+
+
+
 
