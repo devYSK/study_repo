@@ -1531,10 +1531,161 @@ func main()  {
 * 원자성을 보장함. 
 
 
+# Go 에러처리 (예외처리)
+
+* Go에서는 기본적으로 error 패키지에서 error 인터페이스 제공.
+* error 인터페이스는 단 하나의 메서드를 갖고, 이 인터페이스를 구현해서 커스텀 에러타입을 만듬
+```go
+type error interface {
+    Error() string
+}
+```
+
+* 기본적으로 메서드 마다 리턴 타입 2개.
+	* (리턴 값, 에러)
+
+* 주로 Errorf(에러타입 리턴) 메서드, Fatal(프로그램 종료) 메서드를 통해서 에러 출력
+
+```go
+
+import (
+	"log"
+	"os"
+)
+
+func main()  {
+	f, err := os.Open("notExists")
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	println(f.Name())
+
+}
+```
+
+* Go 함수가 결과와 에러를 함께 리턴한다면, 이 에러가 nil 인지 체크해서 에러가 없는지 체크할 수 있다. 
+* log.Fatal()은 메시지를 출력하고 os.Exit(1)를 호출하여 프로그램을 종료한다. 
+
+* 또 다른 에러처리로서 error의 Type을 체크해서 에러 타입별로 별도의 에러처리를 하는 방식이 있다.
+	* switch문에서 변수명.(type) 의 방식으로 타입 체크.
+	* 디폴트의 경우 에러타입이 nil 이므로 에러가 없는 경우. 
+
+```go
+_, err := otherFunc()
+switch err.(type) {
+default: // no error
+    println("ok")
+case MyError:
+    log.Print("Log my error")
+case error:
+    log.Fatal(err.Error())
+}
+```
+
+* errors.New("text") 로 에러를 직접 생성 해줄수도 있다. 
 
 
+```go
+type PowError struct {
+	time time.Time	// 에러 발생 시간
+	value float64	// 파라미터
+	message string // 메시지
+}
 
+func (e PowError) Error() string {
+	return fmt.Sprintf("[%v]Error - Input Value(value: %g) - %s", e.time, e.value, e.message)
+}
 
+func Power(f, i float64) (float64, error) {
+	if f == 0 {
+		return 0, PowError{time.Now(), f, "0은 사용할 수 없습니다"}
+	}
 
+	if math.IsNaN(f) {
+		return 0, PowError{time.Now(), f, "숫자가 아닙니다. "}
+	}
+	
+	if math.IsNaN(i) {
+		return 0, PowError{time.Now(), i, "숫자가 아닙니다. "}
+	}
+	
+	return math.Pow(f, i), nil
+}
 
+func main()  {
 
+	v, err := Power(10, 3)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(v)
+
+	t, err := Power(10, 0)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(t)
+
+	a, err := Power(0, 0)
+
+	if err != nil {
+
+		fmt.Println(err.(PowError).time)
+		fmt.Println(err.(Pow능rror).value)
+		fmt.Println(err.(PowError).message)
+
+		log.Fatal(err)
+	}
+
+	fmt.Println(a)
+}
+```
+* 형변환을 통하여 에러 구조체의 멤버에 접근 가능
+	* err.(type).
+
+## Panic, Recover
+
+* panic() 함수
+	* 사용자가 에러 발생 가능
+	* 호출 즉시, 해당 함수(메서드)를 즉시 중지시키고 defer 함수를 호출하고 자기자신을 호출한곳으로 리턴.
+	* 런타임 이외에 사용자가 코드 흐름에 따라 에러를 발생 시킬 때 중요
+	* panic 모드 실행 방식은, 다시 상위함수에도 똑같이 적용되고 계속 콜스택을 타고 올라가며 적용된다. 그리고 마지막에는 프로그램이 에러를 내고 종료하게 된다. 
+	* 신택스 에러는 아니지만, 논리적인 코드 흐름에 따른 에러 발생 처리 가능. 
+
+* recever() 함수
+	* panic 함수에 의한 패닉 상태를 다시 정상상태로 되돌리는 함수.
+	* recover 함수를 사용하면 panic 상태를 제거하고 panic 이후의 작업을 수행한다.
+	* panic에서 설정한 메시지를 받아올 수 있다.
+
+```go
+func main() {
+    // 잘못된 파일명을 넣음
+    openFile("Invalid.txt")
+ 
+    // recover에 의해
+    // 이 문장 실행됨
+    println("Done") 
+}
+ 
+func openFile(fn string) {
+    // defer 함수. panic 호출시 실행됨
+    defer func() {
+        if r := recover(); r != nil {
+            fmt.Println("OPEN ERROR", r)
+        }
+    }()
+ 
+    f, err := os.Open(fn)
+    if err != nil {
+        panic(err)
+    }
+ 
+    defer f.Close()
+}
+```
