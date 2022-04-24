@@ -1461,6 +1461,74 @@ condition.Wait()
 ```
 
 
+## 고루틴 동기화 고급
+
+* Once : 한 번만 실행(주로 초기화에 사용)
+	* sync 패키지
+	* once := new(sync.Once)
+	* once.Do(func() )
+	* 고루틴을 몇번을 실행해도 1번만 실행됨.
+
+```go
+func main()  {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	once := new(sync.Once)
+
+	for i := 0; i< 5; i++ {
+		go func(n int) {
+			fmt.Println("Goroutine : ", n)
+			once.Do(onceTest)
+		}(i)
+	}
+
+	time.Sleep(2 * time.Second)
+}
+
+func onceTest() {
+	// 한번 실행할 코드 작성
+	fmt.Println("One!")
+}
+```
+
+* 고루틴 대기 그룹
+* 실행 흐릅 변경 (고루틴이 종료될 떄 까지 대기 기능)
+* WaiteGroup : 
+	* Add() : 고루틴 추가 
+	* Done() : 작업 종료 알림
+	* Wait() : 고루틴 종료시까지 대기
+
+* Add로 추가된 고루틴 갯수와, Done으로 종료되는 알림 횟수 같아야 정확하게 동작함. 
+
+```go
+func main()  {
+
+	wg := new(sync.WaitGroup)
+
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		go func(n int) {
+			fmt.Println("WaitGroup ", n)
+			wg.Done()
+		}(i)
+	}
+
+	wg.Wait()
+}
+```
+
+* 고루틴 종료시까지 대기 Wait()
+
+* 고루틴 원자성 사용
+	* 기능적으로 분할 불가능한 완전 보증된 일력의 조작.
+	* 모두 성공하거나, 모두 실패
+	* sync/atomic에서 원자적 연산자 제공
+	* 주로 공용 변수에 관한 계산 사용
+	* https://golang.org/pkg/sync/atomic
+
+* sync/atomic 패키지
+* atomoic.메서드()
+* 원자성을 보장함. 
 
 
 
