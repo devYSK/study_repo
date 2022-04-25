@@ -2,5 +2,16 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/frankban/quicktest" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/google/btree" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/google/go-cmp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/kr/pretty" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/kr/text" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/peterbourgon/diskv" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/rogpeppe/fastuuid" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/rogpeppe/go-internal" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/shabbyrobe/xmlwriter" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/github.com/tealeg/xlsx" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/golang.org/x/text" vcs="Git" />
   </component>
 </project>

@@ -1773,4 +1773,40 @@ unc main() {
 	* file := csv.NewReader(bufio.NewReader(file))
 
 
+### ioutil 패키지.
 
+* I/O 관련한 편리한 유틸리티 제공하는 패키지
+* https://golang.org/pkg/io/ioutil
+
+
+# 패키지 고급
+
+## 사용자 패키지 제작 및 문서화
+
+* 기준은 GOPATH/src
+* go install 명령어 실행 시 GOPATH/pkg에 등록
+* godoc -http=:7070 -> pkg이동 -> 본인 패키지 메소드 및 주석 확인 
+    * go에서 자동으로 주석 달아놨떤 내용 및 메서드를 등록 해줌.
+
+## 외부 저장소 패키지 설치 및 사용
+
+* 2가지 설치 방법 
+1. import 로 먼저 선언 후 폴더 이동 후 go get 설치
+2. go get 패키지 주소 설치 -> 선언
+
+
+# 크롤러 제작 실습 
+
+* 대상 사이트 : 루리웹
+
+* go get github.com/yhat/scrape : 설치
+* https://github.com/yhat/scrape : Go simple scrap package -> 사용하기 어렵지만, 코드 학습 위해서 사용
+* http://go-colly.org/docs/ : Go scrap and cralwing library -> goquery 기반 굉장히 강력하고 쉬운 패키지(가장 많이 사용)
+* https://github.com/PuerkitoBio/goquery : 쉬운 HTML Parsing 지원
+
+# 마무리
+
+* https://www.slant.co/topics/1412/~web-frameworks-for-go
+* https://medium.com/exploring-code/why-should-you-learn-go-f607681fad65
+* https://golangkorea.github.io/post/go-start/feature/
+* 
