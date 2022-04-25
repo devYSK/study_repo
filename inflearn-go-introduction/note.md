@@ -1689,3 +1689,88 @@ func openFile(fn string) {
     defer f.Close()
 }
 ```
+
+
+# Go 파일 입출력
+
+* os 패키지
+* os.Open() : 파일 열때 사용
+* os.Create() : 새 파일 생성
+* close() : 파일 닫기
+
+```go
+func main() {
+    // 입력파일 열기
+    fi, err := os.Open("C:\\temp\\1.txt")
+    if err != nil {
+        panic(err)
+    }
+    defer fi.Close()
+ 
+    // 출력파일 생성
+    fo, err := os.Create("C:\\temp\\2.txt")
+    if err != nil {
+        panic(err)
+    }
+    defer fo.Close()
+ 
+    buff := make([]byte, 1024)
+ 
+    // 루프
+    for {
+        // 읽기
+        cnt, err := fi.Read(buff)
+        if err != nil && err != io.EOF {
+            panic(err)
+        }
+ 
+        // 끝이면 루프 종료
+        if cnt == 0 {
+            break
+        }
+ 
+        // 쓰기
+        _, err = fo.Write(buff[:cnt])
+        if err != nil {
+            panic(err)
+        }
+    }
+}
+```
+
+* csv 패키지중 하나 : https://github.com/tealeg/xlsx
+
+```go
+unc main() {
+
+	file, err := os.Create("test_write.csv")
+	errorCheck1(err)
+
+	defer file.Close()
+
+	wr := csv.NewWriter(file)
+
+	wr.Write([]string{"kim", "4.8"})
+	wr.Write([]string{"kim", "4.8"})
+	wr.Write([]string{"kim", "4.8"})
+	wr.Write([]string{"kim", "4.8"})
+	wr.Write([]string{"kim", "4.8"})
+
+	wr.Flush()
+
+	fileStat, err := file.Stat()
+
+	errorCheck1(err)
+
+	fmt.Println(fileStat.Size()) // 파일 사이즈
+	fmt.Println(fileStat.Mode()) // 파일 권한
+	fmt.Println(fileStat.Name()) // 파일 이름
+	fmt.Println(fileStat.ModTime()) // 파일 생성 시간
+}
+```
+
+* 파일 용량이 큰 경우 버퍼 사용 권장
+	* file := csv.NewReader(bufio.NewReader(file))
+
+
+
