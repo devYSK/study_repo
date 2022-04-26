@@ -8,7 +8,7 @@ import java.sql.*;
 import java.util.NoSuchElementException;
 
 /**
- * JDBC - DriverManager 사용
+ * @author : ysk
  */
 @Slf4j
 public class MemberRepositoryV0 {
@@ -37,38 +37,35 @@ public class MemberRepositoryV0 {
 
     public Member findById(String memberId) throws SQLException {
         String sql = "select * from member where member_id = ?";
-
         Connection con = null;
         PreparedStatement pstmt = null;
-        ResultSet rs = null;
 
         try {
             con = getConnection();
             pstmt = con.prepareStatement(sql);
             pstmt.setString(1, memberId);
+            ResultSet resultSet = pstmt.executeQuery();
 
-            rs = pstmt.executeQuery();
-            if (rs.next()) {
+            if (resultSet.next()) {
                 Member member = new Member();
-                member.setMemberId(rs.getString("member_id"));
-                member.setMoney(rs.getInt("money"));
+                member.setMemberId(resultSet.getString("member_id"));
+                member.setMoney(resultSet.getInt("money"));
                 return member;
             } else {
-                throw new NoSuchElementException("member not found memberId=" + memberId);
+                throw new NoSuchElementException("member not found. memberId : " + memberId);
             }
 
         } catch (SQLException e) {
             log.error("db error", e);
             throw e;
         } finally {
-            close(con, pstmt, rs);
+            close(con, pstmt, null);
         }
 
     }
 
     public void update(String memberId, int money) throws SQLException {
-        String sql = "update member set money=? where member_id=?";
-
+        String sql = "update member set money = ? where member_id = ?";
         Connection con = null;
         PreparedStatement pstmt = null;
 
@@ -78,7 +75,7 @@ public class MemberRepositoryV0 {
             pstmt.setInt(1, money);
             pstmt.setString(2, memberId);
             int resultSize = pstmt.executeUpdate();
-            log.info("resultSize={}", resultSize);
+            log.info("result Size = {}", resultSize);
         } catch (SQLException e) {
             log.error("db error", e);
             throw e;
@@ -89,8 +86,7 @@ public class MemberRepositoryV0 {
     }
 
     public void delete(String memberId) throws SQLException {
-        String sql = "delete from member where member_id=?";
-
+        String sql = "delete from member where member_id = ?";
         Connection con = null;
         PreparedStatement pstmt = null;
 
@@ -108,8 +104,9 @@ public class MemberRepositoryV0 {
 
     }
 
-    private void close(Connection con, Statement stmt, ResultSet rs) {
 
+
+    private void close(Connection con, Statement stmt, ResultSet rs) {
         if (rs != null) {
             try {
                 rs.close();
@@ -136,10 +133,7 @@ public class MemberRepositoryV0 {
 
     }
 
-
     private Connection getConnection() {
         return DBConnectionUtil.getConnection();
     }
-
-
 }
