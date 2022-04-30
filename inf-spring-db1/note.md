@@ -848,4 +848,186 @@ public interface PlatformTransactionManager extends TransactionManager {
   * 트랜잭션이 성공하면 이 로직을 호출해서 커밋하면 된다.
 * transactionManager.rollback(status)
   * 문제가 발생하면 이 로직을 호출해서 트랜잭션을 롤백하면 된다
+  
+## 트랜잭션 문제 해결 - 트랜잭션 매니저 2
+
+* 트랜잭션 매니저의 전체 동작 흐름
+* ![](.note_images/4e932bb6.png)
+
+* 클라이언트의 요청으로 서비스 로직을 실행한다. - 1
+1. 서비스 계층에서 transactionManager.getTransaction() 을 호출해서 트랜잭션을 시작한다.
+2. 트랜잭션을 시작하려면 먼저 데이터베이스 커넥션이 필요하다. 트랜잭션 매니저는 내부에서 데이터소스를 사용해서 커넥션을 생성한다.
+3. 커넥션을 수동 커밋 모드로 변경해서 실제 데이터베이스 트랜잭션을 시작한다.
+4. 커넥션을 트랜잭션 동기화 매니저에 보관한다.
+5. 트랜잭션 동기화 매니저는 쓰레드 로컬에 커넥션을 보관한다. 따라서 멀티 쓰레드 환경에 안전하게 커넥션을 보관할 수 있다
+
+* 트랜잭션 매니저 로직 실행 - 2
+
+* ![](.note_images/cf59fdce.png)
+
+6. 서비스는 비즈니스 로직을 실행하면서 리포지토리의 메서드들을 호출한다. 이때 커넥션을 파라미터로 전달하지 않는다.
+7. 리포지토리 메서드들은 트랜잭션이 시작된 커넥션이 필요하다. 리포지토리는
+   DataSourceUtils.getConnection() 을 사용해서 트랜잭션 동기화 매니저에 보관된 커넥션을 꺼내서
+   사용한다. 이 과정을 통해서 자연스럽게 같은 커넥션을 사용하고, 트랜잭션도 유지된다.
+
+8. 획득한 커넥션을 사용해서 SQL을 데이터베이스에 전달해서 실행한다.
+
+* 트랜잭션 매니저 - 트랜잭션 종료 - 3
+
+* ![](.note_images/52b4f5d6.png)
+
+9. 비즈니스 로직이 끝나고 트랜잭션을 종료한다. 트랜잭션은 커밋하거나 롤백하면 종료된다.
+10. 트랜잭션을 종료하려면 동기화된 커넥션이 필요하다. 트랜잭션 동기화 매니저를 통해 동기화된 커넥션을
+    획득한다.
+11. 획득한 커넥션을 통해 데이터베이스에 트랜잭션을 커밋하거나 롤백한다.
+12. 전체 리소스를 정리한다.
+    트랜잭션 동기화 매니저를 정리한다. 쓰레드 로컬은 사용후 꼭 정리해야 한다.
+    con.setAutoCommit(true) 로 되돌린다. 커넥션 풀을 고려해야 한다.
+    con.close() 를 호출해셔 커넥션을 종료한다. 커넥션 풀을 사용하는 경우 con.close() 를
+    호출하면 커넥션 풀에 반환된다.
+* 정리
+* 트랜잭션 추상화 덕분에 서비스 코드는 이제 JDBC 기술에 의존하지 않는다.
+  * 이후 JDBC에서 JPA로 변경해도 서비스 코드를 그대로 유지할 수 있다.
+  * 기술 변경시 의존관계 주입만 DataSourceTransactionManager 에서 JpaTransactionManager
+    로 변경해주면 된다.
+  * java.sql.SQLException 이 아직 남아있지만 이 부분은 뒤에 예외 문제에서 해결하자.
+    트랜잭션 동기화 매니저 덕분에 커넥션을 파라미터로 넘기지 않아도 된다.
+> 참고
+> 여기서는 DataSourceTransactionManager 의 동작 방식을 위주로 설명했다. 다른 트랜잭션 매니저는
+해당 기술에 맞도록 변형되어서 동작한다.
+
+### 트랜잭션 템플릿
+
+* 템플릿 콜백 패턴
+* 스프링은 TransactionTemplate 이라는 템플릿 클래스 제공
+```java
+public class TransactionTemplate {
+    private PlatformTransactionManager transactionManager;
+    
+    public <T> T execute(TransactionCallback<T> action){..}
+    
+    void executeWithoutResult(Consumer<TransactionStatus> action){..}
+}
+```
+* execute() : 응답 값이 있을 때 사용한다.
+* executeWithoutResult() : 응답 값이 없을 때 사용한다.
+
+
+* 트랜잭션 템플릿의 기본 동작은 다음과 같다.
+* 비즈니스 로직이 정상 수행되면 커밋한다.
+  * 언체크 예외가 발생하면 롤백한다. 그 외의 경우 커밋한다. (체크 예외의 경우에는 커밋하는데, 이 부분은 뒤에서 설명한다.)
+  * 코드에서 예외를 처리하기 위해 try~catch 가 들어갔는데, bizLogic() 메서드를 호출하면
+* SQLException 체크 예외를 넘겨준다. 해당 람다에서 체크 예외를 밖으로 던질 수 없기 때문에 언체크
+예외로 바꾸어 던지도록 예외를 전환했다.
+
+## 트랜잭션 문제 해결 - 트랜잭션 AOP
+
+* 트랜잭션 템플릿 덕분에 트랜잭션을 처리하는 반복 코드는 해결할 수 있었다. 하지만 서비스 계층에 순수한
+비즈니스 로직만 남긴다는 목표는 아직 달성하지 못했다.
+* 이럴 때 스프링 AOP를 통해 프록시를 도입하면 문제를 깔끔하게 해결할 수 있다.
+> 참고
+> 스프링 AOP와 프록시에 대해서 지금은 자세히 이해하지 못해도 괜찮다. 지금은 @Transactional 을
+사용하면 스프링이 AOP를 사용해서 트랜잭션을 편리하게 처리해준다 정도로 이해해도 된다. 스프링 AOP
+와 프록시에 대한 자세한 내용은 스프링 핵심 원리 - 고급편을 참고하자
+* 프록시를 사용하면 트랜잭션을 처리하는 객체와 비즈니스 로직을 처리하는 서비스 객체를 명확하게 분리할
+  수 있다.
+
+## 스프링이 제공하는 트랜잭션 AOP
+
+* 스프링이 제공하는 AOP 기능을 사용하면 프록시를 매우 편리하게 적용할 수 있다. 스프링 핵심 원리 -
+고급편을 통해 AOP를 열심히 공부하신 분이라면 아마도 @Aspect , @Advice , @Pointcut 를 사용해서
+* 트랜잭션 처리용 AOP를 어떻게 만들지 머리속으로 그림이 그려질 것이다.
+물론 스프링 AOP를 직접 사용해서 트랜잭션을 처리해도 되지만, 트랜잭션은 매우 중요한 기능이고, 전세계
+누구나 다 사용하는 기능이다. 스프링은 트랜잭션 AOP를 처리하기 위한 모든 기능을 제공한다. 스프링
+부트를 사용하면 트랜잭션 AOP를 처리하기 위해 필요한 스프링 빈들도 자동으로 등록해준다.
+
+* 개발자는 트랜잭션 처리가 필요한 곳에 @Transactional 애노테이션만 붙여주면 된다. 스프링의
+트랜잭션 AOP는 이 애노테이션을 인식해서 트랜잭션 프록시를 적용해준다
+
+
+참고
+> 스프링 AOP를 적용하려면 어드바이저, 포인트컷, 어드바이스가 필요하다. 스프링은 트랜잭션 AOP 처리를
+위해 다음 클래스를 제공한다. 스프링 부트를 사용하면 해당 빈들은 스프링 컨테이너에 자동으로 등록된다.  
+> 어드바이저: BeanFactoryTransactionAttributeSourceAdvisor  
+> 포인트컷: TransactionAttributeSourcePointcut  
+> 어드바이스: TransactionInterceptor
+
+* @Transactional 애노테이션은 메서드에 붙여도 되고, 클래스에 붙여도 된다. 클래스에 붙이면 외부에서
+  호출 가능한 public 메서드가 AOP 적용 대상이 된다.
+
+* @SpringBootTest : 스프링 AOP를 적용하려면 스프링 컨테이너가 필요하다. 이 애노테이션이 있으면
+테스트시 스프링 부트를 통해 스프링 컨테이너를 생성한다. 그리고 테스트에서 @Autowired 등을 통해
+스프링 컨테이너가 관리하는 빈들을 사용할 수 있다.
+* @TestConfiguration : 테스트 안에서 내부 설정 클래스를 만들어서 사용하면서 이 에노테이션을 붙이면,
+스프링 부트가 자동으로 만들어주는 빈들에 추가로 필요한 스프링 빈들을 등록하고 테스트를 수행할 수
+있다.
+* TestConfig
+  * DataSource 스프링에서 기본으로 사용할 데이터소스를 스프링 빈으로 등록한다. 추가로 트랜잭션 매니저에서도 사용한다.
+  * DataSourceTransactionManager 트랜잭션 매니저를 스프링 빈으로 등록한다.
+    * 스프링이 제공하는 트랜잭션 AOP는 스프링 빈에 등록된 트랜잭션 매니저를 찾아서 사용하기 때문에 트랜잭션 매니저를 스프링 빈으로 등록해두어야 한다
+
+## 트랜잭션 AOP 정리
+
+* 트랜잭션 AOP가 사용된 전체 흐름
+* ![](.note_images/f9bc9912.png)
+
+### 선언적 트랜잭션 관리 vs 프로그래밍 방식 트랜잭션 관리
+
+* 선언적 트랜잭션 관리(Declarative Transaction Management)
+  * `@Transactional 애노테이션 하나만 선언해서 매우 편리하게 트랜잭션을 적용하는 것을 선언적 트랜잭션 관리라 한다.`
+  * 선언적 트랜잭션 관리는 과거 XML에 설정하기도 했다. 이름 그대로 해당 로직에 트랜잭션을 적용하겠다 라고 어딘가에 선언하기만 하면 트랜잭션이 적용되는 방식이다.
+* 프로그래밍 방식의 트랜잭션 관리(programmatic transaction management)
+  * `트랜잭션 매니저 또는 트랜잭션 템플릿 등을 사용해서 트랜잭션 관련 코드를 직접 작성하는 것을 프로그래밍 방식의 트랜잭션 관리라 한다.`
+
+* 선언적 트랜잭션 관리가 프로그래밍 방식에 비해서 훨씬 간편하고 실용적이기 때문에 실무에서는 대부분
+선언적 트랜잭션 관리를 사용한다.
+
+* 프로그래밍 방식의 트랜잭션 관리는 스프링 컨테이너나 스프링 AOP 기술 없이 간단히 사용할 수 있지만
+실무에서는 대부분 스프링 컨테이너와 스프링 AOP를 사용하기 때문에 거의 사용되지 않는다.
+프로그래밍 방식 트랜잭션 관리는 테스트 시에 가끔 사용될 때는 있다.
+
+### 정리
+* 스프링이 제공하는 선언적 트랜잭션 관리 덕분에 드디어 트랜잭션 관련 코드를 순수한 비즈니스 로직에서
+제거할 수 있었다.
+* 개발자는 트랜잭션이 필요한 곳에 @Transactional 애노테이션 하나만 추가하면 된다. 나머지는 스프링
+트랜잭션 AOP가 자동으로 처리해준다.
+* `@Transactional` 애노테이션의 자세한 사용법은 뒤에서 설명한다. 지금은 전체 구조를 이해하는데
+초점을 맞추자.
+
+### 데이터소스(DataSource) - 자동 등록
+
+* 스프링 부트는 데이터소스( DataSource )를 스프링 빈에 자동으로 등록한다.
+* 자동으로 등록되는 스프링 빈 이름: dataSource
+* 개발자가 직접 데이터소스를 빈으로 등록하면 스프링 부트는 데이터소스를 자동으로 등록하지 않는다.
+
+이때 스프링 부트는 다음과 같이 application.properties 에 있는 속성을 사용해서 DataSource 를
+생성한다. 그리고 스프링 빈에 등록한다.
+```yaml
+spring.datasource.url=jdbc:h2:tcp://localhost/~/test
+spring.datasource.username=sa
+spring.datasource.password=
+```
+* 스프링 부트가 기본으로 생성하는 데이터소스는 커넥션풀을 제공하는 HikariDataSource 이다.
+커넥션풀과 관련된 설정도 application.properties 를 통해서 지정할 수 있다.
+* spring.datasource.url 속성이 없으면 내장 데이터베이스(메모리 DB)를 생성하려고 시도한다
+
+### 트랜잭션 매니저 - 자동 등록
+
+* 스프링 부트는 적절한 트랜잭션 매니저( PlatformTransactionManager )를 자동으로 스프링 빈에 등록한다.
+* 자동으로 등록되는 스프링 빈 이름: transactionManager
+* 개발자가 직접 트랜잭션 매니저를 빈으로 등록하면 스프링 부트는 트랜잭션 매니저를 자동으로 등록하지 않는다.
+
+어떤 트랜잭션 매니저를 선택할지는 현재 등록된 라이브러리를 보고 판단하는데, 
+* JDBC를 기술을 사용하면 DataSourceTransactionManager 를 빈으로 등록
+* JPA를 사용하면 JpaTransactionManager 를 빈으로 등록한다. 
+* 둘다 사용하는 경우 JpaTransactionManager 를 등록한다. 참고로 JpaTransactionManager 는 DataSourceTransactionManager 가 제공하는 기능도 대부분 지원한다
+
+
+스프링 부트의 데이터소스 자동 등록에 대한 더 자세한 내용은 다음 스프링 부트 공식 메뉴얼을 참고하자.
+> https://docs.spring.io/spring-boot/docs/current/reference/html/
+data.html#data.sql.datasource.production
+> #### 자세한 설정 속성은 다음을 참고하자.
+> https://docs.spring.io/spring-boot/docs/current/reference/html/applicationproperties.html
+
+
 
