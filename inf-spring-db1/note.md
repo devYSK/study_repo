@@ -1280,14 +1280,212 @@ static class Repository {
 * 예외를 전환할 때는 꼭 기존 예외를 포함해야한다. -> 그렇지 않으면 스택 트레이스 확인 시 심각한 문제 발생
   * 기존 예외가 무엇인지 모름. 
 
+# 6 예외처리, 반복
+
+## 체크 예외와 인터페이스 
+
+* 서비스 계층은 가급적 특정 구현 기술에 의존하지 않고, 순수하게 유지하는 것이 좋다. 이렇게 하려면 예외에 대한 의존도 함께 해결해야한다.
+
+> 예를 들어서 서비스가 처리할 수 없는 SQLException 에 대한 의존을 제거하려면 어떻게 해야할까?  
+서비스가 처리할 수 없으므로 리포지토리가 던지는 SQLException 체크 예외를 런타임 예외로 전환해서 서비스 계층에 던지자.    
+이렇게 하면 서비스 계층이 해당 예외를 무시할 수 있기 때문에, 특정 구현 기술에
+의존하는 부분을 제거하고 서비스 계층을 순수하게 유지할 수 있다.
+
+### 인터페이스 도입 
+
+* 특정 기술에 종속되지 않는 순수한 인터페이스를 기반으로 특정 기술을 사용하는
+  구현체를 만들면 된다.
+  * Repository -> JpaRepository, JdbcRepository 
+
+* 그러나 체크 예외를 사용하려면 인터페이스에도 해당 체크 예외가 선언 되어 있어야 한다. 
+```java
+public interface MemberRepositoryEx {
+    Member save(Member member) throws SQLException;
+    Member findById(String memberId) throws SQLException;
+    void update(String memberId, int money) throws SQLException;
+    void delete(String memberId) throws SQLException;
+}
+```
+* 인터페이스의 구현체가 체크 예외를 던지려면, 인터페이스 메서드에 먼저 체크 예외를 던지는 부분이 선언 되어 있어야 한다. 그래야 구현 클래스의 메서드도 체크 예외를 던질 수 있다.
+  * 구현 클래스의 메서드에 선언할 수 있는 예외는 부모 타입에서 던진 예외와 같거나 하위 타입이어야 한다
+
+* `런타임 예외는 이런 부분에서 자유롭다. 인터페이스에 런타임 예외를 따로 선언하지 않아도 된다.` 따라서 인터페이스가 특정 기술에 종속적일 필요가 없다
+
+* RunTimeException을 상속받는 클래스를 만들어 체크 예외를 런타임예외로 변환해서 던지면 된다. 
+```java
+// 커스텀 예외 클래스 선언 
+public class MyRuntimeException extends RuntimeException {
+
+  public MyRuntimeException() {
+  }
+
+  public MyRuntimeException(String message) {
+    super(message);
+  }
+
+  public MyRuntimeException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public MyRuntimeException(Throwable cause) {
+    super(cause);
+  }
+}
+
+// 다른 클래스의 예외처리 부분
+catch(SQLException e) { // 체크 예외를
+    throw new MyRuntimeException(e); // 런타임 예외로     
+}
+```
+
+* 예외를 변환할 때는 기존 예외를 꼭! 포함하자. 장애가 발생하고 로그에서 진짜 원인이 남지 않는 심각한 문제가 발생할 수 있다
+
+정리
+* 체크 예외를 런타임 예외로 변환하면서 인터페이스와 서비스 계층의 순수성을 유지할 수 있게 되었다.
+* 덕분에 향후 JDBC에서 다른 구현 기술로 변경하더라도 서비스 계층의 코드를 변경하지 않고 유지할 수 있다.
+
+* 리포지토리에서 넘어오는 특정한 예외의 경우 복구를 시도할 수도 있다. 그런데 지금 방식은 항상 MyDbException 이라는 예외만 넘어오기 때문에 예외를 구분할 수 없는 단점이 있다. 
+* 만약 특정 상황에는 예외를 잡아서 복구하고 싶으면 예외를 어떻게 구분해서 처리할 수 있을까?
+* 다음 예제를 보자
+### 데이터 접근 예외 직접 만들기 
+* 데이터베이스 오류에 따라서 특정 예외는 복구하고 싶을 수 있다.
+  * 예를 들어서 회원 가입시 DB에 이미 같은 ID가 있으면 ID 뒤에 숫자를 붙여서 새로운 ID를 만들어야 한다고 가정해보자.
+  * ID를 `hello` 라고 가입 시도 했는데, 이미 같은 아이디가 있으면 `hello12345` 와 같이 뒤에 임의의 숫자를 붙여서 가입하는 것이다.
+
+* 데이터를 DB에 저장할 때 같은 ID가 이미 데이터베이스에 저장되어 있다면, 데이터베이스는 오류 코드를 반환하고, 이 오류 코드를 받은 JDBC 드라이버는 `SQLException` 을 던진다. 그리고 `SQLException` 에는 데이터베이스가 제공하는 `errorCode` 라는 것이 들어있다.
+
+* ![](.note_images/a4569524.png)
+* SQLException 내부에 들어있는 errorCode 를 활용하면 데이터베이스에서 어떤 문제가 발생했는지 확인할 수 있다
+
+* H2 데이터 베이스의 예
+  * 23505 : 키 중복 오류
+  * 42000 : SQL 문법 오류 
+  * 각 데이터베이스 마다 정의된 오류 코드가 다르므로 데이터베이스 메뉴얼을 확인
+
+* 서비스 계층에서는 예외 복구를 위해 키 중복 오류를 확인할 수 있어야 한다. 그래야 새로운 ID를 만들어서 다시 저장을 시도할 수 있기 때문이다. 
+* 이러한 과정이 바로 예외를 확인해서 복구하는 과정이다. 
+* 리포지토리는 SQLException 을 서비스 계층에 던지고 서비스 계층은 이 예외의 오류 코드를 확인해서 키 중복 오류( 23505 )인 경우 새로운 ID를 만들어서 다시 저장하면 된다.
+  
+* 그런데 SQLException 에 들어있는 오류 코드를 활용하기 위해 SQLException 을 서비스 계층으로 던지게 되면, 서비스 계층이 SQLException 이라는 JDBC 기술에 의존하게 되면서, 지금까지 우리가 민했던 서비스 계층의 순수성이 무너진다
+
+* `이 문제를 해결하려면 앞서 배운 것 처럼 리포지토리에서 예외를 변환해서 던지면 된다.
+  SQLException -> MyDuplicateKeyException`
+
+```java
+public class MyDuplicateKeyException extends MyDbException {
+    public MyDuplicateKeyException() {}
+    public MyDuplicateKeyException(String message) {
+        super(message);
+    }
+    public MyDuplicateKeyException(String message, Throwable cause)   {
+        super(message, cause);
+    }
+    public MyDuplicateKeyException(Throwable cause) {
+        super(cause);
+    }
+}
+```
+* 기존에 사용했던 MyDbException 을 상속받아서 의미있는 계층을 형성한다. 이렇게하면 데이터베이스 관련 예외라는 계층을 만들 수 있다.
+* 그리고 이름도 MyDuplicateKeyException 이라는 이름을 지었다. 이 예외는 데이터 중복의 경우에만 던져야 한다.
+* 이 예외는 우리가 직접 만든 것이기 때문에, JDBC나 JPA 같은 특정 기술에 종속적이지 않다. 
+* 따라서 이 예외를 사용하더라도 서비스 계층의 순수성을 유지할 수 있다. (향후 JDBC에서 다른 기술로 바꾸어도 이 예외는 그대로 유지할 수 있다.)
+
+```java
+try {
+    repository.save(new Member(memberId, 0));
+    log.info("saveId={}", memberId);
+} catch (MyDuplicateKeyException e) {
+    log.info("키 중복, 복구 시도");
+    String retryId = generateNewId(memberId);
+    log.info("retryId={}", retryId);
+    repository.save(new Member(retryId, 0));
+} catch (MyDbException e) {
+    log.info("데이터 접근 계층 예외", e);
+    throw e;
+}
+```
+
+* 만약 복구할 수 없는 예외( MyDbException )면 로그만 남기고 다시 예외를 던진다.
+* 참고로 이 경우 여기서 예외 로그를 남기지 않아도 된다. 
+  * 어차피 복구할 수 없는 예외는 예외를 공통으로 처리하는 부분까지 전달되기 때문이다.   * 따라서 이렇게 복구 할 수 없는 예외는 공통으로 예외를 처리하는 곳에서 예외 로그를 남기는 것이 좋다. 
+
+## 스프링 예외 추상화
+
+* 스프링에서는 데이터 접근과 관련된 예외를 추상화해서 제공한다.
+* ![](.note_images/4205f2bd.png)
+* 각각의 예외는 특정 기술에 종속적이지 않게 설계되어 있다. 따라서 서비스 계층에서도 스프링이 제공하는 예외를 사용하면 된다. 
+  * 예를 들어서 JDBC 기술을 사용하든, JPA 기술을 사용하든 스프링이 제공하는
+  예외를 사용하면 된다.
+* JDBC나 JPA를 사용할 때 발생하는 예외를 스프링이 제공하는 예외로 변환해주는 역할도 스프링이 제공한다.
+* 참고로 그림을 단순화 하기 위해 일부 계층을 생략했다.
+
+* 예외의 최고 상위는 org.springframework.dao.DataAccessException 이다. 그림에서 보는 것 처럼 런타임 예외를 상속 받았기 때문에 스프링이 제공하는 데이터 접근 계층의 모든 예외는 런타임 예외이다. 
+
+* DataAccessException 은 크게 2가지로 구분하는데 `NonTransient 예외와 Transient 예외이다.`
+  * Transient 는 일시적이라는 뜻이다. Transient 하위 예외는 동일한 SQL을 다시 시도했을 때 성공할 가능성이 있다.
+    * 예를 들어서 쿼리 타임아웃, 락과 관련된 오류들이다. 이런 오류들은 데이터베이스 상태가 좋아지거나, 락이 풀렸을 때 다시 시도하면 성공할 수 도 있다.
+  * NonTransient 는 일시적이지 않다는 뜻이다. 같은 SQL을 그대로 반복해서 실행하면 실패한다.
+  * SQL 문법 오류, 데이터베이스 제약조건 위배 등이 있다.
+
+> 참고: 스프링 메뉴얼에 모든 예외가 정리되어 있지는 않기 때문에 코드를 직접 열어서 확인해보는 것이 필요하다
+
+### 스프링이 제공하는 예외 변환기
+스프링은 데이터베이스에서 발생하는 오류 코드를 스프링이 정의한 예외로 자동으로 변환해주는 변환기를 제공한다.
+
+* 스프링이 제공하는 SQL 예외 변환기는 다음과 같이 사용하면 된다.
+```java
+SQLExceptionTranslator exTranslator = new
+SQLErrorCodeSQLExceptionTranslator(dataSource);
+DataAccessException resultEx = exTranslator.translate("select", sql, e);
+```
+
+* `translate()` 메서드 
+  * 첫번째 파라미터는 읽을 수 있는 설명이고, 
+  * 두번째는 실행한 sql, 
+  * 마지막은 발생된SQLException 을 전달하면 된다. 이렇게 하면 적절한 스프링 데이터 접근 계층의 예외로 변환해서 반환해준다.
+* 예제에서는 SQL 문법이 잘못되었으므로 BadSqlGrammarException 을 반환하는 것을 확인할 수 있다.
+  * 눈에 보이는 반환 타입은 최상위 타입인 DataAccessException 이지만 실제로는
+  BadSqlGrammarException 예외가 반환된다. 마지막에 assertThat() 부분을 확인하자.
+  * 참고로 BadSqlGrammarException 은 최상위 타입인 DataAccessException 를 상속 받아서 만들어진다.
+* 각각의 DB마다 SQL ErrorCode는 다르다. 그런데 스프링은 어떻게 각각의 DB가 제공하는 SQL ErrorCode까지 고려해서 예외를 변환할 수 있을까?
+
+* `sql-eroor-codes.xml`
+  * org.springframework.jdbc.support.sql-error-codes.xml
+* 스프링 SQL 예외 변환기는 SQL ErrorCode를 이 파일에 대입해서 어떤 스프링 데이터 접근 예외로 전환해야 할지 찾아낸다. 
+* 예를 들어서 H2 데이터베이스에서 42000 이 발생하면 badSqlGrammarCodes
+  이기 때문에 BadSqlGrammarException 을 반환한다
+
+### 정리
+* 스프링은 데이터 접근 계층에 대한 일관된 예외 추상화를 제공한다.
+* 스프링은 예외 변환기를 통해서 SQLException 의 ErrorCode 에 맞는 적절한 스프링 데이터 접근 예외로 변환해준다.
+* 만약 서비스, 컨트롤러 계층에서 예외 처리가 필요하면 특정 기술에 종속적인 SQLException 같은 예외를 직접 사용하는 것이 아니라, 스프링이 제공하는 데이터 접근 예외를 사용하면 된다.
+* 스프링 예외 추상화와 덕분에 특정 기술에 종속적이지 않게 되었다. 
+* 스프링은 JPA 예외를 적절한 스프링 데이터 접근 예외로 변환해준다.
+* 물론 스프링이 제공하는 예외를 사용하기 때문에 스프링에 대한 기술 종속성은 발생한다.
+* 스프링에 대한 기술 종속성까지 완전히 제거하려면 예외를 모두 직접 정의하고 예외 변환도 직접 하면 되지만, 실용적인 방법은 아니다
+
+* 추가로 서비스 계층에서 예외를 잡아서 복구해야 하는 경우, 예외가 스프링이 제공하는 데이터 접근 예외로 변경되어서 서비스 계층에 넘어오기 때문에 필요한 경우 예외를 잡아서 복구하면 된다.
+
+## JDBC 반복 문제 해결 - JdbcTemplate
 
 
+* #### JDBC 반복 문제
+* 커넥션 조회, 커넥션 동기화
+* PreparedStatement 생성 및 파라미터 바인딩
+* 쿼리 실행
+* 결과 바인딩
+* 예외 발생시 스프링 예외 변환기 실행
+* 리소스 종료
 
+* 이런 반복을 효과적으로 처리하는 방법이 바로 `템플릿 콜백 패턴`이다.
 
-
-
-
-
+### 정리
+완성된 코드를 확인해보자.
+* 서비스 계층의 순수성
+  * 트랜잭션 추상화 + 트랜잭션 AOP 덕분에 서비스 계층의 순수성을 최대한 유지하면서 서비스 계층에서 트랜잭션을 사용할 수 있다.
+  * 스프링이 제공하는 예외 추상화와 예외 변환기 덕분에, 데이터 접근 기술이 변경되어도 서비스 계층의 순수성을 유지하면서 예외도 사용할 수 있다.
+  * 서비스 계층이 리포지토리 인터페이스에 의존한 덕분에 향후 리포지토리가 다른 구현 기술로 변경되어도 서비스 계층을 순수하게 유지할 수 있다.
+* 리포지토리에서 JDBC를 사용하는 반복 코드가 JdbcTemplate 으로 대부분 제거되었다
 
 
 
