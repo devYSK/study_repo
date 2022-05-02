@@ -2,16 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="22d1e8a9-a42c-4225-bf1a-54ffef4ecf8b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../hello/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../hello/build.gradle" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../hello/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../hello/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../hello/gradlew" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../hello/gradlew.bat" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../hello/settings.gradle" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../hello/src/main/java/hello/advanced/HelloApplication.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../hello/src/main/resources/application.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../hello/src/test/java/hello/advanced/HelloApplicationTests.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,7 +33,11 @@
       <updated>1645451167860</updated>
       <workItem from="1645451170402" duration="34000" />
       <workItem from="1645451256623" duration="33000" />
+      <workItem from="1651479561757" duration="938000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
 </project>
