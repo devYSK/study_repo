@@ -1159,6 +1159,7 @@ data.html#data.sql.datasource.production
 2. 의존 관계에 대한 문제
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 1. 복구 불가능한 예외
 * 대부분의 예외는 복구가 불가능하다. 일부 복구가 가능한 예외도 있지만 아주 적다.
@@ -1525,6 +1526,8 @@ DataAccessException resultEx = exTranslator.translate("select", sql, e);
 
 
 =======
+=======
+>>>>>>> main
 ### 1. 복구 불가능한 예외
 * 대부분의 예외는 복구가 불가능하다. 일부 복구가 가능한 예외도 있지만 아주 적다.
 * SQLException 을 예를 들면 데이터베이스에 무언가 문제가 있어서 발생하는 예외이다. SQL 문법에 문제가 있을 수도 있고, 데이터베이스 자체에 뭔가 문제가 발생했을 수도 있다. 데이터베이스 서버가 중간에
