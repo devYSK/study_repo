@@ -4,6 +4,8 @@ import com.ys.springbootshop.dto.MemberFormDto;
 import com.ys.springbootshop.entity.Member;
 import com.ys.springbootshop.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.validation.Valid;
+import java.util.Arrays;
 
 /**
  * @author : ysk
@@ -50,6 +53,18 @@ public class MemberController {
         return "redirect:/";
     }
 
+    @GetMapping(value = "/login")
+    public String loginMember(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println(authentication.getName());
+        System.out.println(Arrays.toString(authentication.getAuthorities().toArray()));
+        return "/member/memberLoginForm";
+    }
 
+    @GetMapping(value = "/login/error")
+    public String loginError(Model model){
+        model.addAttribute("loginErrorMsg", "아이디 또는 비밀번호를 확인해주세요");
+        return "/member/memberLoginForm";
+    }
 
 }
