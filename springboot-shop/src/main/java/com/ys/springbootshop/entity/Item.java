@@ -1,5 +1,6 @@
 package com.ys.springbootshop.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ys.springbootshop.constant.ItemSellStatus;
 import lombok.*;
 
@@ -24,6 +25,7 @@ public class Item {
     private Long id; // 상품 코드
 
     @Column(nullable = false, length = 50)
+    @JsonProperty(value = "itemNm")
     private String itemName; // 상품명
 
     @Column(name = "price", nullable = false)
