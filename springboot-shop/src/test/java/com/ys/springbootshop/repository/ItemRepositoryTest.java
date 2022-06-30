@@ -37,7 +37,7 @@ class ItemRepositoryTest {
     @DisplayName("상품 저장 테스트")
     public void createItemTest() {
         Item item = Item.builder()
-                .itemName("테스트 상품")
+                .itemNm("테스트 상품")
                 .price(10000)
                 .itemDetail("테스트 상품 상세 설명")
                 .itemSellStatus(ItemSellStatus.SELL)
@@ -55,7 +55,7 @@ class ItemRepositoryTest {
     @DisplayName("상품명 조회 테스트")
     public void findByItemNameTest() {
         createItemList();
-        List<Item> itemList = itemRepository.findByItemName("테스트 상품1");
+        List<Item> itemList = itemRepository.findByItemNm("테스트 상품1");
 
         itemList.forEach(System.out::println);
 
@@ -66,7 +66,7 @@ class ItemRepositoryTest {
     public void findByItemNameOrItemDetailTest() {
         createItemList();
 
-        itemRepository.findByItemNameOrItemDetail("테스트 상품1", "테스트 상품 상세 설명 5")
+        itemRepository.findByItemNmOrItemDetail("테스트 상품1", "테스트 상품 상세 설명 5")
                 .forEach(System.out::println
                 );
 
@@ -137,7 +137,7 @@ class ItemRepositoryTest {
     public void createItemList() {
         for (int i = 1; i <= 10; i++) {
             Item item = Item.builder()
-                    .itemName("테스트 상품" + i)
+                    .itemNm("테스트 상품" + i)
                     .price(10000 + i)
                     .itemDetail("테스트 상품 상세 설명 " + i)
                     .itemSellStatus(ItemSellStatus.SELL)
@@ -154,7 +154,7 @@ class ItemRepositoryTest {
     public void createItemList2() {
         for (int i = 1; i <= 5; i++) {
             Item item = Item.builder()
-                    .itemName("테스트 상품" + i)
+                    .itemNm("테스트 상품" + i)
                     .price(10000 + i)
                     .itemDetail("테스트 상품 상세 설명 " + i)
                     .itemSellStatus(ItemSellStatus.SELL)
@@ -168,7 +168,7 @@ class ItemRepositoryTest {
 
         for (int i = 6; i <= 10; i++) {
             Item item = Item.builder()
-                    .itemName("테스트 상품" + i)
+                    .itemNm("테스트 상품" + i)
                     .price(10000 + i)
                     .itemDetail("테스트 상품 상세 설명 " + i)
                     .itemSellStatus(ItemSellStatus.SELL)

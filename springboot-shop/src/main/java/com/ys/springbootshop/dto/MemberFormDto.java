@@ -1,9 +1,6 @@
 package com.ys.springbootshop.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.Email;
@@ -13,7 +10,7 @@ import javax.validation.constraints.NotEmpty;
 /**
  * @author : ysk
  */
-@Data
+@Getter @Setter
 @Builder @NoArgsConstructor @AllArgsConstructor
 public class MemberFormDto {
 
