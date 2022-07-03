@@ -19,11 +19,11 @@ import javax.persistence.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Member {
+public class Member extends BaseEntity{
 
     @Id
     @Column(name = "member_id")
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
@@ -45,7 +45,7 @@ public class Member {
                 .email(memberFormDto.getEmail())
                 .address(memberFormDto.getAddress())
                 .password(passwordEncoder.encode(memberFormDto.getPassword()))
-                .role(Role.USER)
+                .role(Role.ADMIN)
                 .build();
     }
 }
