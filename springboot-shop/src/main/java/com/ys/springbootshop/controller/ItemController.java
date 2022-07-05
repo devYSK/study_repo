@@ -2,6 +2,7 @@ package com.ys.springbootshop.controller;
 
 import com.ys.springbootshop.dto.ItemFormDto;
 import com.ys.springbootshop.dto.ItemSearchDto;
+import com.ys.springbootshop.dto.MainItemDto;
 import com.ys.springbootshop.entity.Item;
 import com.ys.springbootshop.service.ItemService;
 import lombok.RequiredArgsConstructor;
@@ -66,7 +67,7 @@ public class ItemController {
     }
 
     @GetMapping(value = "/admin/item/{itemId}")
-    public String itemDtl(@PathVariable Long itemId, Model model) {
+    public String adminItemDtl(@PathVariable Long itemId, Model model) {
         try {
             ItemFormDto itemDtl = itemService.getItemDtl(itemId);
             model.addAttribute("itemFormDto", itemDtl);
@@ -116,6 +117,15 @@ public class ItemController {
         model.addAttribute("maxPage", 5);
 
         return "item/itemMng";
+    }
+
+    @GetMapping(value = "/item/{itemId}")
+    public String itemDtl(@PathVariable Long itemId, Model model) {
+        ItemFormDto itemFormDto = itemService.getItemDtl(itemId);
+
+        model.addAttribute("item", itemFormDto);
+
+        return "item/itemDtl";
     }
 
 }

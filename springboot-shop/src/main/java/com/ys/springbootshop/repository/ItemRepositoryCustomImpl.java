@@ -1,12 +1,17 @@
 package com.ys.springbootshop.repository;
 
+import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Wildcard;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.ys.springbootshop.constant.ItemSellStatus;
 import com.ys.springbootshop.dto.ItemSearchDto;
+import com.ys.springbootshop.dto.MainItemDto;
+import com.ys.springbootshop.dto.QMainItemDto;
 import com.ys.springbootshop.entity.Item;
 import com.ys.springbootshop.entity.QItem;
+import com.ys.springbootshop.entity.QItemImg;
+import org.codehaus.groovy.util.StringUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -82,6 +87,33 @@ public class ItemRepositoryCustomImpl implements ItemRepositoryCustom{
                 ;
 
         return new PageImpl<>(content, pageable, total);
+    }
+
+    @Override
+    public Page<MainItemDto> getMainItemPage(ItemSearchDto itemSearchDto, Pageable pageable) {
+
+        QItem item = QItem.item;
+        QItemImg itemImg = QItemImg.itemImg;
+
+        List<MainItemDto> results = jpaQueryFactory.select(
+                        new QMainItemDto(item.id, item.itemNm, item.itemDetail, itemImg.imgUrl, item.price)
+                )
+                .from(itemImg)
+                .join(itemImg.item, item)
+                .where(itemImg.repimgYn.eq("Y"))
+                .where(itemNmLike(itemSearchDto.getSearchQuery()))
+                .orderBy(item.id.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        Long total = jpaQueryFactory.select(Wildcard.count)
+                .from(itemImg)
+                .join(itemImg.item, item)
+                .where(itemImg.repimgYn.eq("Y"))
+                .where(itemNmLike(itemSearchDto.getSearchQuery()))
+                .fetchOne();
+        return new PageImpl<>(results, pageable, total);
     }
 
     private BooleanExpression itemNmLike(String searchQuery){
