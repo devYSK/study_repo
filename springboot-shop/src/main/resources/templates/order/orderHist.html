@@ -96,10 +96,10 @@
         <div class="d-flex mb-3 align-self-center">
             <h4 th:text="${order.orderDate} + ' 주문'"></h4>
             <div class="ml-3">
-                <th:block th:if="${order.orderStatus == T(com.shop.constant.OrderStatus).ORDER}">
+                <th:block th:if="${order.orderStatus == T(com.ys.springbootshop.constant.OrderStatus).ORDER}">
                     <button type="button" class="btn btn-outline-secondary" th:value="${order.orderId}" onclick="cancelOrder(this.value)">주문취소</button>
                 </th:block>
-                <th:block th:unless="${order.orderStatus == T(com.shop.constant.OrderStatus).ORDER}">
+                <th:block th:unless="${order.orderStatus == T(com.ys.springbootshop.constant.OrderStatus).ORDER}">
                     <h4>(취소 완료)</h4>
                 </th:block>
             </div>
