@@ -3,6 +3,7 @@ package com.ys.springbootshop.entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ys.springbootshop.constant.ItemSellStatus;
 import com.ys.springbootshop.dto.ItemFormDto;
+import com.ys.springbootshop.exception.OutOfStockException;
 import lombok.*;
 
 import javax.persistence.*;
@@ -47,5 +48,14 @@ public class Item extends BaseEntity {
         this.stockNumber = itemFormDto.getStockNumber();
         this.itemDetail = itemFormDto.getItemDetail();
         this.itemSellStatus = itemFormDto.getItemSellStatus();
+    }
+
+    public void removeStock(int stockNumber) {
+        int restStock = this.stockNumber - stockNumber;
+        if (restStock < 0) {
+            throw new OutOfStockException("상품의 재고가 부족합니다. (현재 재고 수량 : " + this.stockNumber + ")");
+        }
+
+        this.stockNumber = stockNumber;
     }
 }

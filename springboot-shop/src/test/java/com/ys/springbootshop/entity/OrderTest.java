@@ -16,8 +16,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.PersistenceContext;
 
-import java.time.LocalDateTime;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -63,7 +61,7 @@ class OrderTest {
         Order savedOrder = orderRepository.findById(order.getId())
                 .orElseThrow(EntityNotFoundException::new);
 
-        assertEquals(3, savedOrder.getOrderItemList().size());
+        assertEquals(3, savedOrder.getOrderItems().size());
     }
 
     public Order createOrder() {
@@ -81,7 +79,7 @@ class OrderTest {
                     .order(order)
                     .build();
 
-            order.getOrderItemList().add(orderItem);
+            order.getOrderItems().add(orderItem);
         }
 
         Member member = new Member();
@@ -98,7 +96,7 @@ class OrderTest {
     public void orphanRemovalTest() {
         Order order = this.createOrder();
 
-        order.getOrderItemList().remove(0);
+        order.getOrderItems().remove(0);
 
         em.flush();
 
@@ -109,7 +107,7 @@ class OrderTest {
     public void lazyLoadingTest() {
         Order order = this.createOrder();
 
-        Long orderItemId = order.getOrderItemList().get(0).getId();
+        Long orderItemId = order.getOrderItems().get(0).getId();
 
         em.flush();
         em.clear();
