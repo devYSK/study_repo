@@ -11,7 +11,9 @@ import java.util.List;
 /**
  * @author : ysk
  */
-public interface ItemRepository extends JpaRepository<Item, Long>, QuerydslPredicateExecutor<Item> {
+public interface ItemRepository extends JpaRepository<Item, Long>,
+        QuerydslPredicateExecutor<Item>,
+        ItemRepositoryCustom {
 
     List<Item> findByItemNm(String itemName);
 

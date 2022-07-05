@@ -52,8 +52,6 @@ class OrderTest {
                 .itemSellStatus(ItemSellStatus.SELL)
                 .stockNumber(100)
                 .stockNumber(100)
-                .regTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
                 .build();
     }
 

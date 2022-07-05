@@ -42,8 +42,6 @@ class ItemRepositoryTest {
                 .itemDetail("테스트 상품 상세 설명")
                 .itemSellStatus(ItemSellStatus.SELL)
                 .stockNumber(100)
-                .regTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
                 .build();
 
         Item savedItem = itemRepository.save(item);
@@ -142,8 +140,6 @@ class ItemRepositoryTest {
                     .itemDetail("테스트 상품 상세 설명 " + i)
                     .itemSellStatus(ItemSellStatus.SELL)
                     .stockNumber(100)
-                    .regTime(LocalDateTime.now())
-                    .updateTime(LocalDateTime.now())
                     .build();
 
             Item savedItem = itemRepository.save(item);
@@ -159,8 +155,6 @@ class ItemRepositoryTest {
                     .itemDetail("테스트 상품 상세 설명 " + i)
                     .itemSellStatus(ItemSellStatus.SELL)
                     .stockNumber(100)
-                    .regTime(LocalDateTime.now())
-                    .updateTime(LocalDateTime.now())
                     .build();
 
             Item savedItem = itemRepository.save(item);
@@ -173,8 +167,6 @@ class ItemRepositoryTest {
                     .itemDetail("테스트 상품 상세 설명 " + i)
                     .itemSellStatus(ItemSellStatus.SELL)
                     .stockNumber(0)
-                    .regTime(LocalDateTime.now())
-                    .updateTime(LocalDateTime.now())
                     .build();
 
             Item savedItem = itemRepository.save(item);
