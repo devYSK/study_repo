@@ -1,7 +1,6 @@
 package com.ys.springbootshop.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -10,7 +9,7 @@ import javax.validation.constraints.NotNull;
 /**
  * @author : ysk
  */
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class OrderDto {
 
     @NotNull(message = "상품 아이디는 필수 입력 값입니다.")

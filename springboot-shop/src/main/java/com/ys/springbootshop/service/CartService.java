@@ -2,6 +2,8 @@ package com.ys.springbootshop.service;
 
 import com.ys.springbootshop.dto.CartDetailDto;
 import com.ys.springbootshop.dto.CartItemDto;
+import com.ys.springbootshop.dto.CartOrderDto;
+import com.ys.springbootshop.dto.OrderDto;
 import com.ys.springbootshop.entity.Cart;
 import com.ys.springbootshop.entity.CartItem;
 import com.ys.springbootshop.entity.Item;
@@ -19,6 +21,7 @@ import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author : ysk
@@ -35,6 +38,8 @@ public class CartService {
     private final CartRepository cartRepository;
 
     private final CartItemRepository cartItemRepository;
+
+    private final OrderService orderService;
 
     public Long addCart(CartItemDto cartItemDto, String email) {
 
@@ -107,6 +112,26 @@ public class CartService {
         CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(EntityNotFoundException::new);
 
         cartItemRepository.delete(cartItem);
+    }
+
+    public Long orderCartItem(List<CartOrderDto> cartOrderDtoList, String email) {
+        List<OrderDto> orderDtoList = cartOrderDtoList.stream().map(cartOrderDto -> {
+            CartItem cartItem = cartItemRepository.findById(cartOrderDto.getCartItemId())
+                    .orElseThrow(EntityNotFoundException::new);
+
+            return new OrderDto(cartItem.getItem().getId(), cartItem.getCount());
+        }).collect(Collectors.toList());
+
+
+        Long orderId = orderService.orders(orderDtoList, email);
+
+        cartOrderDtoList.forEach(cartOrderDto -> {
+            CartItem cartItem = cartItemRepository.findById(cartOrderDto.getCartItemId()).orElseThrow(EntityNotFoundException::new);
+
+            cartItemRepository.delete(cartItem);
+        });
+
+        return orderId;
     }
 
 }

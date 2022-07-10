@@ -2,6 +2,7 @@ package com.ys.springbootshop.controller;
 
 import com.ys.springbootshop.dto.CartDetailDto;
 import com.ys.springbootshop.dto.CartItemDto;
+import com.ys.springbootshop.dto.CartOrderDto;
 import com.ys.springbootshop.service.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -89,5 +90,25 @@ public class CartController {
         cartService.deleteCartItem(cartItemId);
         return new ResponseEntity(cartItemId, HttpStatus.OK);
     }
+
+    @PostMapping(value = "/cart/orders")
+    public @ResponseBody ResponseEntity orderCartItem(@RequestBody CartOrderDto cartOrderDto,
+                                                      Principal principal) {
+        List<CartOrderDto> cartOrderDtoList = cartOrderDto.getCartOrderDtoList();
+
+        if (cartOrderDtoList == null || cartOrderDtoList.size() == 0) {
+            return new ResponseEntity("주문할 상품을 선택해주세요", HttpStatus.FORBIDDEN);
+        }
+
+        for (CartOrderDto dto : cartOrderDtoList) {
+            if (!cartService.validateCartItem(dto.getCartItemId(), principal.getName()))
+                return new ResponseEntity<>("주문 권한이 없습니다.", HttpStatus.FORBIDDEN);
+
+        }
+
+
+        return new ResponseEntity(cartService.orderCartItem(cartOrderDtoList, principal.getName()), HttpStatus.OK);
+    }
+
 
 }
