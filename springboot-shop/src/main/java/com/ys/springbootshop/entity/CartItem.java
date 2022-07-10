@@ -1,7 +1,6 @@
 package com.ys.springbootshop.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 
@@ -11,6 +10,8 @@ import javax.persistence.*;
 @Entity
 @Getter @Setter
 @Table(name = "cart_item")
+@NoArgsConstructor @AllArgsConstructor
+@Builder
 public class CartItem extends BaseEntity {
 
     @Id
@@ -26,5 +27,17 @@ public class CartItem extends BaseEntity {
     @JoinColumn(name = "item_id")
     private Item item;
 
+    private int count;
 
+    public static CartItem createCartItem(Cart cart, Item item, int count) {
+        return CartItem.builder()
+                .cart(cart)
+                .item(item)
+                .count(count)
+                .build();
+    }
+
+    public void addCount(int count) {
+        this.count += count;
+    }
 }

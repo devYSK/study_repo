@@ -1,8 +1,6 @@
 package com.ys.springbootshop.entity;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import javax.persistence.*;
 
@@ -12,7 +10,8 @@ import javax.persistence.*;
 @Entity
 @Table(name = "cart")
 @Getter @Setter
-@ToString
+@ToString @NoArgsConstructor
+@Builder @AllArgsConstructor
 public class Cart extends BaseEntity {
 
     @Id
@@ -24,5 +23,11 @@ public class Cart extends BaseEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
+    public static Cart createCart(Member member) {
+        return Cart.builder()
+                .member(member)
+                .build();
+
+    }
 
 }
