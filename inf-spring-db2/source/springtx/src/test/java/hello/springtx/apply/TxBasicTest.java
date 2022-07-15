@@ -17,7 +17,8 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 public class TxBasicTest {
 
-    @Autowired BasicService basicService;
+    @Autowired
+    BasicService basicService;
 
     @Test
     void proxyCheck() {

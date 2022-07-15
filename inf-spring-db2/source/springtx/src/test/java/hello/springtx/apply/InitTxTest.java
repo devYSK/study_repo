@@ -16,7 +16,8 @@ import javax.annotation.PostConstruct;
 @SpringBootTest
 public class InitTxTest {
 
-    @Autowired Hello hello;
+    @Autowired
+    Hello hello;
 
     @Test
     void go() {

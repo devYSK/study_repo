@@ -12,31 +12,8 @@
         <h2>상품 목록</h2>
     </div>
 
-<!--
-    <div class="row">
-        <div class="col">
-            <button class="btn btn-primary float-end"
-                    onclick="location.href='addForm.html'"
-                    th:onclick="|location.href='@{/items/add}'|"
-                    type="button">상품 등록
-            </button>
-        </div>
-    </div>
--->
-    <form th:object="${itemSearch}" method="get" class="form-inline">
-    <div class="row">
-        <div class="col">
-            <input type="text" th:field="*{itemName}" class="form-control" placeholder="상품명"/>
-        </div>
-        <div class="col">
-            <input type="text" th:field="*{maxPrice}" class="form-control" placeholder="가격제한"/>
-        </div>
-        <div class="col">
-            <button type="submit" class="btn btn-secondary mb-2">검색</button>
-        </div>
-        <div class="col">
-        </div>
-        <div class="col">
+    <!--
+        <div class="row">
             <div class="col">
                 <button class="btn btn-primary float-end"
                         onclick="location.href='addForm.html'"
@@ -45,7 +22,30 @@
                 </button>
             </div>
         </div>
-    </div>
+    -->
+    <form th:object="${itemSearch}" method="get" class="form-inline">
+        <div class="row">
+            <div class="col">
+                <input type="text" th:field="*{itemName}" class="form-control" placeholder="상품명"/>
+            </div>
+            <div class="col">
+                <input type="text" th:field="*{maxPrice}" class="form-control" placeholder="가격제한"/>
+            </div>
+            <div class="col">
+                <button type="submit" class="btn btn-secondary mb-2">검색</button>
+            </div>
+            <div class="col">
+            </div>
+            <div class="col">
+                <div class="col">
+                    <button class="btn btn-primary float-end"
+                            onclick="location.href='addForm.html'"
+                            th:onclick="|location.href='@{/items/add}'|"
+                            type="button">상품 등록
+                    </button>
+                </div>
+            </div>
+        </div>
 
     </form>
 

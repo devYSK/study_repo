@@ -30,9 +30,8 @@ import java.util.Optional;
  * - BeanPropertySqlParameterSource
  * - MapSqlParameterSource
  * Map
- *
+ * <p>
  * BeanPropertyRowMapper
- *
  */
 @Slf4j
 public class JdbcTemplateItemRepositoryV2 implements ItemRepository {

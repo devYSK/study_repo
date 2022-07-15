@@ -15,8 +15,10 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 class OrderServiceTest {
 
-    @Autowired OrderService orderService;
-    @Autowired OrderRepository orderRepository;
+    @Autowired
+    OrderService orderService;
+    @Autowired
+    OrderRepository orderRepository;
 
     @Test
     void complete() throws NotEnoughMoneyException {
