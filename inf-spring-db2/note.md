@@ -338,3 +338,196 @@ jdbcTemplate.update(
 > JOOQ라는 기술도 동적쿼리 문제를 편리하게 해결해주지만 사용자가 많지 않아서 강의에서 다루지는 않는다
 
 
+# JDBC 테스트
+
+* 테스트에서 매우 중요한 원칙은 다음과 같다.
+* `테스트는 다른 테스트와 격리해야 한다.`
+* `테스트는 반복해서 실행할 수 있어야 한다.`
+
+
+## 테스트 - 데이터 롤백
+
+* 트랜잭션과 롤백 전략  
+
+  * 테스트가 끝나고 나서 트랜잭션을 강제로 롤백해버리면 데이터가 깔끔하게 제거된다.  
+  * 테스트를 하면서 데이터를 이미 저장했는데, 중간에 테스트가 실패해서 롤백을 호출하지 못해도 괜찮다.  
+  * 트랜잭션을 커밋하지 않았기 때문에 데이터베이스에 해당 데이터가 반영되지 않는다.  
+  * 이렇게 트랜잭션을 활용하면 테스트가 끝나고 나서 데이터를 깔끔하게 원래 상태로 되돌릴 수 있다
+  
+### 1. 테스트에 직접 트랜잭션 추가
+
+```java
+@SpringBootTest
+class ItemRepositoryTest {
+
+  @Autowired
+  ItemRepository itemRepository;
+
+  @Autowired
+  PlatformTransactionManager transactionManager;
+
+  TransactionStatus status;
+
+  @BeforeEach
+  void beforeEach() {
+    //트랜잭션 시작
+    status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+  }
+
+  @AfterEach
+  void afterEach() {
+    //MemoryItemRepository 의 경우 제한적으로 사용
+    if (itemRepository instanceof MemoryItemRepository) {
+      ((MemoryItemRepository) itemRepository).clearStore();
+    }
+
+    transactionManager.rollback(status); // 트랜잭션 종료 
+  }
+}
+```
+* PlatformTransactionManager transactionManager
+
+* TransactionStatus status
+
+* 트랜잭션 시작 : transactionManager.getTransaction(new DefaultTransactionDefinition())
+* 트랜잭션 종료 : transactionManager.rollback(status)
+
+
+* 트랜잭션 관리자는 PlatformTransactionManager 를 주입 받아서 사용하면 된다. 
+  * 참고로 스프링 부트는 자동으로 적절한 트랜잭션 매니저를 스프링 빈으로 등록해준다. (앞서 학습한 스프링 부트의 자동 리소스
+  등록 장을 떠올려보자.)
+
+* @BeforeEach : 각각의 테스트 케이스를 실행하기 직전에 호출된다. 따라서 여기서 트랜잭션을 시작하면
+  된다. 그러면 각각의 테스트를 트랜잭션 범위 안에서 실행할 수 있다.
+  * transactionManager.getTransaction(new DefaultTransactionDefinition()) 로 트랜잭션을 시작한다.
+
+* @AfterEach : 각각의 테스트 케이스가 완료된 직후에 호출된다. 따라서 여기서 트랜잭션을 롤백하면 된다.
+  그러면 데이터를 트랜잭션 실행 전 상태로 복구할 수 있다.
+  * transactionManager.rollback(status) 로 트랜잭션을 롤백한다
+
+### 2. @Transactional 어노테이션 
+
+* 스프링은 테스트 데이터 초기화를 위해 트랜잭션을 적용하고 롤백하는 방식을 `@Transactional`
+  애노테이션 하나로 깔끔하게 해결해준다.
+
+```java
+@Transactional
+@SpringBootTest
+class ItemRepositoryTest {
+  ...
+}
+```
+
+## `@Transactional 원리`
+
+* 스프링이 제공하는 @Transactional 애노테이션은 로직이 성공적으로 수행되면 커밋하도록 동작한다
+* @Transactional 이 테스트에 있으면 스프링은 테스트를 트랜잭션 안에서 실행하고, 테스트가 끝나면 트랜잭션을 자동으로 롤백시켜 버린다!
+
+
+참고
+* 테스트 케이스의 메서드나 클래스에 @Transactional 을 직접 붙여서 사용할 때 만 이렇게 동작한다.
+* 그리고 트랜잭션을 테스트에서 시작하기 때문에 서비스, 리포지토리에 있는 @Transactional 도 테스트에서 시작한 트랜잭션에 참여한다. 
+* 테스트에서 트랜잭션을 실행하면 테스트 실행이 종료될 때 까지 테스트가 실행하는 모든 코드가 같은 트랜잭션 범위에 들어간다고 이해하면 된다. 
+* 같은 범위라는 뜻은 쉽게 이야기해서 같은 트랜잭션을 사용한다는 뜻이다. 그리고 같은 트랜잭션을 사용한다는 것은 같은 커넥션을 사용한다는 뜻이기도 하다.)
+
+
+* @Transactional 덕분에 아주 편리하게 다음 원칙을 지킬수 있게 되었다.
+  * 테스트는 다른 테스트와 격리해야 한다.
+  * 테스트는 반복해서 실행할 수 있어야 한다
+
+### @Commit - 강제로커밋하기 
+* @Transactional 을 테스트에서 사용하면 테스트가 끝나면 바로 롤백되기 때문에 테스트 과정에서 저장한 모든 데이터가 사라진다. 
+* 가끔은 데이터베이스에 데이터가 잘 보관되었는지 최종 결과를 눈으로 확인하고 싶을 때는 @Commit 을 클래스 또는 메서드에 붙이면 테스트 종료후 롤백 대신 커밋이 호출된다. 
+* 참고로 @Rollback(value = false) 를 사용해도 된다
+
+
+## 테스트용 임베디드 모드 DB
+
+테스트 케이스를 실행하기 위해서 별도의 데이터베이스를 설치하고, 운영하는 것은 상당히 번잡한
+작업이다.   
+단순히 테스트를 검증할 용도로만 사용하기 때문에 테스트가 끝나면 데이터베이스의 데이터를
+모두 삭제해도 된다. 더 나아가서 테스트가 끝나면 데이터베이스 자체를 제거해도 된다.  
+
+* 임베디드 모드
+  * H2 데이터베이스는 자바로 개발되어 있고, JVM안에서 메모리 모드로 동작하는 특별한 기능을 제공한다.
+    그래서 애플리케이션을 실행할 때 H2 데이터베이스도 해당 JVM 메모리에 포함해서 함께 실행할 수 있다.
+    DB를 애플리케이션에 내장해서 함께 실행한다고 해서 임베디드 모드(Embedded mode)라 한다. 물론
+    애플리케이션이 종료되면 임베디드 모드로 동작하는 H2 데이터베이스도 함께 종료되고, 데이터도 모두
+    사라진다. 쉽게 이야기해서 애플리케이션에서 자바 메모리를 함께 사용하는 라이브러리처럼 동작하는
+    것이다.
+  
+### 설정 빈 등록
+
+```java
+@Slf4j
+@Import(JdbcTemplateV3Config.class)
+@SpringBootApplication(scanBasePackages = "hello.itemservice.web")
+public class ItemServiceApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ItemServiceApplication.class, args);
+    }
+
+    @Bean
+    @Profile("test") // 테스트 프로필에서만 실행 
+    public DataSource dataSource() {
+        log.info("메모리 데이터베이스 초기화");
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName("org.h2.Driver");
+        dataSource.setUrl("jdbc:h2:mem:db;DB_CLOSE_DELAY=-1");
+        dataSource.setUsername("sa");
+        dataSource.setPassword("");
+        return dataSource;
+    }
+}
+```
+
+* @Profile("test")
+  * 프로필이 test 인 경우에만 데이터소스를 스프링 빈으로 등록한다.
+  * 테스트 케이스에서만 이 데이터소스를 스프링 빈으로 등록해서 사용하겠다는 뜻이다.
+* dataSource()
+  * jdbc:h2:mem:db : 이 부분이 중요하다. 데이터소스를 만들때 이렇게만 적으면 임베디드 모드(메모리 모드)로 동작하는 H2 데이터베이스를 사용할 수 있다.
+  * DB_CLOSE_DELAY=-1 : 임베디드 모드에서는 데이터베이스 커넥션 연결이 모두 끊어지면 데이터베이스도 종료되는데, 그것을 방지하는 설정이다.
+* 이 데이터소스를 사용하면 메모리 DB를 사용할 수 있다.
+
+## 스프링 부트 - 기본 SQL 스크립트를 사용해서 데이터베이스를 초기화하는 기능
+
+* 스프링 부트는 SQL 스크립트를 실행해서 애플리케이션 로딩 시점에 데이터베이스를 초기화하는 기능을 제공한다.
+
+* src/test/resources/schema.sql 에 초기화용 스크립트 작성 
+
+참고
+> SQL 스크립트를 사용해서 데이터베이스를 초기화하는 자세한 방법은 다음 스프링 부트 공식 메뉴얼을 참고하자.  
+> https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto.datainitialization.using-basic-sql-scripts
+
+* `스프링 부트는 임베디드 데이터베이스에 대한 설정도 기본으로 제공한다.`
+  * 위에서 작성한 테스트 프로필용 DataSource Bean을 작성 안해도 된다. 
+* 스프링 부트는 데이터베이스에 대한 별다른 설정이 없으면 임베디드 데이터베이스를 사용한다.
+
+* `src/test/resources 에 작성한 데이터베이스 접근 설정정보가 없어야 한다. `
+* 렇게 별다른 정보가 없으면 스프링 부트는 임베디드 모드로 접근하는 데이터소스( DataSource )를
+  만들어서 제공한다. 바로 앞서 우리가 직접 만든 데이터소스와 비슷하다 생각하면 된다
+
+> 로그를 보면 다음 부분을 확인할 수 있는데 jdbc:h2:mem 뒤에 임의의 데이터베이스 이름이 들어가
+있다. 이것은 혹시라도 여러 데이터소스가 사용될 때 같은 데이터베이스를 사용하면서 발생하는 충돌을
+방지하기 위해 스프링 부트가 임의의 이름을 부여한 것이다.  
+`conn0: url=jdbc:h2:mem:d8fb3a29-caf7-4b37-9b6c-b0eed9985454`
+
+* 임베디드 데이터베이스 이름을 스프링 부트가 기본으로 제공하는 jdbc:h2:mem:testdb 로 고정하고
+  싶으면 application.properties 에 다음 설정을 추가하면 된다
+  
+  * spring.datasource.generate-unique-name=false
+
+* 참고
+> 임베디드 데이터베이스에 대한 스프링 부트의 더 자세한 설정은 다음 공식 메뉴얼을 참고하자.  
+> https://docs.spring.io/spring-boot/docs/current/reference/html/
+data.html#data.sql.datasource.embedded
+
+
+
+
+
+
+
+
+
