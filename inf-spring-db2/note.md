@@ -1028,11 +1028,61 @@ JPQL은 JPA가 SQL로 번역해서 실행한다.
 * 실무에서 JPQL 동적 쿼리는 Querydsl을 사용하는 것이 좋다
 
 
+# QueryDsl
 
+* query를 java로 type-safe하게 개발할 수 있께 지원하는 프레임워크 
+* 주로 JQPL 작성에 사된다
 
+* QueryDsl gradle 설정
+```groovy
 
+//Querydsl 추가
+implementation 'com.querydsl:querydsl-jpa'
+annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jpa"
+annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
+tasks.named('test') {useJUnitPlatform()
+}
+//Querydsl 추가, 자동 생성된 Q클래스 gradle clean으로 제거
+clean {
+    delete file('src/main/generated')
+}
+```
+* 검증 - Q 타입 생성 확인 방법
+* Preferences ->  Build, Execution, Deployment -> Build Tools Gradle
+  * 여기에 가면 크게 2가지 옵션을 선택할 수 있다. 참고로 옵션은 둘다 같게 맞추어 두자.
+  1. Gradle: Gradle을 통해서 빌드한다.
+  2. IntelliJ IDEA: IntelliJ가 직접 자바를 실행해서 빌드한다
+  
+## 옵션 선택1 - Gradle - Q타입 생성 확인 방법
+### Gradle IntelliJ 사용법
+* Gradle -> Tasks -> build -> clean
+* Gradle -> Tasks -> other -> compileJava
 
+### Gradle 콘솔 사용법
+* ./gradlew clean compileJava
+### Q 타입 생성 확인
+* build -> generated -> sources -> annotationProcessor -> java/main 하위에
+  * hello.itemservice.domain.QItem 이 생성되어 있어야 한다
+  
+> Q타입은 컴파일 시점에 자동 생성되므로 버전관리(GIT)에 포함하지 않는 것이 좋다.  
+> gradle 옵션을 선택하면 Q타입은 gradle build 폴더 아래에 생성되기 때문에 여기를 포함하지 않아야
+한다. 대부분 gradle build 폴더를 git에 포함하지 않기 때문에 이 부분은 자연스럽게 해결된다
+
+## 옵션 선택2 - IntelliJ IDEA - Q타입 생성 확인 방법
+Build -> Build Project 또는  
+Build -> Rebuild 또는  
+main() , 또는 테스트를 실행하면 된다.  
+
+* src/main/generated 하위에
+  * hello.itemservice.domain.QItem 이 생성되어 있어야 한다
+
+## 공통
+* Querydsl을 사용하려면 JPAQueryFactory 가 필요하다. JPAQueryFactory 는 JPA 쿼리인 JPQL을
+만들기 때문에 EntityManager 가 필요하다.
+* 설정 방식은 JdbcTemplate 을 설정하는 것과 유사하다.
+* 참고로 JPAQueryFactory 를 스프링 빈으로 등록해서 사용해도 된다.
 
 
 
