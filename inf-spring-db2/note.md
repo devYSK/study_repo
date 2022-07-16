@@ -1145,6 +1145,544 @@ JdbcTemplate , MyBatis 와 함께 사용할 수 있다.
 * 그래야 그 다음에 호출되는 JdbcTemplate에서 JPA가 반영한 데이터를 사용할 수 있다.
 * JpaTransactionManager 를 사용해서 여러 데이터 접근 기술들을 함께 사용할 수 있다는 점만 기억하자
 
+# Spring Transaction 이해
+
+* JDBC 기술을 사용하다가 JPA 기술로 변경하게 되면 트랜잭션을 사용하는 코드도 모두 함께 변경해야 한다.
+* 스프링은 이런 문제를 해결하기 위해 트랜잭션 추상화를 제공한다. 
+* 트랜잭션을 사용하는 입장에서는 스프링 트랜잭션 추상화를 통해 둘을 동일한 방식으로 사용할 수 있게 되는 것이다.
+* 스프링은 PlatformTransactionManager 라는 인터페이스를 통해 트랜잭션을 추상화한다.
+
+## PlatformTransactionManager 인터페이스
+
+```java
+public interface PlatformTransactionManager extends TransactionManager {
+
+    TransactionStatus getTransaction(@Nullable TransactionDefinition definition)  throws TransactionException;
+    
+    void commit(TransactionStatus status) throws TransactionException;
+    void rollback(TransactionStatus status) throws TransactionException;
+}
+```
+
+* 트랜잭션은 트랜잭션 시작(획득), 커밋, 롤백으로 단순하게 추상화 할 수 있다
+
+* ![](.note_images/ba813619.png)
+* 스프링은 트랜잭션을 추상화해서 제공할 뿐만 아니라, 실무에서 주로 사용하는 데이터 접근 기술에 대한
+  트랜잭션 매니저의 구현체도 제공한다. 
+* 우리는 필요한 구현체를 스프링 빈으로 등록하고 주입 받아서 사용하기만 하면 된다.
+* 여기에 더해서 스프링 부트는 어떤 데이터 접근 기술을 사용하는지를 자동으로 인식해서 적절한 트랜잭션
+  매니저를 선택해서 스프링 빈으로 등록해주기 때문에 트랜잭션 매니저를 선택하고 등락하는 과정도 생략할
+  수 있다. 
+  * 예를 들어서 JdbcTemplate , MyBatis 를 사용하면 DataSourceTransactionManager(JdbcTransactionManager) 를 스프링 빈으로 등록
+  * JPA를 사용하면 JpaTransactionManager 를 스프링 빈으로 등록해준다
+
+> 스프링 5.3부터는 JDBC 트랜잭션을 관리할 때 DataSourceTransactionManager 를 상속받아서 약간의기능을 확장한 JdbcTransactionManager 를 제공한다. 둘의 기능 차이는 크지 않으므로 같은 것으로 이해하면 된다
+
+
+## 스프링 트랜잭션 사용 방식
+* `PlatformTransactionManager` 를 사용하는 방법은 크게 2가지가 있다
+
+### 선언적 트랜잭션 관리 vs 프로그래밍 방식 트랜잭션 관리
+* 선언적 트랜잭션 관리(Declarative Transaction Management)
+* `@Transactional` 애노테이션 하나만 선언해서 매우 편리하게 트랜잭션을 적용하는 것을 선언적
+트랜잭션 관리라 한다.
+* 선언적 트랜잭션 관리는 과거 XML에 설정하기도 했다.
+  * 이름 그대로 해당 로직에 트랜잭션을 적용하겠다 라고 어딘가에 선언하기만 하면 트랜잭션이 적용되는 방식이다.
+* 프로그래밍 방식의 트랜잭션 관리(programmatic transaction management)
+  * 트랜잭션 매니저 또는 트랜잭션 템플릿 등을 사용해서 트랜잭션 관련 코드를 직접 작성하는 것을 프로그래밍 방식의 트랜잭션 관리라 한다.
+  * 프로그래밍 방식의 트랜잭션 관리를 사용하게 되면, 애플리케이션 코드가 트랜잭션이라는 기술 코드와 강하게 결합된다.
+  * 선언적 트랜잭션 관리가 프로그래밍 방식에 비해서 훨씬 간편하고 실용적이다
+
+## 선언적 트랜잭션과 AOP
+* @Transactional 을 통한 선언적 트랜잭션 관리 방식을 사용하게 되면 기본적으로 프록시 방식의 AOP가 적용된다.
+
+* ### 프록시 도입 전 트랜잭션 
+* ![](.note_images/bbadcd03.png)
+* 트랜잭션을 처리하기 위한 프록시를 도입하기 전에는 서비스의 로직에서 트랜잭션을 직접 시작
+
+* ### 프록시 도입 후
+
+* ![](.note_images/c5e702f5.png)
+* 트랜잭션을 처리하기 위한 프록시를 적용하면 트랜잭션을 처리하는 객체와 비즈니스 로직을 처리하는 서비스 객체를 명확하게 분리할 수 있다
+
+* 프록시 코드 예시 
+```java
+public class TransactionProxy {
+  private MemberService target;
+  public void logic() {
+    //트랜잭션 시작
+    TransactionStatus status = transactionManager.getTransaction(..);
+    try {
+        //실제 대상 호출
+      target.logic(); // 호출하는 부분. 
+      transactionManager.commit(status); //성공시 커밋
+    } catch (Exception e) {
+      transactionManager.rollback(status); //실패시 롤백
+      throw new IllegalStateException(e);
+    }
+  }
+}
+```
+
+* 프록시 도입 전: 서비스에 비즈니스 로직과 트랜잭션 처리 로직이 함께 섞여있다.
+* 프록시 도입 후: 트랜잭션 프록시가 트랜잭션 처리 로직을 모두 가져간다. 그리고 트랜잭션을 시작한 후에
+실제 서비스를 대신 호출한다. 
+  * `트랜잭션 프록시 덕분에 서비스 계층에는 순수한 비즈니즈 로직만 남길 수 있다 ! `
+
+## 프록시 도입 후 전체 과정
+
+* ![](.note_images/cae55180.png)
+
+* 트랜잭션은 커넥션에 con.setAutocommit(false) 를 지정하면서 시작한다.
+* `같은 트랜잭션을 유지하려면 같은 데이터베이스 커넥션을 사용해야 한다.`
+* 이것을 위해 스프링 내부에서는 트랜잭션 동기화 매니저가 사용된다.
+* `JdbcTemplate` 을 포함한 대부분의 데이터 접근 기술들은 트랜잭션을 유지하기 위해 내부에서 트랜잭션 동기화 매니저를 통해 리소스(커넥션)를 동기화 한다.
+
+## 스프링이 제공하는 트랜잭션 AOP
+
+* 스프링은 트랜잭션 AOP 를 처리하기 위한 모든 기능을 제공한다. 
+* 스프링 부트를 사용하면 트랜잭션 AOP를 처리하기 위해 필요한 스프링 빈들도 자동으로 등록해준다.
+* 개발자는 트랜잭션 처리가 필요한 곳에 `@Transactional 애노테이션`만 붙여주면 된다. 스프링의
+트랜잭션 AOP는 이 애노테이션을 인식해서 트랜잭션을 처리하는 프록시를 적용해준다
+
+### @Transactional
+* org.springframework.transaction.annotation.Transactional
+
+* AopUtils.isAopProxy() : 선언적 트랜잭션 방식에서 스프링 트랜잭션은 AOP를 기반으로 동작한다.
+* @Transactional 을 메서드나 클래스에 붙이면 해당 객체는 트랜잭션 AOP 적용의 대상이 되고,
+결과적으로 실제 객체 대신에 트랜잭션을 처리해주는 프록시 객체가 스프링 빈에 등록된다. 그리고 주입을
+받을 때도 실제 객체 대신에 프록시 객체가 주입된다
+
+## 스프링 컨테이너에 트랜잭션 프록시 등록 
+
+* ![](.note_images/253c560c.png)
+
+* `@Transactional` 애노테이션이` 특정 클래스나 메서드에 하나라도 있으면 !!!` 트랜잭션 AOP는
+프록시를 만들어서 `스프링 컨테이너에 등록한다.` 
+* 실제 basicService 객체 대신에 프록시인 basicService$$CGLIB 를 스프링 빈에 등록한다. 
+* 프록시는 내부에 실제 basicService 를 참조하게 된다. 여기서 핵심은 실제 객체 대신에 프록시가 스프링 컨테이너에 등록되었다는 점이다.
+* 클라이언트인 txBasicTest 는 스프링 컨테이너에 @Autowired BasicService basicService 로
+의존관계 주입을 요청한다. 
+* 스프링 컨테이너에는 `실제 객체 대신에 프록시가 스프링 빈으로 등록되어 있기 때문에 프록시를 주입`한다.
+* `프록시는 BasicService 를 상속해서 만들어지기 때문에 다형성을 활용할 수 있다.` 
+
+## 트랜잭션 로그 
+
+```properties
+logging.level.org.springframework.transaction.interceptor=TRACE
+```
+
+* 이 로그를 추가하면 트랜잭션 프록시가 호출하는 트랜잭션의 시작과 종료를 명확하게 로그로 확인할 수 있다
+
+* TransactionSynchronizationManager.isActualTransactionActive()
+* 현재 쓰레드에 트랜잭션이 적용되어 있는지 확인할 수 있는 기능이다. 결과가 true 면 트랜잭션이 적용되어
+있는 것이다. 트랜잭션의 적용 여부를 가장 확실하게 확인할 수 있다.
+
+## 트랜잭션 적용 위치
+* @Transactional 의 적용 위치에 따른 우선순위를 확인해보자.
+* 스프링에서 우선순위는 항상 더 구체적이고 자세한 것이 높은 우선순위를 가진다. 이것만 기억하면
+스프링에서 발생하는 대부분의 우선순위를 쉽게 기억할 수 있다. 그리고 더 구체적인 것이 더 높은
+우선순위를 가지는 것은 상식적으로 자연스럽다.
+* 예를 들어서 메서드와 클래스에 애노테이션을 붙일 수 있다면 더 구체적인 메서드가 더 높은 우선순위를
+가진다.
+  * `클래스보다 메서드가 더 높은 우선순위` 
+* 인터페이스와 해당 인터페이스를 구현한 클래스에 애노테이션을 붙일 수 있다면 더 구체적인 클래스가 더
+높은 우선순위를 가진다.
+
+
+```java
+@Slf4j
+@Transactional(readOnly = true)
+static class LevelService {
+    @Transactional(readOnly = false)
+    public void write() {
+        log.info("call write");
+        printTxInfo();
+    }
+    
+    public void read() {
+        log.info("call read");
+        printTxInfo();
+    }
+    
+    private void printTxInfo() {
+        boolean txActive =
+                TransactionSynchronizationManager.isActualTransactionActive();
+        log.info("tx active={}", txActive);
+        boolean readOnly =
+                TransactionSynchronizationManager.isCurrentTransactionReadOnly();
+        log.info("tx readOnly={}", readOnly);
+    }
+}
+```
+
+* 코드를 보면 class에 @Transactional(readOnly = true) 로 되어있고, write() 메서드에 @Transactional(readOnly = false) 로 되어있다. 
+* write()와 call을 호출해보면, write의 readOnly는 false이다.
+  * `class 단위의 transactional보다 method단위의 transactional이 우선순위가 높기 떄문에, method 단위의 transactional 옵션이 우선 시 된다. `
+
+* ## 스프링의 @Transactional 은 다음 두 가지 규칙이 있다.
+1. 우선순위 규칙
+2. 클래스에 적용하면 메서드는 자동 적용
+
+## `우선순위`
+* 트랜잭션을 사용할 때는 다양한 옵션을 사용할 수 있다. 
+* 그런데 어떤 경우에는 옵션을 주고, 어떤 경우에는 옵션을 주지 않으면 어떤 것이 선택될까? 
+  * 예를 들어서 읽기 전용 트랜잭션 옵션을 사용하는 경우와 아닌
+  경우를 비교해보자. (읽기 전용 옵션에 대한 자세한 내용은 뒤에서 다룬다. 여기서는 적용 순서에 집중하자.)
+* LevelService 의 타입에 @Transactional(readOnly = true) 이 붙어있다.
+* write() : 해당 메서드에 @Transactional(readOnly = false) 이 붙어있다.
+  * 이렇게 되면 타입에 있는 @Transactional(readOnly = true) 와 해당 메서드에 있는
+  @Transactional(readOnly = false) 둘 중 하나를 적용해야 한다.
+  * 클래스 보다는 메서드가 더 구체적이므로 메서드에 있는 @Transactional(readOnly = false)
+  옵션을 사용한 트랜잭션이 적용된다.
+
+## `클래스에 적용하면 메서드는 자동 적용`
+* read() : 해당 메서드에 @Transactional 이 없다. 이 경우 더 상위인 클래스를 확인한다.
+  * 클래스에 @Transactional(readOnly = true) 이 적용되어 있다. 따라서 트랜잭션이 적용되고
+  readOnly = true 옵션을 사용하게 된다.
+* 참고로 readOnly=false 는 기본 옵션이기 때문에 보통 생략한다. 
+  *  @Transactional == @Transactional(readOnly=false) 와 같다
+
+## 인터페이스에 @Transactional 적용
+* 인터페이스에도 @Transactional 을 적용할 수 있다. 이 경우 다음 순서로 적용된다. 
+* 구체적인 것이 더 높은 우선순위를 가진다고 생각하면 바로 이해가 될 것이다.
+1. 클래스의 메서드 (우선순위가 가장 높다.)
+2. 클래스의 타입
+3. 인터페이스의 메서드
+4. 인터페이스의 타입 (우선순위가 가장 낮다.)클래스의 메서드를 찾고, 만약 없으면 클래스의 타입을 찾고 만약 없으면 인터페이스의 메서드를 찾고
+   그래도 없으면 인터페이스의 타입을 찾는다.
+   그런데 인터페이스에 @Transactional 사용하는 것은 스프링 공식 메뉴얼에서 권장하지 않는 방법이다.
+   AOP를 적용하는 방식에 따라서 인터페이스에 애노테이션을 두면 AOP가 적용이 되지 않는 경우도 있기
+   때문이다. 가급적 구체 클래스에 @Transactional 을 사용하자.
+> 참고
+> 스프링은 인터페이스에 @Transactional 을 사용하는 방식을 스프링 5.0에서 많은 부분 개선했다.  
+과거에는 구체 클래스를 기반으로 프록시를 생성하는 CGLIB 방식을 사용하면 인터페이스에 있는
+@Transactional 을 인식하지 못했다.   
+> 스프링 5.0 부터는 이 부분을 개선해서 인터페이스에 있는 @Transactional 도 인식한다. 
+> 하지만 다른 AOP 방식에서 또 적용되지 않을 수 있으므로 공식 메뉴얼의 가이드대로 가급적 구체 클래스에 @Transactional 을 사용하자.
+
+## 트랜잭션 AOP 주의 사항 - 프록시 내부 호출1
+> 참고
+> 여기서 설명하는 내용은 스프링 핵심원리 고급편 13. 실무 주의사항 - 프록시와 내부 호출 문제에서 다루는
+내용과 같은 문제를 다룬다. 이렇게 한번 더 언급하는 이유는 그 만큼 실무에서 많이 만나는 주제이고, 많은
+개발자들이 이 문제를 이해하지 못해서 고통받기 때문이다.
+> 여기서는 트랜잭션 AOP에 관점에서 설명한다.
+
+* @Transactional 을 사용하면 스프링의 트랜잭션 AOP가 적용된다.
+* 트랜잭션 AOP는 기본적으로 프록시 방식의 AOP를 사용한다.
+* 앞서 배운 것 처럼 @Transactional 을 적용하면 프록시 객체가 요청을 먼저 받아서 트랜잭션을 처리하고,
+실제 객체를 호출해준다.
+* 따라서 트랜잭션을 적용하려면 항상 프록시를 통해서 대상 객체(Target)을 호출해야 한다.
+* 이렇게 해야 프록시에서 먼저 트랜잭션을 적용하고, 이후에 대상 객체를 호출하게 된다.
+* 만약 프록시를 거치지 않고 대상 객체를 직접 호출하게 되면 AOP가 적용되지 않고, 트랜잭션도 적용되지 않는다
+
+* ![](.note_images/cca8f092.png)
+
+* `AOP를 적용하면 스프링은 대상 객체 대신에 '프록시'를 스프링 빈으로 등록한다.` 
+* 따라서 스프링은 의존관계 주입시에 항상 실제 객체 대신에 프록시 객체를 주입한다. 
+* 프록시 객체가 주입되기 때문에 대상 객체를 직접 호출하는 문제는 일반적으로 발생하지 않는다. 
+* `하지만 대상 객체의 내부에서 메서드 호출이 발생하면 프록시를 거치지 않고 대상 객체를 직접 호출하는 문제가 발생한다.`
+* 이렇게 되면 @Transactional 이 있어도 트랜잭션이 적용되지 않는다.
+
+```java
+@Slf4j
+static class CallService {
+    public void external() {
+        log.info("call external");
+        printTxInfo();
+        internal();
+    }
+
+    @Transactional
+    public void internal() {
+        log.info("call internal");
+        printTxInfo();
+
+    }
+    private void printTxInfo() {
+        boolean txActive =
+                TransactionSynchronizationManager.isActualTransactionActive();
+        log.info("tx active={}", txActive);
+    }
+
+}
+```
+
+* internalCall() 실행
+  * internalCall() 은 트랜잭션이 있는 코드인 internal() 을 호출한다
+  * ```
+    TransactionInterceptor : Getting transaction for[..CallService.internal]
+    ..rnalCallV1Test$CallService : call internal
+    ..rnalCallV1Test$CallService : tx active=true
+    TransactionInterceptor : Completing transaction for [..CallService.internal]
+    ```
+    
+
+* externalCall() 실행
+  * externalCall() 은 트랜잭션이 없는 코드인 external() 을 호출한다.
+  * ```
+    CallService : call external
+    CallService : tx active=false
+    CallService : call internal
+    CallService : tx active=false
+    ```
+
+* 왜 externalCall()에서 internal을 호출했는데 트랜잭션이 적용 안되었을까?
+* ![](.note_images/5faa9253.png)
+* 호출되는 순서 
+1.callService.external() 을 호출한다. 여기서 callService 는 트랜잭션 프록시이다.
+2. callService 의 트랜잭션 프록시가 호출된다.
+3. external() 메서드에는 @Transactional 이 없다. 따라서 트랜잭션 프록시는 트랜잭션을 적용하지 않는다.
+4. 트랜잭션 적용하지 않고, 실제 callService 객체 인스턴스의 external() 을 호출한다.
+5. external() 은 내부에서 internal() 메서드를 호출한다.
+
+### 문제 원인
+> 자바 언어에서 메서드 앞에 별도의 참조가 없으면 this 라는 뜻으로 자기 자신의 인스턴스를 가리킨다.  
+결과적으로 자기 자신의 내부 메서드를 호출하는 this.internal() 이 되는데, 여기서 this 는 자기
+자신을 가리키므로, 실제 대상 객체( target )의 인스턴스를 뜻한다.   
+> `결과적으로 이러한 내부 호출은 프록시를 거치지 않는다.   
+> 따라서 트랜잭션을 적용할 수 없다. 결과적으로 target 에 있는 internal() 을 직접 호출하게 된 것이다.`
+
+* @Transactional 를 사용하는 트랜잭션 AOP는 프록시를 사용한다. 프록시를 사용하면 메서드 내부
+호출에 프록시를 적용할 수 없다.
+* 그렇다면 이 문제를 어떻게 해결할 수 있을까?
+  * 가장 단순한 방법은 내부 호출을 피하기 위해 internal() 메서드를 별도의 클래스로 분리하는 것이다
+
+```java
+public class InternalCallV2Test {
+  @Autowired
+  CallService callService;
+
+  @Test
+  void externalCallV2() {
+    callService.external();
+  }
+
+  @Slf4j
+  @RequiredArgsConstructor
+  static class CallService {
+    private final InternalService internalService;
+
+    public void external() {
+      log.info("call external");
+      printTxInfo();
+      internalService.internal();
+    }
+
+    private void printTxInfo() {
+      boolean txActive = TransactionSynchronizationManager.isActualTransactionActive();
+      log.info("tx active={}", txActive);
+    }
+  }
+
+  @Slf4j
+  static class InternalService {
+    @Transactional
+    public void internal() {
+      log.info("call internal");
+      printTxInfo();
+    }
+
+    private void printTxInfo() {
+      boolean txActive = TransactionSynchronizationManager.isActualTransactionActive();
+      log.info("tx active={}", txActive);
+    }
+  }
+}
+```
+* InternalService 클래스를 만들고 internal() 메서드를 여기로 옮겼다.
+* `이렇게 메서드 내부 호출을 외부 호출로 변경했다.`
+* CallService 에는 트랜잭션 관련 코드가 전혀 없으므로 트랜잭션 프록시가 적용되지 않는다.
+* InternalService 에는 트랜잭션 관련 코드가 있으므로 트랜잭션 프록시가 적용된다
+
+* #### 즉, 메서드 내에서 같은 클래스 내의 트랜잭션 메서드를 호출하지 말고(this X), 별도의 새 클래스에서 트랜잭션을 적용한 메서드를 호출하면 된다.
+  * this를 호출하면 `트랜잭션이 적용된 프록시 객체의 메서드를 호출하지 않고`, `자기자신의 메서드를 호출해서 트랜잭션이 적용이 안된다.`
+    * => 내부호출
+  * 트랜잭션이 적용된 프록시 객체의 메서드를 호출해야 한다.( `target.logic()` ->  proxyClass.transactionMethod() )
+    * => 외부호출
+
+* ![](.note_images/5cc96b8c.png)
+
+* ![](.note_images/64a523a5.png)
+
+1. 클라이언트인 테스트 코드는 callService.external() 을 호출한다.
+2. callService 는 실제 callService 객체 인스턴스이다.
+3. callService 는 주입 받은 internalService.internal() 을 호출한다.
+4. internalService 는 트랜잭션 프록시이다. internal() 메서드에 @Transactional 이 붙어
+   있으므로 트랜잭션 프록시는 트랜잭션을 적용한다.
+5. 트랜잭션 적용 후 실제 internalService 객체 인스턴스의 internal() 을 호출한다.
+
+* 여러가지 다른 해결방안도 있지만, 실무에서는 이렇게 별도의 클래스로 분리하는 방법을 주로 사용한다.
+
+
+## public 메서드만 트랜잭션 적용
+* 스프링의 트랜잭션 AOP 기능은 public 메서드에만 트랜잭션을 적용하도록 기본 설정이 되어있다.
+* 그래서 protected , private , package-visible 에는 트랜잭션이 적용되지 않는다. 생각해보면
+protected , package-visible 도 외부에서 호출이 가능하다. 따라서 부분은 앞서 설명한 프록시의 내부
+호출과는 무관하고, 스프링이 막아둔 것이다.
+
+* 스프링이 public 에만 트랜잭션을 적용하는 이유는 다음과 같다
+
+* 이렇게 클래스 레벨에 트랜잭션을 적용하면 모든 메서드에 트랜잭션이 걸릴 수 있다. 
+* 그러면 트랜잭션을 의도하지 않는 곳 까지 트랜잭션이 과도하게 적용된다. 
+* 트랜잭션은 주로 비즈니스 로직의 시작점에 걸기 때문에 대부분 외부에 열어준 곳을 시작점으로 사용한다. 
+* 이런 이유로 public 메서드에만 트랜잭션을 적용하도록 설정되어 있다.
+* 앞서 실행했던 코드를 package-visible 로 변경해보면 적용되지 않는 것을 확인할 수 있다.
+* 참고로 public 이 아닌곳에 @Transactional 이 붙어 있으면 예외가 발생하지는 않고, `트랜잭션 적용만 무시된다`.
+
+
+## 스프링 초기화 시점에는 트랜잭션 AOP가 적용되지 않을 수 있다.
+
+* 초기화 코드(예: @PostConstruct )와 @Transactional 을 함께 사용하면 트랜잭션이 적용되지 않는다.
+* 왜냐하면 초기화 코드가 먼저 호출되고, 그 다음에 트랜잭션 AOP가 적용되기 때문이다. 따라서 초기화 시점에는 해당 메서드에서 트랜잭션을 획득할 수 없다.
+
+* 가장 확실한 대안은 ApplicationReadyEvent 이벤트를 사용하는 것이다.
+```java
+@EventListener(value = ApplicationReadyEvent.class)
+@Transactional
+public void init2() {
+    log.info("Hello init ApplicationReadyEvent");
+}
+```
+
+* 이 이벤트는 트랜잭션 AOP를 포함한 스프링이 컨테이너가 완전히 생성되고 난 다음에 이벤트가 붙은
+  메서드를 호출해준다. 따라서 init2() 는 트랜잭션이 적용된 것을 확인할 수 있다.
+
+## 트랜잭션 옵션 소개
+
+```java
+public @interface Transactional {
+    String value() default "";
+    
+    String transactionManager() default "";
+    
+    Class<? extends Throwable>[] rollbackFor() default {};
+    
+    Class<? extends Throwable>[] noRollbackFor() default {};
+    
+    Propagation propagation() default Propagation.REQUIRED;
+    
+    Isolation isolation() default Isolation.DEFAULT;
+    
+    int timeout() default TransactionDefinition.TIMEOUT_DEFAULT;boolean readOnly() default false;
+    
+    String[] label() default {};
+}
+```
+### value, transactionManager
+* 트랜잭션을 사용하려면 먼저 스프링 빈에 등록된 어떤 트랜잭션 매니저를 사용할지 알아야 한다.
+* 생각해보면 코드로 직접 트랜잭션을 사용할 때 분명 트랜잭션 매니저를 주입 받아서 사용했다.
+* @Transactional 에서도 트랜잭션 프록시가 사용할 트랜잭션 매니저를 지정해주어야 한다.
+* 사용할 트랜잭션 매니저를 지정할 때는 value , transactionManager 둘 중 하나에 트랜잭션 매니저의
+스프링 빈의 이름을 적어주면 된다.
+이 값을 생략하면 기본으로 등록된 트랜잭션 매니저를 사용하기 때문에 대부분 생략한다. 
+* `그런데 사용하는 트랜잭션 매니저가 둘 이상이라면 다음과 같이 트랜잭션 매니저의 이름을 지정해서 구분하면 된다`
+```java
+public class TxService {
+    @Transactional("memberTxManager") 
+    public void member() {...}
+    
+    @Transactional("orderTxManager")
+    public void order() {...}
+}
+```
+
+### rollbackFor
+예외 발생시 스프링 트랜잭션의 기본 정책은 다음과 같다.
+* 언체크 예외인 RuntimeException , Error 와 그 하위 예외가 발생하면 롤백한다.
+* 체크 예외인 Exception 과 그 하위 예외들은 커밋한다.
+* 이 옵션을 사용하면 기본 정책에 추가로 어떤 예외가 발생할 때 롤백할 지 지정할 수 있다.
+* `@Transactional(rollbackFor = Exception.class)`
+  * 예를 들어서 이렇게 지정하면 체크 예외인 Exception 이 발생해도 롤백하게 된다. (하위 예외들도 대상에 포함된다.)
+
+
+### noRollbackFor
+* 앞서 설명한 rollbackFor 와 반대이다. 기본 정책에 추가로 어떤 예외가 발생했을 때 롤백하면 안되는지 지정할 수 있다.
+* 예외 이름을 문자로 넣을 수 있는 noRollbackForClassName 도 있다.
+  * 롤백 관련 옵션에 대한 더 자세한 내용은 뒤에서 더 자세히 설명한다.
+
+### propagation
+* 트랜잭션 전파에 대한 옵션이다. 
+
+### isolation
+* 트랜잭션 격리 수준을 지정할 수 있다. 
+* 기본 값은 데이터베이스에서 설정한 트랜잭션 격리 수준을 사용하는 DEFAULT 이다. 
+* 대부분 데이터베이스에서 설정한 기준을 따른다. 애플리케이션 개발자가 트랜잭션 격리 수준을 직접 지정하는 경우는 드물다.
+  
+  * DEFAULT : 데이터베이스에서 설정한 격리 수준을 따른다.
+  * READ_UNCOMMITTED : 커밋되지 않은 읽기
+  * READ_COMMITTED : 커밋된 읽기
+  * REPEATABLE_READ : 반복 가능한 읽기
+  * SERIALIZABLE : 직렬화 가능
+
+* `트랜잭션 격리 수준에 대한 더 자세한 내용은 데이터베이스 메뉴얼이나, JPA 책 16.1 트랜잭션과 락을 참고하자.`
+
+
+### timeout
+* 트랜잭션 수행 시간에 대한 타임아웃을 초 단위로 지정한다. 기본 값은 트랜잭션 시스템의 타임아웃을 사용한다. 
+* 운영 환경에 따라 동작하는 경우도 있고 그렇지 않은 경우도 있기 때문에 꼭 확인하고 사용해야 한다.
+* timeoutString 도 있는데, 숫자 대신 문자 값으로 지정할 수 있다.
+
+### label
+트랜잭션 애노테이션에 있는 값을 직접 읽어서 어떤 동작을 하고 싶을 때 사용할 수 있다. 일반적으로
+사용하지 않는다.
+
+### readOnly
+* 트랜잭션은 기본적으로 읽기 쓰기가 모두 가능한 트랜잭션이 생성된다.
+* `readOnly=true` 옵션을 사용하면 읽기 전용 트랜잭션이 생성된다. 이 경우 등록, 수정, 삭제가 안되고 읽기
+기능만 작동한다. (드라이버나 데이터베이스에 따라 정상 동작하지 않는 경우도 있다.) 
+* 그리고 readOnly 옵션을 사용하면 읽기에서 다양한 성능 최적화가 발생할 수 있다.
+readOnly 옵션은 크게 3곳에서 적용된다.
+
+
+#### 프레임워크
+* JdbcTemplate은 읽기 전용 트랜잭션 안에서 변경 기능을 실행하면 예외를 던진다.
+* JPA(하이버네이트)는 읽기 전용 트랜잭션의 경우 커밋 시점에 플러시를 호출하지 않는다. 
+* 읽기 전용이니 변경에 사용되는 플러시를 호출할 필요가 없다. 
+* 추가로 변경이 필요 없으니 변경 감지를 위한 스냅샷 객체도 생성하지 않는다. 이렇게 JPA에서는 다양한 최적화가 발생한다.
+
+#### JDBC 드라이버
+* DB와 드라이버 버전에 따라서 다르게 동작하기 때문에 사전에 확인이 필요하다.
+* 읽기 전용 트랜잭션에서 변경 쿼리가 발생하면 예외를 던진다.
+* 읽기, 쓰기(마스터, 슬레이브) 데이터베이스를 구분해서 요청한다. 읽기 전용 트랜잭션의 경우 읽기(슬레이브) 데이터베이스의 커넥션을 획득해서 사용한다.
+  * 예) https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-source-replicareplication-connection.html
+* 데이터베이스
+  * 데이터베이스에 따라 읽기 전용 트랜잭션의 경우 읽기만 하면 되므로, 내부에서 성능 최적화가 발생한다
+
+## 예외와 트랜잭션 커밋, 롤백 - 기본
+* 예외가 발생했는데, 내부에서 예외를 처리하지 못하고, 트랜잭션 범위( @Transactional가 적용된 AOP )
+  밖으로 예외를 던지면 어떻게 될까?
+
+* ![](.note_images/18ba0fcb.png)
+
+예외 발생시 스프링 트랜잭션 AOP는 예외의 종류에 따라 트랜잭션을 커밋하거나 롤백한다.
+* 언체크 예외인 RuntimeException , Error 와 그 하위 예외가 발생하면 트랜잭션을 롤백한다.
+* 체크 예외인 Exception 과 그 하위 예외가 발생하면 트랜잭션을 커밋한다.
+* 물론 정상 응답(리턴)하면 트랜잭션을 커밋한다
+
+* 트랜 잭션 커밋, 롤백 로그 확인 설정
+```properties
+logging.level.org.springframework.transaction.interceptor=TRACE
+logging.level.org.springframework.jdbc.datasource.DataSourceTransactionManager=DEBUG
+#JPA log
+logging.level.org.springframework.orm.jpa.JpaTransactionManager=DEBUG
+logging.level.org.hibernate.resource.transaction=DEBUG
+```
+
+* 트랜잭션 커밋 시 로그
+```
+o.s.orm.jpa.JpaTransactionManager        : Initiating transaction commit
+o.s.orm.jpa.JpaTransactionManager        : Committing JPA transaction on EntityManager 
+```
+* 트랜잭션 롤백 시 로그 
+```
+o.s.orm.jpa.JpaTransactionManager        : Initiating transaction rollback
+o.s.orm.jpa.JpaTransactionManager        : Rolling back JPA transaction on EntityManager
+```
+
+
+
+
 
 
 
