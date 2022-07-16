@@ -17,16 +17,16 @@ import javax.sql.DataSource;
 @RequiredArgsConstructor
 public class JdbcTemplateV3Config {
 
-    private final DataSource dataSource;
-
-    @Bean
-    public ItemService itemService() {
-        return new ItemServiceV1(itemRepository());
-    }
-
-    @Bean
-    public ItemRepository itemRepository() {
-        return new JdbcTemplateItemRepositoryV3(dataSource);
-    }
-    
+//    private final DataSource dataSource;
+//
+//    @Bean
+//    public ItemService itemService() {
+//        return new ItemServiceV1(itemRepository());
+//    }
+//
+//    @Bean
+//    public ItemRepository itemRepository() {
+//        return new JdbcTemplateItemRepositoryV3(dataSource);
+//    }
+//
 }

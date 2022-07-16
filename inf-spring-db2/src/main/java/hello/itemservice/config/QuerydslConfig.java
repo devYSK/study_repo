@@ -18,13 +18,14 @@ import javax.persistence.EntityManager;
 public class QuerydslConfig {
     private final EntityManager em;
 
-    @Bean
-    public ItemService itemService() {
-        return new ItemServiceV1(itemRepository());
-    }
+//    @Bean
+//    public ItemService itemService() {
+//        return new ItemServiceV1(itemRepository());
+//    }
+//
+//    @Bean
+//    public ItemRepository itemRepository() {
+//        return new JpaItemRepositoryV3(em);
+//    }
 
-    @Bean
-    public ItemRepository itemRepository() {
-        return new JpaItemRepositoryV3(em);
-    }
 }

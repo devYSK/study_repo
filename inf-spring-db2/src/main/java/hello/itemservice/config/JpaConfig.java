@@ -17,15 +17,16 @@ import javax.persistence.EntityManager;
 @Configuration
 public class JpaConfig {
 
-    private final EntityManager em;
+//    private final EntityManager em;
+//
+//    @Bean
+//    public ItemService itemService() {
+//        return new ItemServiceV1(itemRepository());
+//    }
+//
+//    @Bean
+//    public ItemRepository itemRepository() {
+//        return new JpaItemRepositoryV1(em);
+//    }
 
-    @Bean
-    public ItemService itemService() {
-        return new ItemServiceV1(itemRepository());
-    }
-
-    @Bean
-    public ItemRepository itemRepository() {
-        return new JpaItemRepositoryV1(em);
-    }
 }

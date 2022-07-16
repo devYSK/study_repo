@@ -18,14 +18,14 @@ public class MyBatisConfig {
 
     private final ItemMapper itemMapper;
 
-    @Bean
-    public ItemService itemService() {
-        return new ItemServiceV1(itemRepository());
-    }
-
-    @Bean
-    public ItemRepository itemRepository() {
-        return new MyBatisItemRepository(itemMapper);
-    }
+//    @Bean
+//    public ItemService itemService() {
+//        return new ItemServiceV1(itemRepository());
+//    }
+//
+//    @Bean
+//    public ItemRepository itemRepository() {
+//        return new MyBatisItemRepository(itemMapper);
+//    }
 
 }
