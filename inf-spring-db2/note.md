@@ -523,6 +523,418 @@ public class ItemServiceApplication {
 > https://docs.spring.io/spring-boot/docs/current/reference/html/
 data.html#data.sql.datasource.embedded
 
+# MyBatis
+
+* MyBatis는 앞서 설명한 JdbcTemplate보다 더 많은 기능을 제공하는 SQL Mapper 이다.
+* 기본적으로 JdbcTemplate이 제공하는 대부분의 기능을 제공한다.
+* JdbcTemplate과 비교해서 MyBatis의 가장 매력적인 점은 SQL을 XML에 편리하게 작성할 수 있고 또 동적 쿼리를 매우 편리하게 작성할 수 있다는 점이다.
+
+
+* 공식 사이트
+> https://mybatis.org/mybatis-3/ko/index.html
+
+## MyBatis 설정
+
+* gradle
+  * > implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.0'
+  * 뒤에 버전 정보가 붙는 이유는 스프링 부트가 버전을 관리해주는 공식 라이브러리가 아니기 때문이다
+
+
+* 다음과 같은 라이브러리가 추가된다.
+  * mybatis-spring-boot-starter : MyBatis를 스프링 부트에서 편리하게 사용할 수 있게 시작하는 라이브러리
+  * mybatis-spring-boot-autoconfigure : MyBatis와 스프링 부트 설정 라이브러리
+  * mybatis-spring : MyBatis와 스프링을 연동하는 라이브러리
+  * mybatis : MyBatis 라이브러리
+
+* ### mybatis properties or yaml
+```properties
+#MyBatis
+mybatis.type-aliases-package=hello.itemservice.domain
+mybatis.configuration.map-underscore-to-camel-case=true
+logging.level.hello.itemservice.repository.mybatis=trace
+```
+
+* mybatis.type-aliases-package
+  * 마이바티스에서 타입 정보를 사용할 때는 패키지 이름을 적어주어야 하는데, 여기에 명시하면 패키지이름을 생략할 수 있다.
+  * 지정한 패키지와 그 하위 패키지가 자동으로 인식된다.
+  * 여러 위치를 지정하려면 , , ; 로 구분하면 된다.
+* mybatis.configuration.map-underscore-to-camel-case
+  * JdbcTemplate의 BeanPropertyRowMapper 에서 처럼 언더바를 카멜로 자동 변경해주는 기능을 활성화 한다. 
+* logging.level.hello.itemservice.repository.mybatis=trace
+  * MyBatis에서 실행되는 쿼리 로그를 확인할 수 있다.
+
+## Mybatis 인터페이스
+
+```java
+@Mapper
+public interface ItemMapper {
+
+    void save(Item item);
+
+    void update(@Param("id") Long id, @Param("updateParam") ItemUpdateDto updateParam);
+
+    Optional<Item> findById(Long id);
+
+    List<Item> findAll(ItemSearchCond itemSearch);
+}
+```
+
+* 인터페이스로 매퍼를 만들면 XML에서 지정해서 연동할 수 있다.
+* 이 인터페이스에는 @Mapper 애노테이션을 붙여주어야 한다. 그래야 MyBatis에서 인식할 수 있다.
+* 이 인터페이스의 메서드를 호출하면 다음에 보이는 xml 의 해당 SQL을 실행하고 결과를 돌려준다.
+
+> 이제 같은 위치에 실행할 SQL이 있는 XML 매핑 파일을 만들어주면 된다.
+참고로 자바 코드가 아니기 때문에 src/main/resources 하위에 만들되, 패키지 위치는 맞추어 주어야 한다
+
+* Mapper Interface 위치
+  * src/main/java/hello.itemservice.repository.mybatis
+* Mapper XML 위치
+  * src/main/resources/hello/itemservice/repository/mybatis/ItemMapper.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="hello.itemservice.repository.mybatis.ItemMapper">
+  <insert id="save" useGeneratedKeys="true" keyProperty="id">
+    insert into item (item_name, price, quantity)
+    values (#{itemName}, #{price}, #{quantity})
+  </insert>
+
+  <update id="update">
+    update item
+
+    set item_name=#{updateParam.itemName},
+    price=#{updateParam.price},
+    quantity=#{updateParam.quantity}
+    where id = #{id}
+  </update>
+
+  <select id="findById" resultType="Item">
+    select id, item_name, price, quantity
+    from item
+    where id = #{id}
+  </select>
+
+  <select id="findAll" resultType="Item">
+    select id, item_name, price, quantity
+    from item
+    <where>
+
+      <if test="itemName != null and itemName != ''">
+        and item_name like concat('%',#{itemName},'%')
+      </if>
+
+      <if test="maxPrice != null">
+        and price &lt;= #{maxPrice}
+      </if>
+    </where>
+  </select>
+</mapper>
+```
+
+## !! XML 파일 경로를 꼭 interface의 경로와 안맞추어도 된다! 
+### 경로 수정하기 
+* XML 파일을 원하는 위치에 두고 싶으면 application.properties 에 다음과 같이 설정하면 된다.
+  * `mybatis.mapper-locations=classpath:mapper/**/*.xml`
+  * resource/mapper 하위 폴더 인식
+  * 이렇게 하면 resources/mapper 를 포함한 그 하위 폴더에 있는 XML을 XML 매핑 파일로 인식한다. 이 경우 파일 이름은 자유롭게 설정해도 된다.
+
+* 테스트의 application.properties 파일도 함께 수정해야 테스트를 실행할 때 인식할 수 있다.
+
+## Mybatis Insert, Update, Select
+
+
+### Insert
+```java
+void save(Item item);
+
+<insert id="save" useGeneratedKeys="true" keyProperty="id">
+  insert into item (item_name, price, quantity)
+  values (#{itemName}, #{price}, #{quantity})
+</insert>
+```
+
+* Insert SQL은 <insert> 를 사용하면 된다.
+* id 에는 매퍼 인터페이스에 설정한 메서드 이름을 지정하면 된다. 
+  * 여기서는 메서드 이름이 save() 이므로 save 로 지정하면 된다.
+* 파라미터는 `#{} 문법`을 사용하면 된다. 그리고 매퍼에서 넘긴 객체의 프로퍼티 이름을 적어주면 된다.
+  * `#{} 문법`을 사용하면 PreparedStatement 를 사용한다. JDBC의 `?` 를 치환한다 생각하면 된다.
+* useGeneratedKeys 는 데이터베이스가 키를 생성해 주는 IDENTITY 전략일 때 사용한다. keyProperty
+는 생성되는 키의 속성 이름을 지정한다. Insert가 끝나면 item 객체의 id 속성에 생성된 값이 입력된다
+
+### Update
+
+```java
+import org.apache.ibatis.annotations.Param;
+
+void update(@Param("id") Long id, @Param("updateParam") ItemUpdateDto updateParam);
+
+<update id="update">
+    update item
+    set item_name=#{updateParam.itemName},
+    price=#{updateParam.price},quantity=#{updateParam.quantity}
+    where id = #{id}
+</update>
+```
+* Update SQL은 <update> 를 사용하면 된다.
+* 여기서는 파라미터가 Long id , ItemUpdateDto updateParam 으로 2개이다. 
+* 파라미터가 1개만 있으면 @Param 을 지정하지 않아도 되지만, 파라미터가 2개 이상이면 @Param 으로 이름을 지정해서 파라미터를 구분해야 한다.
+* Parameter.propertyName 으로 멤버 필드에 접근한다.
+
+### Select - findOne, findAll
+
+```java
+Optional<Item> findById(Long id);
+
+<select id="findById" resultType="Item">
+    select id, item_name, price, quantity
+    from item
+    where id = #{id}
+</select>
+```
+* Select SQL은 <select> 를 사용하면 된다.
+* resultType 은 반환 타입을 명시하면 된다. 여기서는 결과를 Item 객체에 매핑한다.
+* 앞서 application.properties 에 mybatis.type-aliasespackage=hello.itemservice.domain 속성을 지정한 덕분에 모든 패키지 명을 다 적지는 않아도
+된다. 그렇지 않으면 모든 패키지 명을 다 적어야 한다.
+* JdbcTemplate의 BeanPropertyRowMapper 처럼 SELECT SQL의 결과를 편리하게 객체로 바로 변환해준다.
+* mybatis.configuration.map-underscore-to-camel-case=true 속성을 지정한 덕분에
+언더스코어를 카멜 표기법으로 자동으로 처리해준다. ( item_name itemName )
+* 자바 코드에서 반환 객체가 하나이면 Item , Optional<Item> 과 같이 사용하면 되고, 반환 객체가 하나
+이상이면 컬렉션을 사용하면 된다. 주로 List 를 사용한다.
+
+```java
+List<Item> findAll(ItemSearchCond itemSearch);
+
+<select id="findAll" resultType="Item">
+        select id, item_name, price, quantity
+        from item
+    <where>
+        <if test="itemName != null and itemName != ''">
+            and item_name like concat('%',#{itemName},'%')
+        </if>
+        <if test="maxPrice != null">
+            and price &lt;= #{maxPrice}
+        </if>
+    </where>
+</select>
+```
+
+* Mybatis는 <where> , <if> 같은 동적 쿼리 문법을 통해 편리한 동적 쿼리를 지원한다.
+* <if> 는 해당 조건이 만족하면 구문을 추가한다.
+* <where> 은 적절하게 where 문장을 만들어준다.
+  * 예제에서 <if> 가 모두 실패하게 되면 SQL where 를 만들지 않는다.
+  * 예제에서 <if> 가 하나라도 성공하면 처음 나타나는 and 를 where 로 변환해준다
+
+### XML 특수문자 인식 이슈?
+
+* and price &lt;= #{maxPrice}
+* 여기에 보면 `<=` 를 사용하지 않고 `&lt;=` 를 사용한 것을 확인할 수 있다. 그 이유는 XML에서는 데이터
+영역에 `< , >` 같은 특수 문자를 사용할 수 없기 때문이다. 
+* 이유는 간단한데, XML에서 TAG가 시작하거나 종료할 때 `< , >` 와 같은 특수문자를 사용하기 때문이다.
+```
+< : &lt;
+> : &gt;
+& : &amp;
+```
+
+* 방식으로 변경해서 넣거나, `CDATA` 구문을 사용한다. 
+* 대신 이 구문 안에서는 XML TAG가 단순 문자로 인식되기 때문에 <if> ,<where> 등이 적용되지 않는다
+
+```xml
+<where>
+  <if test="itemName != null and itemName != ''">
+    and item_name like concat('%',#{itemName},'%')
+  </if>
+  <if test="maxPrice != null">
+    <![CDATA[
+    and price <= #{maxPrice}
+    ]]>
+  </if>
+</where>
+```
+
+## MyBatis의 ItemMapper 인터페이스의 구현체가 없는데 어떻게 동작하는가?
+
+* ![](.note_images/9eb2197e.png)
+
+1. 애플리케이션 로딩 시점에 MyBatis 스프링 연동 모듈은 @Mapper 가 붙어있는 인터페이스를 조사한다.
+2. 해당 인터페이스가 발견되면 동적 프록시 기술을 사용해서 ItemMapper 인터페이스의 구현체를 만든다.
+3. 생성된 구현체를 스프링 빈으로 등록한다
+
+## 매퍼 구현체(Mapper)
+
+* 매퍼 구현체는 예외 변환까지 처리해준다. MyBatis에서 발생한 예외를 스프링 예외 추상화인
+DataAccessException 에 맞게 변환해서 반환해준다. 
+
+
+* 마이바티스 스프링 연동 모듈이 자동으로 등록해주는 부분은 MybatisAutoConfiguration 클래스를 참고
+
+
+## Mybatis 동적 쿼리 
+
+* MyBatis 공식 메뉴얼: https://mybatis.org/mybatis-3/ko/index.html
+* MyBatis 스프링 공식 메뉴얼: https://mybatis.org/spring/ko/index.html
+
+* if
+* choose (when, otherwise)
+* trim (where, set)
+* foreach
+
+* -- https://2ham-s.tistory.com/273
+### if
+
+```xml
+<select id="findActiveBlogWithTitleLike" resultType="Blog">
+    SELECT * FROM BLOG
+    WHERE state = ‘ACTIVE’
+    <if test="title != null">
+        AND title like #{title}
+    </if>
+</select>
+```
+* 해당 조건에 따라 값을 추가할지 말지 판단한다.
+* 내부의 문법은 `OGNL`을 사용한다. 자세한 내용은 `OGNL`을 검색해보자
+  * Object Graph Navigation Language 표현식 
+
+### trim (where, set)
+```xml
+<select id="findActiveBlogLike" resultType="Blog">
+SELECT * FROM BLOG
+    <where>
+    <if test="state != null">
+        state = #{state}
+    </if>
+    <if test="title != null">
+        AND title like #{title}
+    </if>
+    <if test="author != null and author.name != null">
+        AND author_name like #{author.name}
+    </if>
+    </where>
+</select>
+```
+
+* `<where>` 는 문장이 없으면 where 를 추가하지 않는다. 문장이 있으면 where 를 추가한다. 만약 and가 먼저 시작된다면 and 를 지운다.
+* 참고로 다음과 같이 trim 이라는 기능으로 사용해도 된다. 이렇게 정의하면 <where> 와 같은 기능을 수행한다
+
+```xml
+<trim prefix="WHERE" prefixOverrides="AND |OR ">
+...
+</trim>
+```
+
+### foreach
+
+```xml
+<select id="selectPostIn" resultType="domain.blog.Post">
+    SELECT *
+    FROM POST P
+    <where>
+        <foreach item="item" index="index" collection="list" open="ID in (" separator="," close=")" nullable="true">
+            #{item}
+        </foreach>
+    </where>
+</select>
+```
+* 컬렉션을 반복 처리할 때 사용한다. where in (1,2,3,4,5,6) 와 같은 문장을 쉽게 완성할 수 있다.
+* 파라미터로 List 를 전달하면 된다.
+
+동적 쿼리에 대한 자세한 내용은 다음을 참고하자.
+> https://mybatis.org/mybatis-3/ko/dynamic-sql.html
+
+### 어노테이션으로 SQL 작성
+
+```java
+@Select("select id, item_name, price, quantity from item where id=#{id}")
+Optional<Item> findById(Long id);
+```
+
+* @Insert , @Update , @Delete , @Select 기능이 제공된다.
+* 이 경우 XML에는 <select id="findById"> ~ </select> 는 제거해야 한다.
+* 동적 SQL이 해결되지 않으므로 간단한 경우에만 사용한다.
+* 애노테이션으로 SQL 작성에 대한 더 자세한 내용은 다음을 참고하자.
+  * https://mybatis.org/mybatis-3/ko/java-api.html
+  
+### 문자열 대체(String Substitution)
+* `#{}` 문법은 ?를 넣고 파라미터를 바인딩하는 PreparedStatement 를 사용한다.
+* 때로는 파라미터 바인딩이 아니라 문자 그대로를 처리하고 싶은 경우도 있다. 이때는 ${} 를 사용하면 된다.
+
+* `ORDER BY ${columnName}`
+```java
+@Select("select * from user where ${column} = #{value}")
+User findByColumn(@Param("column") String column, @Param("value") Stringvalue);
+```
+* 주의
+* ${} 를 사용하면 SQL 인젝션 공격을 당할 수 있다. 따라서 가급적 사용하면 안된다. 사용하더라도 매우 주의깊게 사용해야 한다.
+
+### 재사용 가능한 SQL 조각
+
+* `<sql>` 을 사용하면 SQL 코드를 재사용 할 수 있다.
+```xml
+<sql id="userColumns"> ${alias}.id,${alias}.username,${alias}.password </sql>
+
+<select id="selectUsers" resultType="map">
+    select
+      <include refid="userColumns"><property name="alias" value="t1"/></include>,
+      <include refid="userColumns"><property name="alias" value="t2"/></include>
+    from some_table t1
+    cross join some_table t2
+</select>
+```
+
+* `<include>` 를 통해서 `<sql>` 조각을 찾아서 사용할 수 있다.
+
+## Result Maps : 결과값 매핑
+
+* 별칭( as )을 사용
+```xml
+<select id="selectUsers" resultType="User">
+    select
+        user_id as "id",
+        user_name as "userName",
+        hashed_password as "hashedPassword"
+    from some_table
+    where id = #{id}
+</select>
+```
+
+* `resultMap` 사용
+```xml
+<resultMap id="userResultMap" type="User">
+    <id property="id" column="user_id" />
+    <result property="username" column="username"/>
+    <result property="password" column="password"/>
+</resultMap>
+
+<select id="selectUsers" resultMap="userResultMap">
+    select user_id, user_name, hashed_password
+    from some_table
+    where id = #{id}
+</select>
+```
+* MyBatis도 매우 복잡한 결과에 객체 연관관계를 고려해서 데이터를 조회하는 것이 가능하다.
+* 이때는 `<association>` , `<collection>` 등을 사용한다.
+* 이 부분은 성능과 실효성에서 측면에서 많은 고민이 필요하다
+* 결과 매핑에 대한 자세한 내용은 다음을 참고하자.
+> https://mybatis.org/mybatis-3/ko/sqlmap-xml.html#Result_Maps
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
