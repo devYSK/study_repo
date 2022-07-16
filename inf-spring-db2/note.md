@@ -921,18 +921,111 @@ User findByColumn(@Param("column") String column, @Param("value") Stringvalue);
 > https://mybatis.org/mybatis-3/ko/sqlmap-xml.html#Result_Maps
 
 
+# 데이터 접근 기술 - JPA
+
+* 설정
+```groovy
+//JPA, 스프링 데이터 JPA 추가
+implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+```
+* spring-boot-starter-data-jpa 는 spring-boot-starter-jdbc 도 함께 포함(의존)한다. 
+  * 따라서 spring-boot-starter-jdbc 의존관계를 제거해도 된다. 
+  * 참고로 mybatis-spring-boot-starter 도 spring-bootstarter-jdbc 를 포함하기 때문에 제거해도 된다
+  
+* hibernate-core : JPA 구현체인 하이버네이트 라이브러리
+* jakarta.persistence-api : JPA 인터페이스
+* spring-data-jpa : 스프링 데이터 JPA 라이브러리
+
+```properties
+#JPA log
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
+```
+
+* org.hibernate.SQL=DEBUG : 하이버네이트가 생성하고 실행하는 SQL을 확인할 수 있다.
+* org.hibernate.type.descriptor.sql.BasicBinder=TRACE : SQL에 바인딩 되는 파라미터를 확인할 수 있다
 
 
 
+## JPA 예외 변환 
+
+* JPA의 경우 예외가 발생하면 JPA 예외가 발생하게 된다
+
+* EntityManager 는 순수한 JPA 기술이고, 스프링과는 관계가 없다. 
+* 따라서 엔티티 매니저는 예외가 발생하면 JPA 관련 예외를 발생시킨다.
+* JPA는 `PersistenceException` 과 그 하위 예외를 발생시킨다.
+* 추가로 JPA는 IllegalStateException , IllegalArgumentException 을 발생시킬 수 있다.
+* 그렇다면 JPA 예외를 스프링 예외 추상화( DataAccessException )로 어떻게 변환할 수 있을까?
+* `비밀은 바로 @Repository 에 있다`
+
+* 예외 변환 전 
+  * ![](.note_images/9516a107.png)
 
 
+### @Repository의 기능
+* @Repository 가 붙은 클래스는 컴포넌트 스캔의 대상이 된다.
+* @Repository 가 붙은 클래스는 예외 변환 AOP의 적용 대상이 된다.
+  * 스프링과 JPA를 함께 사용하는 경우 스프링은 JPA 예외 변환기( PersistenceExceptionTranslator )를 등록한다.
+* 예외 변환 AOP 프록시는 JPA 관련 예외가 발생하면 JPA 예외 변환기를 통해 발생한 예외를 스프링데이터 접근 예외로 변환한다
+
+* 예외 변환 후 
+  * ![](.note_images/426bb8a5.png)
+
+* 결과적으로 리포지토리에 @Repository 애노테이션만 있으면 스프링이 예외 변환을 처리하는 AOP를 만들어준다.
+* 참고
+  * 스프링 부트는 PersistenceExceptionTranslationPostProcessor 를 자동으로 등록하는데, 여기에서 @Repository 를 AOP 프록시로 만드는 어드바이저가 등록된다.
+* 참고
+  * 복잡한 과정을 거쳐서 실제 예외를 변환하는데, 실제 JPA 예외를 변환하는 코드는 
+  * `EntityManagerFactoryUtils.convertJpaAccessExceptionIfPossible()` 이다.
 
 
+# Spring Data JPA 
+
+* 스프링 데이터 JPA는 JPA를 편리하게 사용할 수 있도록 도와주는 라이브러리이다.
+* 수많은 편리한 기능을 제공하지만 가장 대표적인 기능은 다음과 같다.
+* 공통 인터페이스 기능
+* 쿼리 메서드 기능
+
+## 공통 인터페이스 기능
+
+* ![](.note_images/b872f709.png)
+
+* JpaRepository 인터페이스를 통해서 기본적인 CRUD 기능 제공환다.
+* 공통화 가능한 기능이 거의 모두 포함되어 있다.
+* CrudRepository 에서 fineOne() findById() 로 변경되었다.
+
+* 스프링 데이터 JPA가 구현 클래스를 대신 생성
+* ![](.note_images/1ab7a988.png)
+
+* JpaRepository 인터페이스만 상속받으면 스프링 데이터 JPA가 프록시 기술을 사용해서 구현 클래스를
+만들어준다. 그리고 만든 구현 클래스의 인스턴스를 만들어서 스프링 빈으로 등록한다.
+* 따라서 개발자는 구현 클래스 없이 인터페이스만 만들면 기본 CRUD 기능을 사용할 수 있다.
 
 
+## 쿼리 메소드
 
+* 스프링 데이터 JPA는 메서드 이름을 분석해서 필요한 JPQL을 만들고 실행해준다. 
+JPQL은 JPA가 SQL로 번역해서 실행한다.
+* 다음과 같은 규칙을 따라야 한다.
+* 스프링 데이터 JPA가 제공하는 쿼리 메소드 기능
+* 조회: find…By , read…By , query…By , get…By
+  * 예:) findHelloBy 처럼 ...에 식별하기 위한 내용(설명)이 들어가도 된다.
+* COUNT: count…By 반환타입 long
+* EXISTS: exists…By 반환타입 boolean
+* 삭제: delete…By , remove…By 반환타입 long
+* DISTINCT: findDistinct , findMemberDistinctBy
+* LIMIT: findFirst3 , findFirst , findTop , findTop
 
+* 쿼리 메소드 필터 조건
+> 스프링 데이터 JPA 공식 문서 참고  
+> https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.querymethods.query-creation  
+> https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.limitquery-result
 
+* 동적 쿼리를 사용하면 좋겠지만, 스프링 데이터 JPA는 동적 쿼리에 약하다. 
+
+* 스프링 데이터 JPA도 Example 이라는 기능으로 약간의 동적 쿼리를 지원하지만, 실무에서 사용하기는
+기능이 빈약하다. 
+* 실무에서 JPQL 동적 쿼리는 Querydsl을 사용하는 것이 좋다
 
 
 
