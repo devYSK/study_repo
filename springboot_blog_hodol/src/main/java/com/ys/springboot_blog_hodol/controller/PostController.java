@@ -39,7 +39,7 @@ public class PostController {
     }
 
     @GetMapping("/posts")
-    public List<PostResponse> getPosts(@RequestParam PostSearch postSearch) {
+    public List<PostResponse> getPosts(@RequestBody PostSearch postSearch) {
         return postService.getList(postSearch);
     }
 
@@ -50,7 +50,7 @@ public class PostController {
     }
 
 
-    @DeleteMapping("/posts{postId}")
+    @DeleteMapping("/posts/{postId}")
     public void delete(@PathVariable Long postId) {
         postService.delete(postId);
     }
