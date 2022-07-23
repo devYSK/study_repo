@@ -56,8 +56,7 @@ public class FrontControllerServletV5 extends HttpServlet {
     }
 
     @Override
-    protected void service(HttpServletRequest request, HttpServletResponse
-            response)
+    protected void service(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         Object handler = getHandler(request);
