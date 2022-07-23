@@ -409,4 +409,247 @@ ViewResolver internalResourceViewResolver() {
 * 스프링 빈 중에서 @RequestMapping 또는 @Controller 가
 클래스 레벨에 붙어 있는 경우에 매핑 정보로 인식한다
 
+# 스프링 MVC
+
+* https://docs.spring.io/spring-boot/docs/current/reference/html/spring-bootfeatures.html#boot-features-spring-mvc-welcome-page
+
+## 로깅 간단히 알아보기.
+
+### 로깅 라이브러리
+* 스프링 부트 라이브러리를 사용하면 스프링 부트 로깅 라이브러리( spring-boot-starter-logging )가 함께 포함된다.
+* 스프링 부트 로깅 라이브러리는 기본으로 다음 로깅 라이브러리를 사용한다.
+  * SLF4J - http://www.slf4j.org
+  * Logback - http://logback.qos.ch
+* 로그 라이브러리는 Logback, Log4J, Log4J2 등등 수 많은 라이브러리가 있는데, 그것을 통합해서
+인터페이스로 제공하는 것이 바로 SLF4J 라이브러리다.
+* 쉽게 이야기해서 SLF4J는 인터페이스이고, 그 구현체로 Logback 같은 로그 라이브러리를 선택하면 된다.
+* 실무에서는 스프링 부트가 기본으로 제공하는 Logback을 대부분 사용한다
+
+### 로그 선언 
+
+* 로그 선언
+* private Logger log = LoggerFactory.getLogger(getClass());
+* private static final Logger log = LoggerFactory.getLogger(Xxx.class)
+* @Slf4j : 롬복 사용 가능
+
+### 로그 레벨 설정
+* application.properties 
+```properties
+#전체 로그 레벨 설정(기본 info)
+logging.level.root=info
+#hello.springmvc 패키지와 그 하위 로그 레벨 설정
+logging.level.hello.springmvc=debug
+```
+* 기본 `INFO` 레벨.
+* LEVEL: TRACE > DEBUG > INFO > WARN > ERROR
+  * 트레이스가 레벨 제일 높음.
+  * 가장 높은 레벨 설정을 기준으로 그 하위레벨 모든 로그를 다 보여줌
+  * ex ) TRACE는 TRACE, DEBUG, INFO, WARN,ERROR 다보임
+  * ex ) INFO는 TRACE, DEBUG는 안보이고 INFO,WARN, ERROR만 보임
+
+### 올바른 로그 사용법
+* log.debug("data="+data)
+  * 로그 출력 레벨을 info로 설정해도 해당 코드에 있는 "data="+data가 실제 실행이 되어 버린다.
+결과적으로 문자 더하기 연산이 발생한다.
+* log.debug("data={}", data)
+  * 로그 출력 레벨을 info로 설정하면 아무일도 발생하지 않는다. 따라서 앞과 같은 의미없는 연산이
+발생하지 않는다.
+### 로그 사용시 장점
+* 쓰레드 정보, 클래스 이름 같은 부가 정보를 함께 볼 수 있고, 출력 모양을 조정할 수 있다.
+* 로그 레벨에 따라 개발 서버에서는 모든 로그를 출력하고, 운영서버에서는 출력하지 않는 등 로그를 상황에
+맞게 조절할 수 있다.
+* 시스템 아웃 콘솔에만 출력하는 것이 아니라, 파일이나 네트워크 등, 로그를 별도의 위치에 남길 수 있다.
+* 특히 파일로 남길 때는 일별, 특정 용량에 따라 로그를 분할하는 것도 가능하다.
+성능도 일반 System.out보다 좋다. (내부 버퍼링, 멀티 쓰레드 등등) 그래서 실무에서는 꼭 로그를사용해야 한다.
+### 더 공부하실 분
+* 로그에 대해서 더 자세한 내용은 slf4j, logback을 검색해보자.
+  * SLF4J - http://www.slf4j.org
+  * Logback - http://logback.qos.ch
+* 스프링 부트가 제공하는 로그 기능은 다음을 참고하자.
+* https://docs.spring.io/spring-boot/docs/current/reference/html/spring-bootfeatures.html#boot-features-logging
+
+## requestMapping
+### 특정 헤더 조건 매핑
+```java
+/**
+* 특정 헤더로 추가 매핑
+* headers="mode",
+* headers="!mode"
+* headers="mode=debug"
+* headers="mode!=debug" (! = )
+*/
+@GetMapping(value = "/mapping-header", headers = "mode=debug")
+public String mappingHeader() {
+  log.info("mappingHeader");
+  return "ok";
+}
+```
+
+### 미디어 타입 조건 매핑 - HTTP 요청 Content-Type, consume
+* consumes : 클라이언트가 서버에게 보내는 데이터 타입 명시 
+```java
+**
+* Content-Type 헤더 기반 추가 매핑 Media Type
+* consumes="application/json"* consumes="!application/json"
+* consumes="application/*"
+* consumes="*\/*"
+* MediaType.APPLICATION_JSON_VALUE
+*/
+@PostMapping(value = "/mapping-consume", consumes = "application/json")
+public String mappingConsumes() {
+log.info("mappingConsumes");
+return "ok";
+}
+```
+
+### 미디어 타입 조건 매핑 - HTTP 요청 Accept, produce
+* produces는 반환하는 데이터 타입을 정의
+* HTTP 요청의 Accept 헤더를 기반으로 미디어 타입으로 매핑한다.
+  만약 맞지 않으면 HTTP 406 상태코드(Not Acceptable)을 반환한다
+```java
+/**
+* Accept 헤더 기반 Media Type
+* produces = "text/html"
+* produces = "!text/html"
+* produces = "text/*"
+* produces = "*\/*"
+*/
+@PostMapping(value = "/mapping-produce", produces = "text/html")
+public String mappingProduces() {
+log.info("mappingProduces");
+return "ok";
+}
+
+/**
+ * produces = "text/plain"
+ produces = {"text/plain", "application/*"}
+ produces = MediaType.TEXT_PLAIN_VALUE
+ produces = "text/plain;charset=UTF-8"
+ */
+```
+
+## HTTP 요청 헤더 조회
+
+```java
+public class RequestHeaderController {
+@RequestMapping("/headers")
+    public String headers(HttpServletRequest request, 
+                          HttpServletResponse response, 
+                          HttpMethod httpMethod, 
+                          Locale locale,
+                          @RequestHeader MultiValueMap<String, String> headerMap,
+                          @RequestHeader("host") String host,
+                          @CookieValue(value = "myCookie", required = false) 
+                              String cookie) {
+        log.info("request={}", request);
+        log.info("response={}", response);
+        log.info("httpMethod={}", httpMethod);
+        log.info("locale={}", locale);
+        log.info("headerMap={}", headerMap);
+        log.info("header host={}", host);
+        log.info("myCookie={}", cookie);
+        return "ok";
+    }
+}
+```
+
+* HttpServletRequest
+* HttpServletResponse
+* HttpMethod : HTTP 메서드를 조회한다. org.springframework.http.HttpMethod
+* Locale : Locale 정보를 조회한다. - LocaleResolver
+* @RequestHeader MultiValueMap<String, String> headerMap
+  * 모든 HTTP 헤더를 MultiValueMap 형식으로 조회한다.
+* @RequestHeader("host") String host
+  * 특정 HTTP 헤더를 조회한다.
+  * 속성
+  * 필수 값 여부: required
+  * 기본 값 속성: defaultValue
+* @CookieValue(value = "myCookie", required = false) String cookie
+* 특정 쿠키를 조회한다.
+* 속성
+  * 필수 값 여부: required
+  * 기본 값: defaultValue
+
+* **MultiValueMap**
+* MAP과 유사한데, 하나의 키에 여러 값을 받을 수 있다.
+* HTTP header, HTTP 쿼리 파라미터와 같이 하나의 키에 여러 값을 받을 때 사용한다.
+  * keyA=value1&keyA=value2
+
+### Contollrer의 사용 가능한 파라미터 몽록
+* https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-annarguments
+* https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-annreturn-types
+
+## HTTP 요청 파라미터 - 쿼리 파라미터, HTML Form
+
+* GET - 쿼리 파라미터
+  * /url?username=hello&age=20
+  * 메시지 바디 없이, URL의 쿼리 파라미터에 데이터를 포함해서 전달
+  * 예) 검색, 필터, 페이징등에서 많이 사용하는 방식
+* POST - HTML Form
+  * content-type: application/x-www-form-urlencoded
+  * 메시지 바디에 쿼리 파리미터 형식으로 전달 username=hello&age=20
+  * 예) 회원 가입, 상품 주문, HTML Form 사용
+* HTTP message body에 데이터를 직접 담아서 요청
+  * HTTP API에서 주로 사용, JSON, XML, TEXT
+  * 데이터 형식은 주로 JSON 사용
+  * POST, PUT, PATCH
+
+## HTTP 요청 파라미터 - @RequestParam
+
+```java
+@ResponseBody
+@RequestMapping("/request-param-v2")
+public String requestParamV2(@RequestParam("username") String memberName,
+                             @RequestParam("age") int memberAge) {
+    log.info("username={}, age={}", memberName, memberAge);
+    return "ok";
+}
+```
+
+* @RequestParam : 파라미터 이름으로 바인딩
+  * @RequestParam의 name(value) 속성이 파라미터 이름으로 사용
+  * @RequestParam("username") String memberName
+    * -> request.getParameter("username")
+    * HTTP 파라미터 이름이 변수 이름과 같으면 @RequestParam(name="xx") 생략 가능
+    * @RequestParam 애노테이션을 생략하면 스프링 MVC는 내부에서 required=false 를 적용한다
+* @ResponseBody : View 조회를 무시하고, HTTP message body에 직접 해당 내용 입력
+
+* @RequestParam(required = true)
+  * 파라미터 필수 여부. 기본값이 파라미터 필수( true )이다.
+  * required=true 일 때 비어있으면 400 예외 발생 
+  * 파라미터 이름만 있고 값이 없는 경우 빈문자로 통과
+
+* @RequestParam(required = true, defaultValue = "guest"
+  * 파라미터에 값이 없는 경우 defaultValue 를 사용하면 기본 값을 적용할 수 있다.
+    * 이미 기본 값이 있기 때문에 required 는 의미가 없다
+
+## HTTP 요청 파라미터 - @ModelAttribute
+
+* Setter 필요. Setter기반으로 객체에 값을 넣어준다.
+
+```java
+/**
+ * @ModelAttribute 사용
+ * 참고: model.addAttribute(helloData) 코드도 함께 자동 적용됨
+ */
+@ResponseBody
+@RequestMapping("/model-attribute-v1")
+public String modelAttributeV1(@ModelAttribute HelloData helloData) {
+        log.info("username={}, age={}", helloData.getUsername(),
+        helloData.getAge());
+        return "ok";
+  }
+```
+
+* 프로퍼티의 setter를 호출해서 파라미터의 값을 입력(바인딩) 한다
+* age=abc 처럼 숫자가 들어가야 할 곳에 문자를 넣으면 BindException 이 발생한다. 
+* `@ModelAttribute 생략 가능`
+
+### 스프링은 해당 생략시 다음과 같은 규칙을 적용한다.
+* String , int , Integer 같은 단순 타입 = @RequestParam
+* 나머지 = @ModelAttribute (argument resolver 로 지정해둔 타입 외)
+
+
+
+
 
