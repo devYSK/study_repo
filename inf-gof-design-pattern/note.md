@@ -246,4 +246,61 @@ public class Singleton {
 * 자바 java.lang.Runtime
 * 다른 디자인 패턴(빌더, 퍼사드, 추상 팩토리 등) 구현체의 일부로 쓰이기도 한다.
 
+# 팩토리 메소드 (Factory method) 패턴
+* 해결하려는 문제 : 어떤 인스턴스를 생성하는 책임을 구체적인 클래스 말고 추상적인 인터페이스의 메서드로 감싸는 것 
+* 구체적으로 어떤 인스턴스를 만들지는 서브 클래스가 정한다
+* 다양한 구현체 (Product)가 있고, 그중에서 특정한 구현체를 만들 수 있는 다양한 팩토리
+  (Creator)를 제공할 수 있다
+* ![](.note_images/0563e369.png)
+
+* 객체만 생성하는 공장을 통해서 간접적으로 객체를 생성하게 하며 인터페이스를 정의하되, 
+* 실제 구현내용은 자식클래스에서 구현이 되므로 세부 구현 코드를 몰라도 부모클래스에서 자유롭게 사용이 가능하여 객체 간의 결합도가 낮아지는 효과
+
+* 자바에서 팩토리 메소드 패턴을 적용할 때 참고
+1. 자바 8의 인터페이스 default 메소드
+- 인터페이스에 추상 메소드가 아닌 default 메소드를 통해 기능을 구현할 수 있게 되어서 상속받는 서브클래스의 중복코드를 제거할 수 있다.
+2. 자바 9의 인터페이스의 private 메소드
+- 기능 구현이 가능해지면서 인터페이스의 내부 로직을 private 메소드로 구현하면 읽기 좋은 코드로 작성할 수 있게 된다.
+
+* ![](.note_images/44fb6f04.png)
+  * 자바 8 이전
+* ![](.note_images/d2248a14.png)
+  * 자바 8 이후 
+
+* ## 확장에 열려있고 변경에 닫혀있는 구조
+
+* 팩토리 메소드 패턴을 적용했을 때의 장점은? 단점은?
+  * 장점 : 코드를 수정하지 않고(변경의 최소) 새로운 인스턴스를 여러 방법으로 생성할 수 있는 "확장에 열려있고 변경에 닫혀있는 객체 지향 원칙"을 만족하는 객체 생성 방법
+    * 코드가 간결해진다.
+    * 느슨한 결합(loose coupling)
+  * 단점 : 계속해서 새로운 하위클래스를 정의한다는 점이 있다. 
+    * 이는 불필요하게 많은 클래스를 정의하게 될 수 있고 이로 인해 복잡해 질 수 있다는 단점
+* “확장에 열려있고 변경에 닫혀있는 객체 지향 원칙”을 설명하세요.
+  * 개방-폐쇄 원칙 (OCP: Open-Closed Principle)
+  * 소프트웨어 엔티티(클래스, 모듈, 함수 등)는 확장에 대해서는 열려 있어야 하지만 변경에 대해서는 닫혀 있어야 한다.
+    * 기존 코드를 변경하지 않으면서(Close) 기능을 추가(Open)할 수 있도록 설계가 되어야 한다는 원칙
+* 자바 8에 추가된 default 메소드에 대해 설명하세요
+  * 인터페이스에 추상 메소드가 아닌 default 메소드를 통해 기능을 구현할 수 있게 됨
+    * 그 인터페이스를 구현하거나, 상속받은 인터페이스도 메서드 사용 가능 
+## 실무에서는 어떻게 쓰이나?
+* 단순한 팩토리 패턴
+  * `매개변수의 값에 따라 또는 메소드에 따라 각기 다른 인스턴스를 리턴하는 단순한 버전 의 팩토리 패턴`
+  * java.lang.Calendar 또는 java.lang.NumberFormat
+    * Calendar는 Gregorian형식(우리가 현재 쓰는), Julian 형식이 있는데, 이 두가지 경우를 모두 커버하기 위해 팩토리 메소드 패턴으로 디자인 되었다.
+    * NumberFormat은 국가에 따라 또는 화폐에 따라 다른 표현 방식을 커버하기 위해 팩토리 메소드 패턴으로 디자인 되었다.
+* 스프링 BeanFactory
+  * Object 타입의 Product를 만드는 BeanFacotry라는 Creator!
+```java
+BeanFactory xmlFactory = new ClassPathXmlApplicationContext("config.xml");
+String hello = xmlFactory.getBean("hello", String.class);
+System.out.println(hello);
+
+BeanFactory javaFactory = new AnnotationConfigApplicationContext(Config.class);
+String hi = javaFactory.getBean("hello", String.class);
+System.out.println(hi);
+```
+* xml 설정과 java 설정으로 읽어오는 방식
+* Product에 해당하는 것은 Object
+* ConcreteProduct에 해당하는 것은 xml 또는 class Bean
+
 
