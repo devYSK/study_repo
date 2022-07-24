@@ -340,6 +340,60 @@ System.out.println(hi);
 * FactoryBean은 스프링이 제공하는 인터페이스로, (XML 설정 기준) 기본으로 제공되는 스프링 구문으로는 생성 및 관리할 수 없는 객체를 Bean으로 활용할 수 있게끔 어댑터 역할을 한다. 여기서 생성 및 관리할 수 없는 객체란 생성자가 private한 싱글톤 객체 혹은 정적 팩토리 메서드를 통해 얻어오는 객체가 이에 해당한다.
 
 
+# 빌더 (Builder) 패턴
+* 동일한 프로세스를 거쳐 다양한 구성의 인스턴스를 만드는 방법
+
+* (복잡한) 객체를 만드는 프로세스를 독립적으로 분리할 수 있다.
+* ![](.note_images/2571adde.png)
+
+* 장점
+  * 만들기 복잡한 객체를 순차적으로 만들 수 있다.
+  * 복잡한 객체를 만드는 구체적인 과정을 숨길 수 있다.
+  * 동일한 프로세스를 통해 각기 다르게 구성된 객체를 만들 수도 있다.
+  * 불완전한 객체를 사용하지 못하도록 방지할 수 있다.
+* 단점
+  * 원하는 객체를 만들려면 빌더부터 만들어야 한다.
+  * 구조가 복잡해 진다. (트레이드 오프)
+
+구체적인 인스턴스를 생성하는 건 빌더 구현체이기에 다른 프로세스로 인스턴스를 생성하길 원한다면 새로운 ConcreteBuilder를 정의하면 된다.
+
+* 빌더 인터페이스는 인스턴스를 만들기 위한 과정을 추상화한다.
+
+* 일관된 프로세스를 거쳐 인스턴스를 구성하는 작업이 끝났다면 getProduct 메서드를 호출해 인스턴스를 반환한다.
+* 여기까지만 해도 빌더 패턴이지만 조금 더 고도화 시켜서 빌더와 클라이언트 사이에 디렉터를 둘 수 있는데, 
+* 클라이언트가 직접 빌더의 모든 API를 사용하는 게 아닌 디렉터를 통해서 간단하게 인스턴스를 얻어올 수 있고 코드를 재사용할 수 있다는 장점을 가지고 있다.
+  * 클라이언트쪽 코드는 깔끔하지만, 디렉터쪽 코드는 더러울 수도 있다. 
+
+* https://kangworld.tistory.com/246?category=1005888 참고할것 
+
+## 빌더 (Builder) 패턴
+* 실무에서 어떻게 쓰이나?
+* 자바 8 Stream.Buidler API
+* StringBuilder는 빌더 패턴일까?
+* 롬복의 @Builder
+  * https://projectlombok.org/features/Builder
+* 스프링
+  * UriComponentsBuilder
+  * MockMvcWebClientBuilder
+  * …Builder
+```java
+UriComponents uriComponents = UriComponentsBuilder.newInstance()
+        .scheme("https")
+        .host("naver.com")
+        .build();
+
+System.out.println(uriComponents); // https://naver.com
+```
+
+
+
+
+
+
+
+
+
+
 
 
 
