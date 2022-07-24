@@ -771,3 +771,235 @@ HTTP 메시지 컨버터는 문자 뿐만 아니라 JSON도 객체로 변환해�
 * HelloData data -> @ModelAttribute HelloData data
 * 따라서 생략하면 HTTP 메시지 바디가 아니라 요청 파라미터를 처리하게 된다.
 
+## HTTP 응답 - 정적 리소스, 뷰 템플릿
+
+스프링(서버)에서 응답 데이터를 만드는 방법은 크게 3가지이다.
+* 정적 리소스
+  * 예) 웹 브라우저에 정적인 HTML, css, js를 제공할 때는, 정적 리소스를 사용한다.
+* 뷰 템플릿 사용
+  * 예) 웹 브라우저에 동적인 HTML을 제공할 때는 뷰 템플릿을 사용한다.
+* HTTP 메시지 사용
+  * HTTP API를 제공하는 경우에는 HTML이 아니라 데이터를 전달해야 하므로, HTTP 메시지 바디에
+JSON 같은 형식으로 데이터를 실어 보낸다.
+
+### 정적 리소스
+스프링 부트는 클래스패스의 다음 디렉토리에 있는 정적 리소스를 제공한다.
+> `/static , /public , /resources , /META-INF/resources`
+* src/main/resources 는 리소스를 보관하는 곳이고, 또 클래스패스의 시작 경로이다
+
+* 정적 리소스 경로
+  * src/main/resources/static
+  * 다음 경로에 파일이 들어있으면
+  * src/main/resources/static/basic/hello-form.html
+  * 웹 브라우저에서 다음과 같이 실행하면 된다.
+  * http://localhost:8080/basic/hello-form.html
+* 정적 리소스는 해당 파일을 변경 없이 그대로 서비스하는 것이다
+
+### 뷰 템플릿
+
+* 뷰 템플릿 경로
+  * src/main/resources/templates
+* 뷰 템플릿 생성
+  * src/main/resources/templates/response/hello.html
+
+```java
+@Controller
+public class ResponseViewController {
+  @RequestMapping("/response-view-v1")
+  public ModelAndView responseViewV1() {
+    ModelAndView mav = new ModelAndView("response/hello")
+            .addObject("data", "hello!");
+    return mav;
+  }
+}
+```
+* @ResponseBody 가 없으면 response/hello 로 뷰 리졸버가 실행되어서 뷰를 찾고, 렌더링 한다.
+* @ResponseBody 가 있으면 뷰 리졸버를 실행하지 않고, HTTP 메시지 바디에 직접 response/hello 라는
+  문자가 입력된다
+
+
+### Thymeleaf
+
+* 스프링 부트가 자동으로 ThymeleafViewResolver 와 필요한 스프링 빈들을 등록한다. 그리고 다음
+  설정도 사용한다. 이 설정은 기본 값 이기 때문에 변경이 필요할 때만 설정하면 된다.
+```properties
+spring.thymeleaf.prefix=classpath:/templates/
+spring.thymeleaf.suffix=.html
+```
+
+*  https://docs.spring.io/spring-boot/docs/2.4.3/reference/html/appendix-applicationproperties.html#common-application-properties-templating
+
+## HTTP 메시지 컨버터
+
+* 뷰 템플릿으로 HTML을 생성해서 응답하는 것이 아니라, HTTP API처럼 JSON 데이터를 HTTP 메시지
+  바디에서 직접 읽거나 쓰는 경우 HTTP 메시지 컨버터를 사용하면 편리
+
+* @ResponseBody
+  * @RestController 인 경우에는 모든 메서드에 기본으로 적용된다
+  * HTTP의 BODY에 문자 내용을 직접 반환
+  * viewResolver 대신에 HttpMessageConverter 가 동작
+  * 기본 문자처리: `StringHttpMessageConverter`
+  * 기본 객체처리: `MappingJackson2HttpMessageConverter`
+  * byte 처리 등등 기타 여러 HttpMessageConverter가 기본으로 등록되어 있음
+
+* 참고: 응답의 경우 클라이언트의 HTTP Accept 해더와 서버의 컨트롤러 반환 타입 정보 둘을 조합해서 HttpMessageConverter 가 선택된다. 
+
+### HTTP 메시지 컨버터 인터페이스
+* org.springframework.http.converter.HttpMessageConverter
+```java
+
+public interface HttpMessageConverter<T> {
+  boolean canRead(Class<?> clazz, @Nullable MediaType mediaType);
+
+  boolean canWrite(Class<?> clazz, @Nullable MediaType mediaType);
+
+  List<MediaType> getSupportedMediaTypes();
+
+  T read(Class<? extends T> clazz, HttpInputMessage inputMessage)
+          throws IOException, HttpMessageNotReadableException;
+
+  void write(T t, @Nullable MediaType contentType, HttpOutputMessage
+          outputMessage)
+          throws IOException, HttpMessageNotWritableException;
+}
+```
+HTTP 메시지 컨버터는 HTTP 요청, HTTP 응답 둘 다 사용된다.
+* canRead() , canWrite() : 메시지 컨버터가 해당 클래스, 미디어타입을 지원하는지 체크
+* read() , write() : 메시지 컨버터를 통해서 메시지를 읽고 쓰는 기능
+
+#### 스프링 부트 기본 메시지 컨버터
+```
+0 = ByteArrayHttpMessageConverter
+1 = StringHttpMessageConverter
+2 = MappingJackson2HttpMessageConverter
+```
+
+* 스프링 부트는 다양한 메시지 컨버터를 제공하는데, 대상 클래스 타입과 미디어 타입 둘을 체크해서사용여부를 결정한다. 
+* 만약 만족하지 않으면 `다음 메시지 컨버터로 우선순위가 넘어간다`
+
+몇가지 주요한 메시지 컨버터를 알아보자.
+* ByteArrayHttpMessageConverter : byte[] 데이터를 처리한다.
+  * 클래스 타입: byte[] , 미디어타입: */* ,
+  * 요청 예) @RequestBody byte[] data
+  * 응답 예) @ResponseBody return byte[] 쓰기 미디어타입 application/octet-stream
+* StringHttpMessageConverter : String 문자로 데이터를 처리한다.
+  * 클래스 타입: String , 미디어타입: */*
+  * 요청 예) @RequestBody String data
+  * 응답 예) @ResponseBody return "ok" 쓰기 미디어타입 text/plain
+* MappingJackson2HttpMessageConverter : application/json
+  * 클래스 타입: 객체 또는 HashMap , 미디어타입 application/json 관련
+  * 요청 예) @RequestBody HelloData data
+  * 응답 예) @ResponseBody return helloData 쓰기 미디어타입 application/json 관련
+
+### HTTP 요청 데이터 읽기
+* HTTP 요청이 오고, 컨트롤러에서 @RequestBody , HttpEntity 파라미터를 사용한다.
+* 메시지 컨버터가 메시지를 읽을 수 있는지 확인하기 위해 canRead() 를 호출한다.
+  * 대상 클래스 타입을 지원하는가.
+    * 예) @RequestBody 의 대상 클래스 ( byte[] , String , HelloData )
+  * HTTP 요청의 Content-Type 미디어 타입을 지원하는가.
+    * 예) text/plain , application/json , */*
+* canRead() 조건을 만족하면 read() 를 호출해서 객체 생성하고, 반환한다
+
+
+### HTTP 응답 데이터 생성
+* 컨트롤러에서 @ResponseBody , HttpEntity 로 값이 반환된다.
+* 메시지 컨버터가 메시지를 쓸 수 있는지 확인하기 위해 canWrite() 를 호출한다.
+  * 대상 클래스 타입을 지원하는가.
+    * 예) return의 대상 클래스 ( byte[] , String , HelloData )
+  * HTTP 요청의 Accept 미디어 타입을 지원하는가.(더 정확히는 @RequestMapping 의 produces )
+    * 예) text/plain , application/json , */*
+* canWrite() 조건을 만족하면 write() 를 호출해서 HTTP 응답 메시지 바디에 데이터를 생성한다
+
+
+@@ 요청 매핑 헨들러 어뎁터 구조
+* **그렇다면 HTTP 메시지 컨버터는 스프링 MVC 어디쯤에서 사용되는 것일까?**
+* @RequestMapping 을 처리하는 핸들러 어댑터인 RequestMappingHandlerAdapter (요청 매핑 헨들러 어뎁터)에 있다
+
+### RequestMappingHandlerAdapter 동작 방식
+* ![](.note_images/fb8108d1.png)
+
+#### ArgumentResolver
+* 생각해보면, 애노테이션 기반의 컨트롤러는 매우 다양한 파라미터를 사용할 수 있었다.
+* HttpServletRequest , Model 은 물론이고, @RequestParam , @ModelAttribute 같은 애노테이션
+그리고 @RequestBody , HttpEntity 같은 HTTP 메시지를 처리하는 부분까지 매우 큰 유연함을
+보여주었다.
+* #### 이렇게 파라미터를 유연하게 처리할 수 있는 이유가 바로 `ArgumentResolver` 덕분이다.
+* 스프링은 30개가 넘는 ArgumentResolver 를 기본으로 제공한다.
+   어떤 종류들이 있는지 살짝 코드로 확인만 해보자.
+* 가능한 파라미터 목록은 다음 공식 메뉴얼에서 확인할 수 있다.
+  * > https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-annarguments
+
+* 정확히는 HandlerMethodArgumentResolver 인데 줄여서 ArgumentResolver 라고 부른다.
+```java
+public interface HandlerMethodArgumentResolver {
+  boolean supportsParameter(MethodParameter parameter);
+
+  @Nullable
+  Object resolveArgument(MethodParameter parameter, @Nullable
+          ModelAndViewContainer mavContainer,
+                         NativeWebRequest webRequest, @Nullable WebDataBinderFactory
+                                 binderFactory) throws Exception;
+}
+```
+
+### ArgumentResolver 동작 방식
+
+* ArgumentResolver 의 supportsParameter() 를 호출해서 해당 파라미터를 지원하는지 체크하고,
+지원하면 resolveArgument() 를 호출해서 실제 객체를 생성한다. 그리고 이렇게 생성된 객체가 컨트롤러
+호출시 넘어가는 것이다.
+
+* 그리고 원한다면 여러분이 직접 이 인터페이스를 확장해서 원하는 ArgumentResolver 를 만들 수도 있다.
+실제 확장하는 예제는 향후 로그인 처리에서 진행하겠다
+
+#### ReturnValueHandler
+
+* HandlerMethodReturnValueHandler 를 줄여서 ReturnValueHandler 라 부른다.
+* ArgumentResolver 와 비슷한데, 이것은 응답 값을 변환하고 처리한다.
+  * 컨트롤러에서 String으로 뷰 이름을 반환해도, 동작하는 이유가 바로 ReturnValueHandler 덕분이다.
+
+* 스프링은 10여개가 넘는 ReturnValueHandler 를 지원한다.
+  * 예) ModelAndView , @ResponseBody , HttpEntity , String
+  * 가능한 응답 값 목록은 다음 공식 메뉴얼에서 확인할 수 있다.
+  * > https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-annreturn-types
+
+### HTTP 메시지 컨버터 위치
+
+* ![](.note_images/83470d0f.png)
+* HTTP 메시지 컨버터를 사용하는 @RequestBody 도 컨트롤러가 필요로 하는 파라미터의 값에 사용된다.
+  @ResponseBody 의 경우도 컨트롤러의 반환 값을 이용한다
+
+* 요청의 경우 @RequestBody 를 처리하는 ArgumentResolver 가 있고, HttpEntity 를 처리하는
+  ArgumentResolver 가 있다. 이 ArgumentResolver 들이 HTTP 메시지 컨버터를 사용해서 필요한
+  객체를 생성하는 것이다. (어떤 종류가 있는지 코드로 살짝 확인해보자)
+
+* 응답의 경우 @ResponseBody 와 HttpEntity 를 처리하는 ReturnValueHandler 가 있다. 그리고여기에서 HTTP 메시지 컨버터를 호출해서 응답 결과를 만든다
+
+* 스프링 MVC는 @RequestBody @ResponseBody 가 있으면
+  RequestResponseBodyMethodProcessor (ArgumentResolver)
+  HttpEntity 가 있으면 HttpEntityMethodProcessor (ArgumentResolver)를 사용한다
+
+### 확장
+스프링은 다음을 모두 인터페이스로 제공한다. 따라서 필요하면 언제든지 기능을 확장할 수 있다.
+
+* HandlerMethodArgumentResolver
+* HandlerMethodReturnValueHandler
+* HttpMessageConverter
+
+* WebMvcConfigurer 확장
+```java
+@Bean
+public WebMvcConfigurer webMvcConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addArgumentResolvers(List<HandlerMethodArgumentResolver>
+            resolvers) {
+            //...
+            }
+            @Override
+            public void extendMessageConverters(List<HttpMessageConverter<?>>
+                    converters) {
+            //...
+            }
+        };
+}
+```
