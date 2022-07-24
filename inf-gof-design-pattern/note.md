@@ -303,4 +303,45 @@ System.out.println(hi);
 * Product에 해당하는 것은 Object
 * ConcreteProduct에 해당하는 것은 xml 또는 class Bean
 
+# 추상 팩토리 (Abstract factory) 패턴 
+* 서로 관련있는 여러 객체를 만들어주는 인터페이스
+* 목적 : 클라이언트 코드 팩토리에서 어떤 인스턴스를 만들어 쓰는 코드를 인터페이스 기반으로 코드를 짤 수 있게하기 위함  
+  * 팩토리 메서드 패턴이랑 비슷하지만 다르다  
+* ![](.note_images/7d54f826.png)
+
+* 추상 팩토리 패턴의 목적 자체를 이해하면 팩토리 메서드와 완전히 분리해서 이해할 수 있는데, 추상 팩토리 패턴은 클라이언트 코드에서 팩토리로부터 객체(제품)를 생성하고 사용하는 코드를 인터페이스 기반으로 작성할 수 있게끔 한다.
+* 팩토리 메서드 패턴 vs 추상 팩토리 패턴 : https://stackoverflow.com/questions/5739611/what-are-the-differences-between-abstract-factory-and-factory-design-patterns
+  * 팩토리 메서드 패턴의 핵심은 제품(객체)을 생성하는 추상 메서드와 이를 오버라이드해 필요한 제품을 생성하는 메서드 그 자체라고 볼 수 있고 추상 팩토리 패턴은 제품(객체)을 생성하는 한 개 이상의 추상 메서드를 가진 인터페이스와 이를 구현한 콘크리트 팩토리의 객체에 초점이 맞춰져 있다.
+
+
+## 추상 팩토리 (Abstract factory) 패턴 구현 방법
+* 클라이언트 코드에서 구체적인 클래스의 의존성을 제거한다
+
+* 팩토리 메소드 패턴과 굉장히 흡사한데 무엇이 다른건가.
+* 모양과 효과는 비슷하지만…
+  * 둘 다 구체적인 객체 생성 과정을 추상화한 인터페이스를 제공한다.
+* 관점이 다르다.
+  * 팩토리 메소드 패턴은 `“팩토리를 구현하는 방법 (inheritance)”`에 초점을 둔다.
+  * 추상 팩토리 패턴은 `“팩토리를 사용하는 방법 (composition)”`에 초점을 둔다.
+* 목적이 조금 다르다.
+  * 팩토리 메소드 패턴은 구체적인 객체 생성 과정을 하위 또는 구체적인 클래스로 옮기는 것이 목적.
+  * 추상 팩토리 패턴은 관련있는 여러 객체를 구체적인 클래스에 의존하지 않고 만들 수 있게 해주는 것이 목적.
+
+## 추상 팩토리 (Abstract factory) 패턴
+실무에서는 어떻게 쓰이나?
+
+* 자바 라이브러리
+  * javax.xml.xpath.XPathFactory#newInstance()
+  * javax.xml.transform.TransformerFactory#newInstance()
+  * javax.xml.parsers.DocumentBuilderFactory#newInstance()
+* 스프링
+  * FactoryBean과 그 구현체
+
+* FactoryBean은 스프링이 제공하는 인터페이스로, (XML 설정 기준) 기본으로 제공되는 스프링 구문으로는 생성 및 관리할 수 없는 객체를 Bean으로 활용할 수 있게끔 어댑터 역할을 한다. 여기서 생성 및 관리할 수 없는 객체란 생성자가 private한 싱글톤 객체 혹은 정적 팩토리 메서드를 통해 얻어오는 객체가 이에 해당한다.
+
+
+
+
+
+
 
