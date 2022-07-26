@@ -1,0 +1,1 @@
+package com.ys.designpatterns.creational_patterns._05_prototype;
