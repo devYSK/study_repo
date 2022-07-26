@@ -710,4 +710,3 @@ SHOW GRANTS FOR 'user_1'@'%';
 GRANT ALL PRIVILEGES ON mydatabase.*
 TO 'user_1'@'%';
 ```
-
