@@ -1,5 +1,5 @@
 
-public class Calculate {
+public class Calculate implements {
     /**
      *
      * @param r : the hourly pay rate

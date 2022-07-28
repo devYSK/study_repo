@@ -281,3 +281,234 @@ public class Calculate {
 
 ## 작명 도와주는 사이트 : `https://www.curioustore.com/#!/` < 남들이 무엇을 많이 사용하는가 알 수 있다. 
 
+
+## 프로그램 개발 과정에서 영어로 이름 짓기
+
+1. 서술적인 이름을 사용하라 
+
+```java
+public int x() {
+    int q = 0;
+    int z = 0;
+    for (int kk = 0; kk < 10; kk++) {
+        if (l[z] == 10) {
+            q += 10 + (l[z + 1] + l[z + 2]);
+        } else if (l[z] + l[z + 1] == 10) {
+            q += 10 + l[z + 2];
+            z += 2;
+        } else {
+            q += l[z] + l[z + 1];
+            z += 2;
+        }
+        
+    }
+    return q;
+}
+
+public int score() {
+    int score = 0;
+    int frame = 0;
+    
+    for (int frameNumber = 0; frameNumber < 10; frameNumber++) {
+        if (isStrike(frame)) {
+            score += 10 + nextTwoBallForStrike(frame);
+            frame += 1;
+        } else if (isSpare(frame)) {
+            score += 10 + nextBallForSpare(frame);
+            frame += 2;
+        } else {
+            score += twoBallsInFrame(frame);
+            frame +=2;
+        } 
+        return score;
+    }
+}
+
+```
+* 위의 두 코드는 같은 기능을 하는 코드입니다.
+* x() 메서드와 score() 메서드는 같은 코드지만, 변수 이름만으로도 코드 해석에 걸리는 시간이 차이납니다.
+* 그러므로 명확하고 서술적인 이름을 사용하는 것이 좋습니다.
+
+2. 적절한 추상화 수준에서 이름을 선택
+   * 구현을 드러내는 이름을 피하자.
+   * 작업 대상 클래스나 함수가 위치하는 추상화 수준을 반영하는 이름을 선택하자
+
+```java
+public interface Modem {
+    boolean dial(String phoneNumber);
+    boolean disconnect();
+    boolean send(char c);
+    char recv();
+    String getConnectedPhoneNumber();
+}
+
+// ->
+public interface Model {
+    boolean connect(String connectionLocator);
+    boolean disconnect();
+    boolean send(char c);
+    char recv();
+    String getConnectedLocator();
+}
+
+```
+
+3. 가능하다면 표준 명명법을 활용
+    프로젝트에 유효한 의미가 담긴 이름을 많이 사용할수록 독자가 코드를 이해하기 쉬워진다
+* 예
+  * DECORATOR 패턴을 활용한다면 장식하는 클래스 이름에 Decorator라는 단어를 사용해야 한다
+  * 자바에서 객체를 문자열로 변환하는 함수는 toString 이라는 이름을 많이 쓴다
+  * 클래스에서 구현부를 분리할 경우 Impl을 붙인다.(implements)
+
+4. 명확한 이름
+   * 파일, 네임스페이스, 클래스, 함수, 변수의 목적을 명확히 밝히는 이름 선택
+
+```java
+private String doRename() throws Exception {
+    if (refactorReferences) {
+        renameReferences();     // 레퍼런스들 까지 이름을 모두 바꾼다.
+    }    
+    
+    renamePage();
+    pathToRename.removeNameFromEnd();
+    pathToRename.addNameToEnd(newName);
+    return PathParser.render(pathToRename);
+}
+```
+* 레퍼런스들 까지 이름을 모두 바꾸는 2가지 일을 하고 있다.
+* 메서드 이름을 doRename 대신 renamePageAndOptionallyAllReferences 로 해주는 것이 더 명확하다. 
+  * 정해진 정답은 없지만, 메서드 이름으로 알 수 있고 명확하다.
+
+5. 긴 범위에서는 긴 이름을 사용하자
+  * 이름 길이는 범위 길이에 비례해야 함
+  * 범위가 5줄 안팎이면 i, j, k도 좋음
+  * 이름이 짧은 변수나 함수는 범위가 길어지면 의미를 상실함.
+
+6. 인코딩을 피하자
+  * 이름에 유형(type) 정보와 범위 정보를 넣어서는 안 된다.
+    * 예 : pszLocatorStr, g_count, m_index
+  * 특히 헝가리안 표기법은 피해야 한다. - [ [나무위키- 헝가리안 표기법](https://namu.wiki/w/%ED%97%9D%EA%B0%80%EB%A6%AC%EC%95%88%20%ED%91%9C%EA%B8%B0%EB%B2%95) ]
+    * 컴퓨터 프로그래밍에서 변수 및 함수의 이름 인자 앞에 데이터 타입을 명시하는 코딩 규칙이다.
+    * 예외 : WIN32 API로 프로그래밍 할 경우 
+
+7. 이름으로 부수 효과를 설명하자
+  * 클래스, 함수, 변수가 하는 일을 모두 기술하는 이름을 사용하자.
+  * 이름에 부수 효과를 숨기지 않는다.
+
+```java
+public ObjectOutputStream getOos() throws IOException {
+    if (m_oos == null) {
+        m_oos = new ObjectOutputStream(m_socket.getOutputStream());        
+    }
+    return m_oos;
+}
+```
+* 좋은 코드는 아니지만, 이름을 예시로 들기 위함입니다.
+* m_oos가 null 일 경우 OutputStream을 create 하므로 명명을 바꿔주는 것이 좋다.
+* getOos -> `createOrReturnOos` or `getOrCreateOos`
+
+### 작명 규칙
+
+1. 이름에 정보를 담자
+  * #### 단어를 잘 선택해야 한다.
+    * stop()이 좋은 메서드 이름일까?
+    * 다시 되돌릴 수 없으면 kill(), 다시 되돌릴 수 있으면 pause()가 더 좋은 이름.
+  * 단어선택 예
+    * send() -> `dispatch()` (편지 / 메시지 전송), `route()` (최적의 경로를 선택해 보냄), `announce()` (어떤 (변경) 사항을 공지)
+    * find() -> `search()` (데이터베이스에서 검색), `extract()` (정보 등을 추론), `locate()` (위치를 찾음)
+    * start() -> `launch()` (프로그램을 시작), `create()` (프로세스를 생성)
+    * make() -> `build()` (소스코드에서 목적 파일을 생성), `generate()` (비즈니스에 필요한 결과물을 생성), `compose()` (기존에 존재하는 구성 요소를 뭔가를 조립)
+  * #### 보편적인 이름 피하기
+    * 예 : tmp, retval, gap과 같은 이름은 회피하는게 좋다 -> 검색도 어렵고 이해도 어려움
+  * 추상적인 이름 대신 구체적인 이름 활용
+    * ServerCanStart() vs CanListenOnPort()
+    * CanListenOnPort()는 데몬 프로세스가 특정 포트를 열어 들어오는 네트워크에 귀를 기울이고 있꼬 문제가 발생할 경우 다른 프로세스가 이미 해당 포트를 점유하거나 포트에 대한 접근 권한이 부족하다는 사실을 눈치챌 수 있다.
+  * #### 추가적인 정보 덧붙이기
+    * `접두사나 접미사를 활용`
+    * 예) 평문 암호인 경우 password -> plaintextPassword
+    * 예 ) URL 인코딩된 데이터인 경우 data -> dataUrlEnc
+    * 예 ) UTF-8로 변환된 HTML 코드의 경우 html -> htmlUtf8
+  
+  * #### 눈에 잘 띄게 만들기  
+    * 단어를 구분하는 방법
+    * camelCase : 자바 등에서 활용, 첫 단어를 제외한 나머지 단어의 첫글자를 대문자로 
+      * board_comment (x) -> boardComment (O) /  outOfMemory, gitRepository 등
+    * snakeCase : C와 파이썬 등에서 활용하며, 단어와 단어 사이에 밑줄(_, underscore)이 들어감.
+      * board_comment (Board와 Comment), authority_name (Authority와 Name), out_of_memory_error 등
+    * PascalCase : 단어의 첫 글자를 대문자로 시작함
+      * BoardComment, AuthorityName, OutOfMemoryException 등
+
+  * #### 클래스 이름과 메서드 이름
+    * 클래스 이름은 명사구가 적합
+      * 좋은 예 : Customer, Employee, WikiPage, Account, AddressParser
+      * 나쁜 예 : Manager, Processor, Data, Info
+        * Manager : 이름이 너무 일반적이다. (무슨 매니저인데..?) 클래스 자체의 메소드 수가 너무 많아지거나 책임이 많아진다.
+        * Processor : 무슨 프로세서? 뭘 처리하지..?
+        * Data: 무슨 데이터인데?
+        * Info : 무슨 Info인데..?
+        * `명사구이지만, 명확하지가 않다`
+    * 메서드 이름은 동사나 동사구가 적합
+      * 접근자(Accessor) : 값 앞에 get 을 붙임 -> employee.getName()
+      * 변경자(Mutator) : 값 앞에 set을 붙임 -> customer.setName()
+        * #### `하지만 setter 사용은 지양하는게 좋다.` 
+          1. 왜, 언제, 어디서 값이 변경 되었는지 모른다. 
+          2. 값을 변경한 의도를 파악하기다 힘들다.
+          3. 객체의 일관성을 유지하기 힘들다
+        * setter를 굳이 사용해야 하는 상황이 아니라면, 생성자 오버로딩, Builder패턴, 정적 팩토리 메소드를 사용하거나   
+        * set 대신 명확한 의도를 알 수 있는 메서드 이름을 짓자.
+    * 한 개념에 한 단어만 사용
+      * 똑같은 메서드를 클래스마다 fetch(), retrive(), get()으로 제각각 부르면 혼란이 온다
+    * 한 단어를 두 가지 목적으로 사용하지 말자
+      * 예 ) add() 메소드를 여러 클래스에서 사용할 경우 매개변수와 반환값이 의미적으로 같아야 한다.  
+    
+    * 사례 한 가지 : get() vs find()
+      * get()은 실패가 없고, 인출이 아주 짧은 경우 사용하는게 좋다(비즈니스 논리 없이 단순 값 반환)
+      * find()는 실패할 수 있으며 실행과정에서 시간이 걸리는 경우 사용
+      * ```java
+        public boolean tryGetRevision(Item item, String revision) {
+            service.load(item, "revision");
+            // there is usually more work to do before getting the data..
+            try {
+                revision = item.getRevision();
+                return true;
+            } catch(NotLoadedException exception) {
+                log.error("Property named 'property_name' was not loaded", exception);
+                revision = "";
+                return false;
+            }
+        }
+        ```
+  * #### 크기를 어떻게 나타낼까? length vs count vs size
+    * length() : 연속적인 구성 요소를 지칭(예 : 문자열)
+      * array.length()
+    * count() : 더 느슨한 구성 요소의 숫자를 지정
+      * collection.count()
+    * size() : 구성요소의 최대 크기를 지칭(예: 문자열의 경우 최대 글자수)
+      * vector.size()
+    * capacity() : 할당된 메모리를 지칭
+    * `주의 : 가변 문자열(UTF-8)`
+
+핵심은 추상화와 구상화 사이의 줄다리기!  
+구체적인 작명 규칙은 기존 코드 기반이나 오픈 소스 코드를 많이 읽어보면 도움이 된다.
+* 성공은 이름의 맥락과 정보를 얼마나 잘 부여하느냐에 달려있다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
