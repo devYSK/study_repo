@@ -141,6 +141,29 @@ String name = "ys";
 
 
 
+## 정수 리터럴
+
+```java
+int decimal = 26;	   // 10진법
+int ocatal = 032;        // 제일 앞에 0이 붙으면 8진법 
+int heaxaDecimal = 0x1a; // 0x가 붙으면 16진법 
+int binary = 0b11010;    // 0b가 붙으면 2진법 
+```
+
+
+
+## 실수 리터럴
+
+* 기본 dobule 타입, float 타입으로 사용하려면 명시적으로 f를 붙여야 한다.
+
+```null
+double a = 0.1;	 // 0.1
+double b = 1E-1; // 0.1
+float c = 0.1f;	 // 0.1
+```
+
+
+
 # 변수 선언 및 초기화하는 방법
 
 
@@ -383,6 +406,8 @@ public static void main(String[] args) {
 
 
 * 참조 및 출처
+
+https://mine-it-record.tistory.com/100
 
 https://www.learningjournal.guru/article/programming-in-java/scope-and-lifetime-of-a-variable/
 
