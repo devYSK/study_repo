@@ -58,7 +58,7 @@
     * 프로그램이 실행 중인 런타임에서야 모든 코드가 자바 가상 머신과 연결.
       동적으로 읽어온다는 것은 런타임시에 모든 코드가 JVM에 링크 되는 것을 의미.
 
-  * <img src="/Users/ysk/study/study_repo/whiteship-java/src/main/java/week01/images//image-20220730003633934.png" alt="image-20220730003633934" style="zoom:67%;" />
+  * <img src="https://github.com/devYSK/study_repo/blob/main/whiteship-java/src/main/java/week01/images/image-20220730003633934.png?raw=true" alt="image-20220730003633934" style="zoom:67%;" />
   * 로딩, 링크, 초기화 순으로 진행된다.
   * Loading - 로딩
     - 클래스 로더가 .class 파일을 읽고 그 내용에 따라 적절한 바이너리 데이터를 만들고 “메소드” 영역에 저장
@@ -226,7 +226,7 @@ JDK (Java Development Kit) : 자바 프로그래밍 시 필요한 컴파일러 �
 
   * Java 프로그램을 실행하는데만 포커스를 둔다면, JRE만 설치하면 된다. 반면, Java로 프로그래밍을 하거나 배포를 진행해야 한다면 JDK를 설치해야 한다.
 
-### 참조 및 출처 
+### 참조 및 출처
 
 https://www.baeldung.com/java-stack-heap
 
