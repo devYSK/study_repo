@@ -1,6 +1,7 @@
 package com.ys.stock.service;
 
 import com.ys.stock.domain.Stock;
+import com.ys.stock.facade.LettuceLockStockFacade;
 import com.ys.stock.facade.OptimisticLockStockFacade;
 import com.ys.stock.repository.StockRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -34,6 +35,9 @@ class StockServiceTest {
     @Autowired
     private OptimisticLockStockFacade optimisticLockStockFacade;
 
+    @Autowired
+    private LettuceLockStockFacade stockFacade;
+
     @BeforeEach
     public void before() {
         Stock stock = new Stock(1L, 100L);
@@ -52,6 +56,35 @@ class StockServiceTest {
         Stock stock = stockRepository.findById(1L).orElseThrow();
 
         assertEquals(99, stock.getQuantity());
+    }
+
+    @Test
+    void 동시에_100개의_요청_REDIS() throws InterruptedException {
+        int threadCount = 100;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(32);
+
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+
+            executorService.submit(() -> {
+                try {
+                    stockFacade.decrease(1L, 1L);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+
+        latch.await();
+
+        Stock stock = stockRepository.findById(1L).orElseThrow();
+
+        assertEquals(0L, stock.getQuantity());
     }
 
     @Test
