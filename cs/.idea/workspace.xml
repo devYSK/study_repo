@@ -5,7 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9e6817a0-4fdb-4e0e-8eb0-05c5d4d120b3" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/자료구조/자료구조.md" beforeDir="false" afterPath="$PROJECT_DIR$/자료구조/자료구조.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../udemy-developer-english/note.md" beforeDir="false" afterPath="$PROJECT_DIR$/../udemy-developer-english/note.md" afterDir="false" />
@@ -70,20 +69,7 @@
     <property name="project.structure.side.proportion" value="0.0" />
     <property name="settings.editor.selected.configurable" value="reference.settingsdialog.project.gradle" />
   </component>
-  <component name="RunManager" selected="Application.ArrayListMinHeap">
-    <configuration name="AVLTree" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="tree.AVLTree" />
-      <module name="cs.main" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="tree.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
+  <component name="RunManager" selected="Application.GraphDFS">
     <configuration name="ArrayListMaxHeap" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="heap.ArrayListMaxHeap" />
       <module name="cs.main" />
@@ -110,19 +96,6 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="ArrayMaxHeap" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="heap.ArrayMaxHeap" />
-      <module name="cs.main" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="heap.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="ArrayMinHeap" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="heap.ArrayMinHeap" />
       <module name="cs.main" />
@@ -136,13 +109,39 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="GraphBFS" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="graph.GraphBFS" />
+      <module name="cs.main" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="graph.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="GraphDFS" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="graph.GraphDFS" />
+      <module name="cs.main" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="graph.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.GraphDFS" />
+        <item itemvalue="Application.GraphBFS" />
         <item itemvalue="Application.ArrayListMinHeap" />
         <item itemvalue="Application.ArrayListMaxHeap" />
         <item itemvalue="Application.ArrayMinHeap" />
-        <item itemvalue="Application.ArrayMaxHeap" />
-        <item itemvalue="Application.AVLTree" />
       </list>
     </recent_temporary>
   </component>
@@ -154,7 +153,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1660375558985</updated>
-      <workItem from="1660375563887" duration="38925000" />
+      <workItem from="1660375563887" duration="49870000" />
     </task>
     <servers />
   </component>
