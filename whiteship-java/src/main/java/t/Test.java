@@ -29,7 +29,7 @@ public class Test {
 
     private int getBigNumber() {
         Integer integer = dandyNumbers.stream().max(Integer::compareTo).orElse(-1);
-        return integer == -1 ? -1 :
+        return integer == -1 ? -1 : 1;
     }
 
     private void drawDandyNumberFromString(String s) {

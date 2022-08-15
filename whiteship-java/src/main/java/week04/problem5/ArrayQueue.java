@@ -90,16 +90,7 @@ public class ArrayQueue implements Queue {
     }
 
     private void reSize(int newCapacity) {
-//        this.dataArray = Arrays.copyOf(dataArray, newCapacity);
-
-
-        int[] newArray = new int[newCapacity];
-
-        for (int i = 0, j = front + 1; i <= count; i++, j++) {
-            newArray[i] = dataArray[j % this.size];
-        }
-
-        this.dataArray = newArray;
+        this.dataArray = Arrays.copyOf(dataArray, newCapacity);
         this.size = newCapacity;
     }
 

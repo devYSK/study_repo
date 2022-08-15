@@ -7,23 +7,23 @@ import week04.problem2.ListNode;
  */
 public class LinkedListStack {
 
-    private final ListNode headNode;
+    private final ListNode head;
 
     private int top;
 
     public LinkedListStack() {
-        this.headNode = new ListNode();
+        this.head = new ListNode();
         this.top = -1;
     }
 
     public LinkedListStack(int data) {
-        this.headNode = new ListNode(data);
+        this.head = new ListNode(data);
         this.top = 0;
     }
 
     public void push(int data) {
         ListNode newNode = new ListNode(data);
-        this.headNode.add(headNode, newNode, ++top);
+        this.head.add(head, newNode, ++top);
     }
 
     public int pop() {
@@ -31,11 +31,11 @@ public class LinkedListStack {
             throw new RuntimeException("stack is empty");
         }
 
-        return this.headNode.remove(headNode, top--).getData();
+        return this.head.remove(head, top--).getData();
     }
 
     public void printData() {
-        headNode.printAllData(headNode);
+        head.printAllData(head);
     }
 
 

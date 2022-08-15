@@ -41,12 +41,12 @@ public class ListNode implements LinkedList {
 
     @Override
     public ListNode add(ListNode head, ListNode nodeToAdd, int position) {
-       ListNode node = head;
+
+        ListNode node = head;
 
         validatePositionValue(position);
 
-
-        for (int i = 0; i < position ; i++) {
+        for (int i = 0; i < position; i++) {
             node = node.nextNode;
         }
 
@@ -56,6 +56,18 @@ public class ListNode implements LinkedList {
         this.size += 1;
         return node;
     }
+
+    public ListNode add(ListNode head, ListNode nodeToAdd) {
+        ListNode node = head;
+
+        while (node.nextNode != null) {
+            node = node.nextNode;
+        }
+        node.nextNode = nodeToAdd;
+        this.size += 1;
+        return node;
+    }
+
 
     @Override
     public ListNode remove(ListNode head, int positionToRemove) {
@@ -87,6 +99,14 @@ public class ListNode implements LinkedList {
         return deleteNode;
     }
 
+    public void changeNextNode(ListNode node) {
+        this.nextNode = node;
+    }
+
+    public void changeSize(int size) {
+        this.size = size;
+    }
+
     @Override
     public boolean contains(ListNode head, ListNode nodeToCheck) {
 
@@ -99,7 +119,6 @@ public class ListNode implements LinkedList {
 
         return false;
     }
-
 
 
     private void validatePositionValue(int position) {
