@@ -4,22 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9e6817a0-4fdb-4e0e-8eb0-05c5d4d120b3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../udemy-developer-english/note.md" beforeDir="false" afterPath="$PROJECT_DIR$/../udemy-developer-english/note.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../whiteship-java/.gradle/7.1/executionHistory/executionHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../whiteship-java/.gradle/7.1/executionHistory/executionHistory.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../whiteship-java/.gradle/7.1/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../whiteship-java/.gradle/7.1/executionHistory/executionHistory.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../whiteship-java/.gradle/7.1/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../whiteship-java/.gradle/7.1/fileHashes/fileHashes.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../whiteship-java/.gradle/7.1/fileHashes/fileHashes.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../whiteship-java/.gradle/7.1/fileHashes/fileHashes.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../whiteship-java/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../whiteship-java/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../whiteship-java/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../whiteship-java/.gradle/buildOutputCleanup/outputFiles.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../whiteship-java/.gradle/checksums/checksums.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../whiteship-java/.gradle/checksums/checksums.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../whiteship-java/.gradle/checksums/sha1-checksums.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../whiteship-java/.gradle/checksums/sha1-checksums.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../whiteship-java/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../whiteship-java/.idea/gradle.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../whiteship-java/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../whiteship-java/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../whiteship-java/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../whiteship-java/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../whiteship-java/src/main/java/week03/week03.md" beforeDir="false" afterPath="$PROJECT_DIR$/../whiteship-java/src/main/java/week03/week03.md" afterDir="false" />
-    </list>
+    <list default="true" id="9e6817a0-4fdb-4e0e-8eb0-05c5d4d120b3" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -152,7 +137,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1660375558985</updated>
-      <workItem from="1660375563887" duration="52036000" />
+      <workItem from="1660375563887" duration="52623000" />
     </task>
     <servers />
   </component>
