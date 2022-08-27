@@ -1038,3 +1038,298 @@ BDD는 시나리오를 기반으로 테스트 케이스를 작성하며 함수 �
 - https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html#BDD_behavior_verification
 
 ### 
+
+# 슬라이스 테스트
+
+
+
+슬라이스 테스트는 단위 테스트와 통합 테스트의 중간 개념,
+
+레이어드 아키텍처를 기준으로 각 레이어 별로 나누어 테스트를 진행한다.
+
+이말인 즉슨, 레이어별로 단위테스트를 한다는것
+
+단위 테스트를 수행하기 위해서는 모든 외부 요인을 차단하고 테스트를 진행해야 한다.
+
+하지만 컨트롤러는 개념상 웹과 맞닿은 레이어로서  외부 요인을 차단하고 테스트하면 의미가 없기 때문에 슬라이스 테스트를 진행하는 경우가 많다.
+
+스프링은 레이어 별로 잘라서 특정 레이어에 대해서 Bean을 최소한으로 등록시켜 테스트 하고자 하는 부분에 최대한 단위 테스트를 지원해주고 있다.
+
+
+
+
+
+
+
+컨트롤러를 이용한 슬라이스 테스트는 `WebMvcTest` 어노테이션을 이용한다. 
+
+그리고 Spring Data JPA 사용시에도 @SpringBootTest 대신 @DataJpaTest를 사용하는 것이 좋다.
+
+`@SpringBootTest` 어노테이션을 사용하는 경우 단점은 아래와 같다.
+
+- 실제 구동되는 애플리케이션의 설정, 모든 `Bean`을 로드하기 때문에 시간이 오래걸리고 무겁다.
+- 테스트 단위가 크기 때문에 디버깅이 어려운 편이다.
+- 외부 API 콜같은 Rollback 처리가 안되는 테스트 진행을 하기 어려움
+
+따라서 repository 레이어의 단위테스트의 경우 `@SpringBootTest` 대신 `@DataJpaTest` 사용하여 테스트를 작성하는 경우 통해 속도적인 측면과 의존성 측면에서 이점을 가질 수 있다.
+
+
+
+### 슬라이스 테스트를 위해 사용할 수 있는 대표적인 어노테이션들
+
+- `@WebMvcTest`
+- `@WebFluxTest`
+- `@WebServiceClientTest`
+- `@JsonTest`
+- `@RestClientTest`
+- `@DataJdbcTest`
+- `@DataJpaTest`
+- `@JdbcTest`
+- `@JooqTest`
+- `@JsonTest`
+
+
+
+그 중 @WebMvcTest와 @DataJpaTest를 정리하였다.
+
+
+
+> @Service 클래스의 테스트는 @ExtendWith 와 함께 테스트 하면 된다. 
+
+* https://galid1.tistory.com/772
+
+## @WebMvcTest
+
+- MVC를 위한 테스트.
+- 웹에서 테스트하기 힘든 `컨트롤러`를 테스트하는 데 적합.
+- 웹상에서 요청과 응답에 대해 테스트할 수 있음.
+- 시큐리티, 필터까지 자동으로 테스트하며, 수동으로 추가/삭제 가능.
+- @SpringBootTest 어노테이션보다 가볍게 테스트할 수 있음.
+- 다음과 같은 어노테이션이 붙은 Bean들만 스캔하도록 제한함. 
+  - @Controller, 
+  - @ControllerAdvice, 
+  - @JsonComponent, 
+  - Converter, 
+  - GenericConverter, 
+  - Filter, 
+  - HandlerInterceptor,
+  - 따라서 의존성이 끊기기 때문에, 예를 들면 서비스와 같은 객체들은 @MockBean을 사용해서 만들어 사용해야 한다.
+- 이 밖에 테스트를 하는 데 필요하지 않은 컴포넌트들(ex. `@Service`, `@Repository`)은 `Bean`으로 등록하지 않는다.
+
+```java
+@WebMvcTest(ShelterPostController.class)
+public class PostControllerTest {
+
+    @Autowired
+    protected MockMvc mockMvc;
+
+    @Autowired
+    protected ObjectMapper objectMapper;
+
+    @MockBean
+    protected PostService postService;
+
+    @Test
+    @DisplayName("게시글 리스트 조회 테스트")
+    void getPostsTest() throws Exception {
+        // given, when, then
+				...
+    }
+  	
+  	@Test
+    void testExample() throws Exception {
+  	    given(this.postService.getPostsBy("sboot")) // 이 메서드를 호출하면
+            .willReturn(new Post("1")); // 지정된 객체를 반환
+  	    
+        this.mvc.perform(get("/api/posts").accept(MediaType.TEXT_PLAIN))
+            .andExpect(status().isOk()).andExpect(content().string(...));
+      }
+  
+}
+```
+
+
+
+---
+
+### **@MockBean**
+
+* `Mock Bean`은 **기존 `Bean`의 껍데기만 가져오고 내부 구현은 사용자에게 위임**한 형태이다.
+
+
+
+spring-boot-test 패키지는 Mockito를 포함하고 있기 때문에 기존에 사용하던 방식대로 Mock 객체를 생성해서 테스트하는 방법도 있지만, spring-boot-test에서는 새로운 방법도 제공한다.
+
+- 바로 @MockBean 어노테이션을 사용해서 이름 그대로 Mock 객체를 빈으로써 등록할 수 있다.
+- 기존에 사용되던 스프링 Bean이 아닌 Mock Bean을 주입한다.
+- 그렇기 때문에 만일 @MockBean으로 선언된 빈을 주입받는다면 Spring의 ApplicationContext는 Mock 객체를 주입한다.
+- 새롭게 @MockBean을 선언하면 Mock 객체를 빈으로써 등록하지만, 
+- `만일 @MockBean으로 선언한 객체와 같은 이름과 타입으로 이미 빈으로 등록되어있다면 해당 빈은 선언한 Mock 빈으로 대체된다.`
+
+
+
+즉, 해당 `Bean`의 어떤 메서드에 어떤 값이 입력되면 어떤 값이 리턴 되어야 한다는 내용 
+
+모두 `testExample` 메서드와 같이 **개발자 필요에 의해서 조작이 가능**하다.
+
+어떤 로직에 대해 `Bean`이 예상대로 동작하도록 하고 싶을 때, `Mock Bean`을 사용하는 것이다.
+
+
+
+또한 @MockBean 어노테이션은 테스트 내용 중 외부 서비스를 호출하는 부분을 Mock해서 쉽게 처리할 수 있다.
+
+```java
+@SpringBootTest
+public class XXXControllerTest {
+
+    @MockBean  // 외부 서비스 호출에 사용되는 RestTemplate Bean을 Mock
+    private RestTemplate mockRT;
+
+    @MockBean  // 외부 서비스 호출에 사용되는 Service Bean을 Mock
+    private XXXService xXXService;
+
+}
+```
+
+
+
+예를 들면 아임포트 등 **외부의 결제 대행 서비스**를 사용하여 결제 기능을 개발한다고 가정하자.
+
+결제 대행 서비스에서는 테스트 코드에서 보낸 요청을 올바르지 않은 요청으로 간주할 것이다.
+
+올바른 요청으로 간주했을 때의 로직을 테스트하고 싶은 경우, `Mock Bean` 을 사용한다.
+
+원하는 결과를 지정한 후, 이후 로직을 진행하면 된다.
+
+```java
+@WebMvcTest(PaymentController.class)
+public class PaymentControllerTests {
+    @AutoWired 
+    private MockMvc mvc;
+  
+  	@MockBean
+    private PaymentService paymentService; // PaymentService 내부에서 외부의 결제 대행 서비스를 사용하고 있는 상태라고 가정
+  	
+    @Test
+    public void testPayment() throws Exception {
+  	    given(this.payMentService.chargePoint(50000L)) // 5만원 금액 충전: 테스트 환경에서는 실패하는 행위이지만
+            .willReturn(new Point(50000L)); // 올바른 요청으로 간주하고 그에 따른 객체를 반환하도록 행위 지정
+      }
+}
+```
+
+
+
+### `Mock` 사용 시 주의할 점 및 적절한 사용 방법
+
+슬라이스 테스트 시, 하위 레이어는 `Mock` 기반으로 만들기 때문에 주의할 점들이 있다.
+
+- 실제 환경에서는 제대로 동작하지 않을 수 있다.
+- `Mock`을 사용한다면 내부 구현도 알아야 하고, 테스트 코드를 작성하며 테스트의 성공을 의도할 수 있기 때문에 완벽한 테스트라 보기 힘들다.
+- 내부 구현이 변경 됐을 때 테스트가 실패하지 않고 통과하게 되면서 혼란이 발생할 수도 있다.
+
+`그렇다면 언제 `Mock` 기반의 테스트를 사용해야 할까?`
+
+- 랜덤의 성격을 띄고 있는 함수
+- `LocalDate.now()` 처럼 계속 흘러가는 시간의 순간
+- 외부에 존재하여 내가 제어할 수 없는 외부 서버, 외부 저장소 등 제어할 수 없는 영역
+- 대규모 어플리케이션(깊은 depth의 레이어)에서 하위 계층들의 테스트 셋업이 방대할 경우
+
+
+
+---
+
+
+
+# @DataJpaTest
+
+
+
+## @DataJpaTest
+
+Spring Data JPA를 테스트하고자 한다면 `@DataJpaTest` 기능을 사용해볼 수 있다.
+
+- 해당 테스트는 기본적으로 in-memory embedded database를 생성하고 `@Entity` 클래스를 스캔한다.
+- 일반적인 다른 컴포넌트들은 스캔하지 않는다. 따라서 특정 bean의 의존성이 필요한 경우 아래의 방법 사용
+  - @import
+  - @DataJpaTest(includeFilters = @Filter(..))
+
+`@DataJpaTest`는 `@Transactional` 어노테이션을 포함하고 있다.
+
+- 따라서 테스트가 완료되면 자동으로 롤백된다.
+  ![img](https://velog.velcdn.com/images%2Fljo_0920%2Fpost%2F563be9c9-8607-4a07-bf46-0581e59ab3d2%2FUntitled.png)
+
+만약 `@Transactional` 기능이 필요하지 않다면 아래와 같이 줄 수 있다.
+
+```java
+@DataJpaTest
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+class SomejpaTest {
+    ...
+}
+```
+
+`@DataJpaTest` 기능을 사용하면 `@Entity`를 스캔하고 repository를 설정하는 것 이외에도 
+
+테스트를 위한 `TestEntityManager`라는 빈이 생성된다.
+
+- 이 빈을 사용해서 테스트에 이용한 데이터를 정의할 수 있다.
+
+```java
+@DataJpaTest
+class SomejpaTest {
+
+    @Autowired
+    private TestEntityManager entityManager;
+
+    @Test
+    @DisplayName("게시글 아이디로 댓글 목록 삭제 테스트")
+    void deleteAllByMissingPostIdTest() {
+        // given
+        LongStream.rangeClosed(1, 3).forEach(idx ->
+            entityManager.persist(Comment.builder()
+                .missingPost(missingPost)
+                .content("내용")
+                .account(account)
+                .build()
+            )
+        );
+
+        // when
+        commentRepository.deleteAllByMissingPostId(missingPost.getId());
+        List<Comment> comments = commentRepository.findAll();
+
+        // then
+        SoftAssertions.assertSoftly(softAssertions -> {
+                softAssertions.assertThat(comments).hasSize(3);
+                comments.forEach(foundComment ->
+                                 softAssertions.assertThat(foundComment.isDeleted()).isTrue());
+            }
+        );
+    }
+
+}
+```
+
+만약 테스트에 내장된 임베디드 데이터베이스를 사용하지 않고 real database를 사용하고자 하는 경우, `@AutoConfigureTestDatabase` 어노테이션을 사용하면 손쉽게 설정할 수 있습니다.
+
+```java
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+class SomejpaTest {
+    ...
+}
+```
+
+
+
+
+
+참조
+
+- https://tecoble.techcourse.co.kr/post/2021-05-18-slice-test/
+- https://velog.io/@ljo_0920/Spring-Boot-slice-test
+
+
+
+---

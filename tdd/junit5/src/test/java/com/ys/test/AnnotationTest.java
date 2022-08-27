@@ -37,37 +37,3 @@ public class AnnotationTest {
     }
 
 }
-
-static class StudyConverter extends SimpleArgumentConverter {
-    @Override
-    protected Object convert(Object o, Class<?> aClass) throws ArgumentConversionException {
-        assertEquals(Study.class, aClass, "Can only convert to Study");
-        return new Study(Integer.parseInt(o.toString()));
-    }
-
-
-    @DisplayName("컨버터 테스트")
-    @ParameterizedTest(name = "{index} {displayName} message = {0}")
-    @ValueSource(ints = {10, 20, 40})
-    void parameterizedTest2(@ConvertWith(StudyConverter.class) Study study) {
-        System.out.println(study.getLimit());
-    }
-
-    @Test
-    void createNewStudy(@Mock MemberService memberService,
-                        @Mock StudyRepository studyRepository) {
-
-        Member member = new Member();
-        member.setId(1L);
-        member.setEmail("youngsoo@naver.com");
-
-        Optional<Member> byId = memberService.findById(1L);
-        when(memberService.findById(1L))
-                .thenReturn(Optional.of(member));
-        Study study = new Study(10, "java");
-
-        Optional<Member> findById = memberService.findById(1L);
-        assertEquals("youngsoo@naver.com", findById.get().getEmail());
-
-    }
-}
