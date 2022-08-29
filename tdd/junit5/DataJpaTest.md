@@ -273,7 +273,8 @@ org.hibernate.tool.schema.spi.CommandAcceptanceException: Error executing DDL "
 
 2022-08-27 21:51:20.268  WARN 64106 --- [    Test worker] o.h.t.s.i.ExceptionHandlerLoggedImpl     : GenerationTarget encountered exception accepting command : Error executing DDL "
 
-
+---
+# 에러 본문을 보시려면 펼치세요
 
 <details>
 <summary> 에러 본문 - 접기/펼치기</summary>
@@ -485,22 +486,31 @@ org.hibernate.tool.schema.spi.CommandAcceptanceException: Error executing DDL "
 
 ### 무슨 오류?
 
-오류 내용을 보면, DDL 수행중 오류, 식별자(indifier) 관련해서 DB관련 예약어 오류로 보인다.
+오류 내용만 보면, DDL 수행중 오류, 식별자(indifier) 관련해서 DB관련 예약어 오류로 보인다.
+
+하지만 오류 로그를 보면 
+
+jpa.hibernate.properties.globally_quoted_identifiers= true 옵션을 줘서 테이블 이름과 컬럼 이름이 다  ` 로 감싸줬는데
+
+왜 syntax 에러가 발생한 것인가?  
 
 구글링과 인프런 김영한님의 강의 질문에 찾아봐도, 스택오버플로우에도 없었다.
 
 하지만 문제는 그게 아니였다.
 
-2일동안 삽질을 한 탓에 원인을 찾았다.
+2일동안 삽질을 한 탓에 원인을 찾았다. 구글 창을 100개는 뒤진것 같다. 
 
-원인은 @DataJpaTest의 기본 설정을 잘 모르고 사용했던것이였다..
+원인은 @DataJpaTest의 기본 설정을 잘 모르고 사용했던것이다.
 
  
 
 ## 먼저 결론을 해결방법부터 적어보자면
 
-* 기본값들로 세팅되어있는 H2 가 아닌 내가 설정한 property 파일로 된 H2로 사용하고자 한다면
+* 기본값들로 세팅되어있는 H2 가 아닌 내가 설정한 property 파일로 된 H2나 다른 DBMS로 사용하고자 한다면
 * `@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)` 를 테스트 클래스 위에 붙여야 한다.
+* 이래야 기본설정된 DataSource를 replace해서 설정을 덮어쓰게 되어서 우리가 설정한 데로 작동한다. 
+  * 그러면 property에 설정한 dataSource의 설정 값을 확인하여 적절한 DataSource를 생성하게 된다
+  * 붙이지 않으면 우리가 원하는 DB에 붙지 못한다. 
 
 
 
@@ -698,15 +708,47 @@ spring:
 
 
 
+### TestClass
+
+```java
+@ActiveProfiles("test")
+@DataJpaTest
+@TestPropertySource(locations = "classpath:application-test.yml")
+class MemberRepositoryTest {
+
+    @Autowired
+    MemberRepository memberRepository;
+
+    @Test
+    void save() {
+        memberRepository.save(
+                Member.builder()
+                        .age(1)
+                        .email("email@email.com")
+                        .name("name")
+                        .build()
+        );
+
+    }
+}
+```
+
 
 
 
 
 실행해서 나오는 로그들을 보자 
 
-![image-20220827223423787](/Users/ysk/study/study_repo/tdd/junit5/images//image-20220827223423787.png)
+<img src="https://blog.kakaocdn.net/dn/efOfRG/btrKMFCQdDu/sW9hW31EK0GluRUh1IRysk/img.png">
 
-* jdbc:h2:mem:05497116-9d3f-43ee-94d6-6de829c82dc6 ??????
+* org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseFactory 에서 로그가 하나 출력되었다.
+
+  
+
+* jdbc:h2:mem:05497116-9d3f-43ee-94d6-6de829c82dc6 
+
+  *  뭐지? url중 마지막 데이터베이스 이름이 이상하다. 
+  * 랜덤으로 만들어진 데이터베이스 이름같다
 
 나는  jdbc:h2:mem:test로 설정 하였는데?
 
@@ -716,30 +758,76 @@ spring:
 
 datasource의 커넥션의 메타데이터가 org.h2.jdbc의 JdbcDatabaseMetaData 구현체가 주입되어있다.
 
+또한
+
+connection -> session(sessionLocal) -> Database 구현체의 Mode가 Regular로 되어있다. 
+
+그리고 분명 application-test.yml 에서 나는 MODE=MySql로 설정했는데. 
+
+datasource.url 설정도 다르다.  
+
+내가 설정한 url은 jdbc:h2:mem:test 인데, 데이터 베이스 이름이 아닌 랜덤으로 데이터베이스 이름이 정해져 있다.
+
+<img src="https://blog.kakaocdn.net/dn/wTG6x/btrKMpfKgC5/aW5y2lgfi6Q3dhkcE3mj3k/img.png" width="800" height="1200">
 
 
-옵션을 설청한채로 디버그를 돌려보면 HikariProxyDatabaseMetaData 구현체가 주입되어있다.
+
+---
+
+
+
+이번엔 다르게 옵션을 설정한채로 디버그를 돌려보면 HikariProxyDatabaseMetaData 구현체가 주입되어있다.
+
+* SpirngBoot 2.0부터는 HikariDataSource가 기본으로 등록이 되어있다고 한다. 
+
+HikariProxyDatabaseMetaData의 connection -> session(sessionLocal) -> Database 구현체의 Mode를 보면
+
+내가 설정했던 Mode의 MySQL로 잘 설정 되어 있다.
+
+url도 jdbc:h2:mem:test 로 내가 설정하였던 url로 잘 설정 되어 있다. 
+
+
+
+<img src ="https://blog.kakaocdn.net/dn/y3gjM/btrKMFiwMzY/oSnC1tRdxZPwgqF766YTt0/img.png" width="900" height="1200">
+
+
 
 정확히 어떻게 구현이 되어있는지는 모르겠으나,
 
-application.properties나 yml에 정의한 설정을 그대로 사용하는 것이 아닌, 기본적으로 내장되어 구현되어 있는 DataSource와 Connection을 사용하여 우리 설정을 사용하지 않아서 구현체로 다른것을 사용한것 같다. 
+application.properties나 yml에 정의한 설정을 그대로 사용하는 것이 아닌, 
+
+기본적으로 내장되어 구현되어 있는 DataSource와 Connection을 사용하여 우리 설정을 사용하지 않아서 구현체로 다른것을 사용한것 같다. 
 
 
 
+이것으로 보아 `@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)` 이
+
+설정이 없으면 자동으로 만들어주는 datasource 기반으로 h2를 설정하고, 우리가 설정파일에 작성한 내용중 
+
+데이터베이스 연결 설정과 관련된 부분은 설정이 되질 않아 오류가 날 수 있다.
 
 
 
+결론은 
+
+자기가 설정안하고 자동으로 설정된 H2를 테스트 데이터베이스로 사용할 것이 아니고, 
+
+자기가 설정한 H2이던, 실제 MySQL이나 Oracle설정이 된 DataSource를 사용할것이라면 
+
+ `@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)` 
+
+설정을 사용하자.
+
+ 
+
+이 설정은 자동으로 된 설정을  replace 해서 해당 설정이 동작하지 않고, 
+
+내가 설정한 설정파일대로 만들어진 DataSoruce가 Bean으로 등록된다. 
 
 
 
+저 어노테이션 설정을 추가하고 테스트를 돌리면 잘 실행되는것을 확인할 수 있다. 
 
+* org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseFactory 에서 로그도 출력되지 않는다.
+  * HikariDataSource가 적용되었기 때문
 
-
-
-
-
-
-
-```
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-```
