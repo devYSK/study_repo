@@ -794,6 +794,16 @@ https://deveric.tistory.com/104
 
 https://velog.io/@mnsukoo/Spring-Boot-%EB%8F%99%EC%8B%9C%EC%84%B1-%EB%AC%B8%EC%A0%9C-ThreadLocal
 
+https://www.inflearn.com/questions/17498
+
+https://velog.io/@recordsbeat/JPA%EC%97%90%EC%84%9C-Write-Skew-%EB%B0%A9%EC%A7%80%ED%95%98%EA%B8%B0-locking-%EC%A0%84%EB%9E%B5
+
+https://4whomtbts.tistory.com/118
+
+https://techblog.woowahan.com/2631/
+
+https://tjdrnr05571.tistory.com/18
+
 # @Transactional 동시성 제어 기법
 
 아마 Transactional 애노테이션은 기본적으로 달려있을거같은데요.
