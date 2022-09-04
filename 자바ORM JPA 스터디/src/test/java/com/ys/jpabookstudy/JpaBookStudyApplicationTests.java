@@ -1,6 +1,7 @@
 package com.ys.jpabookstudy;
 
 import com.ys.jpabookstudy.member.Member;
+import com.ys.jpabookstudy.member.TestMember;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,7 +32,13 @@ class JpaBookStudyApplicationTests {
 
         EntityManagerFactory jpaFactory = Persistence.createEntityManagerFactory("jpaFactory");
 
+        TestMember gg = new TestMember(1L, "gg");
+
+        entityManager.persist(gg);
+
         EntityManager ee = jpaFactory.createEntityManager();
+        ee.clear();
+        ee.close();
         System.out.println();
 
     }
