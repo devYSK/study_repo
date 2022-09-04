@@ -60,7 +60,7 @@ CPU(중앙처리장치), 프로세스 관리, 메모리 관리, 디스크 파일
     * 운영되기 위한 주소 공간, 파일, 메모리 영역 등
     * 프로세스는 각각 독립된 메모리 영역을 할당 받는다. Code, Data, Stack, Heap의 구조로 되어있는 `독립된 메모리 영역` 
 
-* <img src="https://blog.kakaocdn.net/dn/egpi9B/btrI1OJXdbh/ZXOY6BzAnnnGqbJqHATVhK/img.png" />
+* <img src="https://blog.kakaocdn.net/dn/egpi9B/btrI1OJXdbh/ZXOY6BzAnnnGqbJqHATVhK/img.png" width = 750 height = 450/>
 
   * > [이미지 출처](https://gmlwjd9405.github.io/2018/09/14/process-vs-thread.html)
 
@@ -216,7 +216,7 @@ CPU(중앙처리장치), 프로세스 관리, 메모리 관리, 디스크 파일
 
 즉 프로세스의 실행 단위.
 
-* <img src="https://blog.kakaocdn.net/dn/l0XEi/btrI9l0L3w8/YlPiiP6Y9EinPwG0h8pvO0/img.png" style="zoom:80%;" />
+* <img src="https://blog.kakaocdn.net/dn/l0XEi/btrI9l0L3w8/YlPiiP6Y9EinPwG0h8pvO0/img.png" width=650 />
   * [이미지출처](https://gmlwjd9405.github.io/2018/09/14/process-vs-thread.html)
 
 * 프로세스 내에서 각각 Stack만 따로 할당 받고, Code, Data, Heap 영역은 공유한다
@@ -285,7 +285,7 @@ CPU(중앙처리장치), 프로세스 관리, 메모리 관리, 디스크 파일
 
 * 멀티 쓰레드에서는 한 프로세스 내에 여러개의 쓰레드가 있고, 각 쓰레드들은 Stack 메모리를 제외한 Data, Code, Heap 영역을 공유한다. 
 * 각 쓰레드가 한 프로세스 내에서 독립적인 기능을 수행한다는 것은 독립적으로 함수를 호출하는것  
-* <img src="https://blog.kakaocdn.net/dn/vp6Ax/btrI9lsWxkx/iSXHMM0MoEjBRJefidvuLK/img.png" style="zoom:80%;" />
+* <img src="https://blog.kakaocdn.net/dn/vp6Ax/btrI9lsWxkx/iSXHMM0MoEjBRJefidvuLK/img.png" width = 650 />
   * [이미지 출처](http://www.yes24.com/Product/Goods/78225791)
 
 * 장점 
@@ -667,12 +667,17 @@ CPU가 하나의 프로세스 작업이 끝나면 다음 프로세스 작업을 
 
 
 
-  		2. RR, RoundRobin() : 라운드로빈
-       * 큐 이용. 각 프로세스는 동일한 크기의 사용 시간을 할당받음.
-       * 할당 시간이 지나면 프로세스는 선점당하여 큐의 제일뒤에가서 다시 줄을 선다.
-       * 이 작업을 모든 프로세스가 돌아가면서 진행
-       * 장점으로 응답시간이 빨라지고, 각 프로세스들이 공평하게 사용된다.
-       * 단점으로는 할당된 시간이 작으면 컨텍스트 스위칭이 잦아져서 오버헤드 증가 
+2. RR, RoundRobin() : 라운드로빈
+
+      * 큐 이용. 각 프로세스는 동일한 크기의 사용 시간을 할당받음.
+
+      * 할당 시간이 지나면 프로세스는 선점당하여 큐의 제일뒤에가서 다시 줄을 선다.
+
+      * 이 작업을 모든 프로세스가 돌아가면서 진행
+
+      * 장점으로 응답시간이 빨라지고, 각 프로세스들이 공평하게 사용된다.
+
+      * 단점으로는 할당된 시간이 작으면 컨텍스트 스위칭이 잦아져서 오버헤드 증가 
 
 
 
