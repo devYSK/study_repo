@@ -1,5 +1,7 @@
 package le1;
 
+import java.util.Locale;
+
 /**
  * @author : ysk
  */
@@ -18,102 +20,63 @@ public class 신규아이디추천 {
      * @return
      */
     public String solution(String new_id) {
-        String answer = toLowerCase(new_id);
 
-        answer = removeUnnecessaryChar(answer);
+        String newId = new_id.toLowerCase(Locale.ROOT);
 
-        answer = replaceDoubleDot(answer);
+        newId = replaceAll("[^a-z0-9-_.]", "", newId);
 
-        answer = removeFrontDotAndRearDot(answer);
+        newId = replaceAll("[.]{2,}",".",  newId);
+        newId = replaceAll("^[.]|[.]$", "", newId);
 
-        answer = addCharA(answer);
-
-        answer = removeSizeOverChars(answer);
-
-
-
-        return addLastChar(answer);
-    }
-
-    private String toLowerCase(String newId) {
-        return newId.toLowerCase();
-    }
-
-    private String removeUnnecessaryChar(String newId) {
-        StringBuilder idBuilder = new StringBuilder();
-
-        for (char c : newId.toCharArray()) {
-
-
-            if (Character.isLowerCase(c)) {
-                idBuilder.append(c);
-                continue;
-            }
-
-            if (Character.isDigit(c)) {
-                idBuilder.append(c);
-                continue;
-            }
-
-            if (c == '-') {
-                idBuilder.append(c);
-                continue;
-            }
-
-            if (c == '_') {
-                idBuilder.append(c);
-                continue;
-            }
-
-            if (c == '.') {
-                idBuilder.append(c);
-            }
-
+        if (newId.equals("")) {
+            newId = "a";
         }
 
-        return idBuilder.toString();
-    }
+        if (newId.length() >= 16) newId = newId.substring(0, 15);
 
-    private String replaceDoubleDot(String newId) {
-        return newId.replaceAll("..", ".");
-    }
+        newId = replaceAll("[.]$", "", newId);
 
-    private String removeFrontDotAndRearDot(String newId) {
-        String id = newId.charAt(0) == '.' ? newId.substring(1) : newId;
-
-        return id.charAt(id.length() - 1) == '.' ? newId.substring(0, id.length() - 1) : id;
-    }
-
-    private String addCharA(String newId) {
-
-        return newId.equals("") ? "a" : newId;
-    }
-
-    private String removeSizeOverChars(String newId) {
-        String removedId = newId.length() >= 16 ? newId.substring(0, 15) : newId;
-
-        return removedId.charAt(removedId.length() - 1) == '.' ? removedId.substring(0, removedId.length() -1)
-                : removedId;
-    }
-
-    private String addLastChar(String newId) {
-
-        if (newId.length() <= 2) {
-            StringBuilder idBuilder = new StringBuilder();
+        if (newId.length() < 3) {
             char lastChar = newId.charAt(newId.length() - 1);
-            idBuilder.append(newId, 0, newId.length() - 2);
-            while (idBuilder.length() < 3) {
-                idBuilder.append(lastChar);
+            StringBuilder newIdBuilder = new StringBuilder(newId);
+            while (newIdBuilder.length() < 3) {
+                newIdBuilder.append(lastChar);
             }
-            return idBuilder.toString();
+            newId = newIdBuilder.toString();
         }
 
         return newId;
     }
 
+    private String replaceAll(String pattern, String replaceStr,  String str) {
+        return str.replaceAll(pattern, replaceStr);
+    }
+
+    private String remove1(String str) {
+
+        String pattern = "[^a-z0-9-_.]";
+
+        return str.replaceAll(pattern, "");
+    }
+
+    private String replace2(String str) {
+        String pattern = "[.]{2,}";
+
+        return str.replaceAll(pattern, ".");
+    }
+
+    private String startWithDot(String str) {
+        String pattern = "^[.]|[.]$";
+
+        return str.replaceAll(pattern, "");
+    }
+
+
     public static void main(String[] args) {
         신규아이디추천 s = new 신규아이디추천();
 
-        System.out.println(s.solution("...!@BaT#*..y.abcdefghijklm"));
+        System.out.println(s.solution("...!@BaT#*..y--__.@#ADSFdc-30239DQEFPabcdefghijklm"));
+
+        System.out.println(s.solution(".............33...33....."));
     }
 }
