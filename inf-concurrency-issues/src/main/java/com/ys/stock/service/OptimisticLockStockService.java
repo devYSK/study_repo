@@ -20,7 +20,7 @@ public class OptimisticLockStockService {
         Stock stock = stockRepository.findByIdWithOptimisticLock(id);
         stock.decrease(quantity);
 
-        stockRepository.saveAndFlush(stock);
+        stockRepository.save(stock);
     }
 
 }
