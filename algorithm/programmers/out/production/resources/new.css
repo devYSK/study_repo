@@ -1,0 +1,9 @@
+
+
+p:color=green, font-size=15px;
+
+{p:color=green, font-size=15px};
+
+p {color:green, font-size:15px;}
+
+p {color:green; font-size: 15px;}
