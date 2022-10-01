@@ -19,6 +19,6 @@ spring:
         id:
           new_generator_mappings: true
     hibernate:
-      ddl-auto:
+      ddl-auto: update
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
