@@ -3,10 +3,7 @@ package com.ys.jpabookstudy.member;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * @author : ysk
@@ -24,5 +21,6 @@ public class Member {
     private String username;
 
     private Integer age;
-
+    @OneToOne(mappedBy = "member")
+    private Locker locker;
 }
