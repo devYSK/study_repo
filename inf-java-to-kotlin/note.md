@@ -36,19 +36,30 @@
 
 ## 1. 변수 선언 키워드 - var과 val의 차이점
 
-코틀린에서는 변수를 선언할 때 키워드를 무조건 선언해줘야 한다 (val, var)
+코틀린에서는 변수를 선언할 때 키워드를 무조건 선언해줘야 한다 (val, var -> 수정 가능 여부)
 
-* val(벨, value의 줄임말)
+* val(벨, value의 줄임말) : 불변성을 가진다. 값을 바꿀 수 없다. 
 
-* var(바, varaible의 줄임말)
+* var(바, varaible의 줄임말) : 가변성을 가진다. 값을 바꿀 수 있다.
 
 
 
 * 자바에서 long과 `final` long의 차이 = 가변인가 불변인가(read-only)의 차이 
 
+* 코틀린에서는 타입(자료형)을 컴파일러가 자동으로 추론해준다. 의무적으로 작성하지 않아도 된다.
+  * 만약 타입을 명시하고 싶다면, `변수명: 타입` 으로 명시해줄 수 있다. 
+* 값을 초기화 하지 않은 변수는 타입을 명시하지 않으면 컴파일 에러가 난다.
 
+```ko
+var number1 // 컴파일 에러
+var number1: Long // 컴파일 에러 아님 정상 동작. 
+```
+
+* 그러나, 초기화하지 않은 값을 사용한다면 컴파일 에러가 난다. 
 
 ### 자바코드와 코틀린 코드의 차이
+
+* java
 
 ```java
 long number1 = 10L; // 1
@@ -58,16 +69,97 @@ Long number3 = 1_000L; // 3
 Person person = new Person("김영수"); // 4
 ```
 
-
-
 * kotlin
 
+```kotlin
+var number1 = 10L;
+val number2 = 10L; // final + 타입 추론
+    
+var number3: Long = 1_000L;
+var person = Person("김영수");
+```
 
+
+
+> 모든 변수는 우선 val로 만들고, 꼭 필요한 경우 var로 변경하는 것이 좋다.
 
 
 
 ## 2. Kotlin에서의 Primitive Type
 
+```java
+long number1 = 10L; // 1
+final long number2 = 10L; // 2​
+Long number3 = 1_000L; // 3
+Person person = new Person("김영수"); // 4
+```
+
+* `long`은 primitive type 
+* Long은 refence type (wrapper) 
+
+
+
+연산을 사용할 때는, Reference Type 대신 Primitive Type을 사용해야 한다.
+
+
+
+그러나, 코틀린에서는 상관 없다.
+
+숫자랑, 불리언, 문자에 대해서는 겉으로는 래퍼클래스를 사용하더라도, 내부적으로는 Primitive Type을 사용한다. 
+
+Long 타입을 사용하더라도, 상황에 따라서 필요할 때 long 타입으로 변환해준다.
+
+* 인텔리제이 tolls -> show Kotlin byteCode -> Decompile 클릭
+* long 타입으로 변환되어있는걸 확인 가능.  
+
+* 코틀린 공식 문서
+
+> Some types can have a special internal representation - for  
+> example, numbers, characters and booleans - can be  
+> represented as primitive values at runtime - but to the user they  
+> look like ordinary classes.  
+
+> 숫자, 문자, 불리언과 같은 몇몇 타입은 내부적으로 특별한 표현을 갖는다.  
+> 이 타입들은 실행시에 Primitive Value로 표현되지만,  
+> 코드에서는 평범한 클래스 처럼 보인다.
+
+즉, 프로그래머가 boxing / unboxing을고려하지 않아도 되도록 Kotlin이 알아서 처리 해준다. 
+
+* 내부적으로 Primitive type으로 바꿔서 적절히 처리해준다. 
+
+  
+
 ## 3. Kotlin에서의 nullable 변수
 
+코틀린에서 null이 변수에 들어갈 수 있다면 `Type ?` 를 사용해야 한다.
+
+* 기본적으로 모든 변수에 null이 들어갈 수 없게끔 설계 되어 있다.
+
+```kotlin
+var number: Long? = 1_000L
+number = null
+```
+
+* `?` 키워드가 중요.
+
+
+
 ## 4. Kotlin에서의 객체 인스턴스화
+
+* Java 인스턴스화
+
+```java
+Person person = new Person("김영수");
+```
+
+
+
+* Kotlin 인스턴스화
+
+```kotlin
+val person = Person("김영수");
+```
+
+
+
+> 코틀린에서는 인스턴스화 할 때, `new`를 붙이지 않는다.
