@@ -1,11 +1,18 @@
 package com.lannstark.lec01
 
+import java.lang.IllegalArgumentException
+
 fun main() {
 
-    var number1 = 10L;
-    val number2 = 10L;
+    val person = Person("영수르");
 
-    var number3: Long = 1_000L;
-    var person = Person("김영수");
-
+    startsWith(person.name)
 }
+
+
+
+
+fun startsWith(str: String) : Boolean {
+    return str.startsWith("A")
+}
+
