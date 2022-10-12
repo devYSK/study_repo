@@ -7,3 +7,11 @@ fun main() {
 
     println(money1 + money2);
 }
+
+
+fun startsWith(obj: Any) : Boolean {
+    return when(obj) {
+        is String -> obj.startsWith("A")
+        else -> false
+    }
+}

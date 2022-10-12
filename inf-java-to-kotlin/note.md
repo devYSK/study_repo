@@ -858,3 +858,201 @@ fun main() {
 연산자도 있다.
 - 객체끼리의 연산자를 직접 정의할 수 있다
 
+
+
+# Lec05. 코틀린에서 조건문을 다루는 방법
+
+
+
+1. if문
+2. Expression과 Statement
+3. switch와 when
+
+
+
+## 1. if문
+
+```kotlin
+fun validateScoreIsNotNegative(score: Int) {
+	if (score < 0) {
+		throw IllegalArgumentException("${score}")
+	}
+} 
+```
+
+* 메서드 뒤에 반환형인 void (Unit) 이 생략되었다. 
+
+
+
+## 2. Expression과 Statement
+
+
+
+```kotlin
+fun getPassOrFail(score: Int): String {
+  if (score >= 50) {
+    return "P"
+  } else {
+    return "F"
+  }
+}
+```
+
+자바와 코틀린의 if-else의 차이점은,  
+
+자바에서는 Statement 이지만,  
+코틀린에서는  Expression 이다.
+
+ 
+
+* Statement: 프로그램의 문장 전체, 하나의 값으로 도출되지 않는다. 
+
+* Expression : 반드시 하나의 값으로 도출되는 문장
+
+![image-20221012104143303](/Users/ysk/study/study_repo/inf-java-to-kotlin/image-20221012104143303.png)
+
+* Expression은   StateMent에 속해있고, Statement중 하나의 값으로 도출되는 문장들이 Expression이다.   
+
+
+
+### 예제
+
+```java
+int score = 30 + 40;
+```
+
+* 30 + 40은 70이라는 하나의 결과가 나온다. -> Expression이면서 Statement
+
+
+
+```java
+String grade = if (score >= 50) {
+  "P";
+} else {
+  "F";
+}
+```
+
+* 이 문법은 에러이다. if문을 하나의 값으로 취급하지 않는다. -> Statement
+
+
+
+```java
+String rade = score >= 50 ? "P" : "F"
+```
+
+* 3항 연산자는 하나의 값으로 취급하므로 에러가 없다. -> Expression이면서 statement
+
+
+
+> 그러나 코틀린은 다르다. 
+
+```kotlin
+fun getPassOrFail(score: Int): String {
+  return if (score >= 50) {
+    "P"
+  } else {
+    "F"
+  }
+}
+```
+
+* 다음과 같은 블록을 return 할 수 있다 -> Expression ->  식 자체를 하나의 값으로 취급한다
+* 그러나 코틀린에서는 if-else를 expression으로 사용할 수 있기 때문에 `3항 연산자가 없다.` 
+
+<br>
+
+또한 어떤 값이 특정 범위에 포함되어 있는지 다음과 같이 변환할 수 있다.
+
+in java
+
+```java
+if (0 <= score && score <= 100)
+```
+
+in kotlin
+
+```kotlin
+if (score in 0..100)
+```
+
+
+
+## 3. switch와 when
+
+
+
+```kotlin
+fun getGradeWithSwitch(score: Int): String {
+  return when (score / 10) {
+    9 -> "A"
+    8 -> "B"
+    7 -> "C"
+    else -> "D"
+  }
+}
+```
+
+* switch 없이 when으로 가능하다.
+* case 대신 바로 경우를 정하고, 화살표(->)로 리턴값을 정한다.
+
+```kotlin
+fun getGradeWithSwitch(score: Int): String {
+  return when (score) {
+    in 90..99 -> "A"
+    in 80..89 -> "B"
+    in 70..79 -> "C"
+    else -> "D"
+  }
+}
+```
+
+* 위와 같이 다양한 조건으로 분기를 가질수도 있다. 
+
+```
+when (값) {
+	조건부 -> 실행구문
+  조건부 -> 실행구문
+  else -> 나머지 실행 구문 
+}
+```
+
+* 조건부에는 어떠한 expression이라도 들어갈 수 있다. (ex. is Type)
+
+```kotlin
+fun startsWith(obj: Any) : Boolean {
+    return when(obj) {
+        is String -> obj.startsWith("A")
+        else -> false
+    }
+}
+```
+
+<br>
+
+```kotlin
+fun gudgeNumber(number: Int) {
+  when (number) {
+    1, 0, -1 -> println("어디서 많이 본 숫자입니다.")
+    else -> println("1, 0, -1이 아닙니다.")
+  }
+}
+```
+
+
+
+- if / if – else / if - else if – else 모두 Java와 문법이 동일하다.
+- 단 Kotlin에서는 Expression으로 취급된다.
+  - 때문에 Kotlin에서는 삼항 연산자가 없다
+- Java의 switch는 Kotlin에서 when으로 대체되었고, when은 더 강력한 기능을 갖는다.
+
+
+
+
+
+
+
+
+
+
+
