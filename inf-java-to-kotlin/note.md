@@ -1307,3 +1307,187 @@ fun readFile(path: String) {
 }
 ```
 
+
+
+# Lec08. 코틀린에서 함수를 다루는 방법
+
+1. 함수 선언 문법
+2. default parameter
+3. named argument (parameter)
+4. 같은 타입의 여러 파라미터 받기 (가변인자)
+
+
+
+
+
+## 1. 함수 선언 문법
+
+* 함수는 fun 키워드로 선언한다. 
+
+* 접근 지시어 public은 생략 가능하다.
+
+```kotlin
+접근지시어 fun 함수명(매개변수, 매개변수명: 타입): 반환 타입
+```
+
+* 반환 타입이 Unit(void) 인 경우 생략 가능하다. 
+
+* 만약 함수의 반환값이 1개라면, `block({})` 대신 `=` 이 사용가능하다 
+
+```kotlin
+fun max(a: Int, b: Int): Int = 
+	if (a > b) {
+    a
+  } else {
+    b
+  }
+
+// 한줄로도 변경 가능
+fun max(a: Int, b: Int): Int = if (a > b) a else b
+```
+
+* a가 b보다 크면 a 리턴, 아니면  b 리턴 
+
+* `=` 를 사용하는 경우 반환 타입 생략 가능 
+
+* block{} 을 사용하는 경우, 반환 타입이 Unit이 아니면 명시적으로 타입을 작성해주어야 한다. 
+
+<br> 
+
+* 함수는 클래스 안에 있을 수도, 파일 최상단에 있을 수도 있다다. 
+  * 또한, 한 파일 안에 여러 함수들이 있을 수도 있다.
+
+
+
+## 2. default parameter
+
+
+
+### in java
+
+```java
+public void repeat(String str, int num, boolean useNewLine) {
+  for (int i = 1; i<= num; i++) {
+    if (useNewLine) {
+      System.out.println(str);
+    } else {
+			System.out.print(str);
+    }
+  }
+}
+```
+
+
+
+* 많은 코드에서 useNewLine 을 사용한다면 `OverLoading`을 활용하여 다음과 같이 쓸 수 있다.
+
+```java
+public void repeat(String str, int num) {
+  repeat(str, num, true);
+}
+```
+
+
+
+> 코틀린은 default 파라미터 값을 줄 수 있다.
+
+### in kotlin
+
+```kotlin
+fun repeat(
+	str: String,
+  num: Int = 3,
+  useNewLine: Boolean = true
+) {
+  for (i in 1..num) {
+    if (useNewLine) {
+      println(str)
+    } else {
+      print(str)
+    }
+  }
+}
+```
+
+
+
+* 자동으로 오버로딩이 된다.
+* 물론 코틀린에도 오버로드 기능은 있다. 
+
+```kotlin
+fun main() {
+  repeat("hello", 3, true)
+  repeat("hello")
+  repeat("hello", 2)
+}
+```
+
+
+
+## 3. named argument (parameter)
+
+매개 변수 이름을 통해 직접 지정할 수 있다.  
+지정되지 않은 매개변수는 기본값을 사용한다.
+
+```kotlin
+repeat("hello", useNewLine = false)
+```
+
+
+
+* builder를 직접 만들지 않고 builder의 장점을 가지게 된다. 
+
+> 그러나, Kotlin에서 Java 함수를 가져다 사용할 때는 named argument를 사용할 수 없다
+
+* 코틀린 함수만 사용할 수 있다.
+* JVM 상에서, Java가 바이트 코드로 변환됐을 때 parameter 이름을 보존하고 있지 않다 보니, 코틀린에서는 자바 함수를  named argument를 이용해서  사용할 수 없다. 
+
+
+
+## 4. 같은 타입의 여러 파라미터 받기 (가변인자)
+
+
+
+### in java
+
+```java
+public static void printAll(String... strings) {
+  for (String str : strings) {
+    System.out.println(str);
+  }
+}
+```
+
+
+
+### in kotlin
+
+```kotlin
+fun printAll(vararg strings: String) {
+  for (str in strings) {
+    println(str)
+  }
+}
+```
+
+
+
+만약, 배열을 바로 넣는 다면 스프레드 연산자(*)를 붙여야 한다. 
+
+```kotlin
+var array = arrayOf("A", "B", "C")
+printAll(*array)
+
+printAll("A", "B", "C")
+```
+
+
+
+
+
+
+
+
+
+
+
