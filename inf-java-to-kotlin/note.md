@@ -1718,3 +1718,159 @@ field라는 키워드를 사용한다.
 
 
 
+# Lec 10.코틀린에서 상속을 다루는 방법
+
+1. 추상 클래스
+2. 인터페이스
+3. 클래스를 상속할 때 주의할 점
+4. 상속 관련 지시어 정리
+
+
+
+
+
+
+
+## 1. 추상 클래스
+
+Animal이란 추상클래스를 구현한 Cat, Penguin
+
+```kotlin
+abstract class Animal (
+    protected val species: String,
+    protected open val legCount: Int, // 추상 프로퍼티가 아니라면, 상속받을때 꼭 open을 붙여야 한다.
+        ) {
+    
+    abstract fun move()
+}
+
+class Cat(
+    species: String
+) : Animal(species, 4){
+
+    override fun move() {
+        println("${species}라는 고양이가 걸어가.")
+    }
+}
+
+class Penguin (species: String,) : Animal(species, 2) {
+
+    private val wingCount: Int = 2
+
+    override fun move() {
+        println("펭귄이 움직인다")
+    }
+
+    override val legCount: Int
+        get() = super.legCount + this.wingCount
+}
+```
+
+* 상속은  `extends` 키워드를 사용하지 않고 `:` 를 사용한다
+* 상위 클래스의 생성자를 바로 호출한다. 
+  * 무조건 상위 클래스의 생성자를 호출해야 한다. 
+* @Override어노테이션 대신 override 키워드를 사용한다. 
+* 추상클래스에서 만들어진 getter를 오버라이드 할라면 open을 붙여야 한다. 
+  * property(getter, setter) override
+  * `protected open val legCount: Int`
+
+> Java, Kotlin 모두 추상 클래스는 인스턴스화 할 수 없다. 
+
+
+
+## 2. 인터페이스
+
+Flyable과 Swimmable을 구현한 Penguin
+
+```kotlin
+interface Swimmable {
+  
+  val swimAblitiy: Int
+  
+    fun act() {
+        println("어푸 어푸")
+    }
+}
+
+interface Flyable {
+
+    fun act() {
+        println("파닥 파닥")
+    }
+    
+}
+
+class Penguin (species: String,) : Animal(species, 2), Swimable, Flyable {
+
+    override fun act() {
+        super<Flyable>.act()
+        super<Swimable>.act()
+    }
+  
+  	override fun swimAbility: Int
+  		get() = 3
+  
+}
+```
+
+* 코틀린 인터페이스의 디폴트 메소드는  default 키워드 없이 메소드 구현이 가능하다. 
+  * 구현을 하면 디폴트 메소드, 구현 안하면 추상 메소드 
+
+* 인터페이스 구현도 : 를 사용한다.
+* 중복되는 인터페이스를 특정할 때  super<타입>.함수 사용
+* 코틀린에서는 backing field가 없는 프로퍼티를 Interface에 만들 수 있다.
+  * 인터페이스에 프로퍼티를 정의하고, getter에 대한 것을 구현한 서브 클래스 에서 오버라이딩한다. 
+  * swimAblitiy에 대한 getter를 오버라이딩 했다. 
+
+
+
+## 3. 클래스를 상속할 때 주의할 점
+
+다른 클래스가 상속을 받을라면 슈퍼 클래스에  `open` 키워드를 명시해야 한다. 
+
+* open 키워드를 사용하지 않으면 final class
+* property도  override 해줘야 한다. 
+
+```kotlin
+open class Base (open val number: Int = 100) {
+
+    init {
+        println("Base Class")
+        println(number)
+    }
+}
+
+class Derived(
+    override val number: Int
+) : Base(number) {
+    init {
+        println("derived Class")
+    }
+}
+```
+
+* 상위 클래스의 init이 먼저 호출된다
+  * 상위클래스 init이 먼저 호출되었고 하위 클래스에서 override 하고 있는 프로퍼티(number)에 접근하는데, 하위 클래스는 아직 초기화가 안되었다.   
+  * 그러므로 하위 클래스의 field인 number에 접근하면 안된다. 
+    * 0이 호출된다. 
+
+> 상위 클래스를 설계할 때, 생성자 또는 초기화 블록에 사용되는 프로퍼티에는  open을 피해야 한다.
+
+
+
+1. final : override를 할 수 없게 한다. default로 보이지 않게 존재한다.
+   * 그러므로 open 키워드를 사용해야 상속 및 override가 가능하다. 
+2. open : override를 열어 준다.
+3. abstract : 반드시 override 해야 한다.
+4. override : 상위 타입을 오버라이드 하고 있다.
+
+---
+
+* 상속 또는 구현을 할 때에 : 을 사용해야 한다.
+
+- 상위 클래스 상속을 구현할 때 생성자를 반드시 호출해야 한다.
+- override를 필수로 붙여야 한다.
+- 추상 멤버가 아니면 기본적으로 오버라이드가 불가능하다.
+- open을 사용해주어야 한다.
+- 상위 클래스의 생성자 또는 초기화 블록에서 open 프로퍼티를
+사용하면 얘기치 못한 버그가 생길 수 있다

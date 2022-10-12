@@ -14,9 +14,5 @@ class Person (
 
     val isAdult: Boolean get() = this.age >= 20
 
-    fun isAdult(): Boolean {
-        return this.age >= 20
-    }
-
 
 }
