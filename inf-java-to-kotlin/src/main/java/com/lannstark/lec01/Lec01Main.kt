@@ -16,6 +16,10 @@ fun main() {
        EFG
        ${number1}
     """.trimIndent()
+
+
+    val numbers = listOf("1", "2", "3")
+
 }
 
 
