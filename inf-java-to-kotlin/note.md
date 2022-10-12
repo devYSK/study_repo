@@ -1157,3 +1157,153 @@ while (i <= 3) {
 
 
 
+# Lec07. 코틀린에서 예외를 다루는 방법
+
+1. try catch finally 구문
+2. Checked Exception과 Unchecked Exception
+3. try with resources
+
+
+
+## 1. try catch finally 구문
+
+* 주어진 문자열을 정수로 변경하는 예제 
+
+### in java
+
+```java
+private int parseIntOrThrow(@NotNull String str) {
+  try {
+    return Integer.parseInt(str);
+  } catch (NumberFormatException e) {
+    throw new IllegalArgumentException();
+  }
+}
+```
+
+
+
+### in kotlin
+
+```kotlin
+fun parseIntOrThrow(str: String): Int {
+  try {
+    return str.toInt()
+  } catch (e: NumberFormatException) {
+    throw IllegalArgumentException()
+  }
+}
+```
+
+---
+
+### in java
+
+```java
+private int parseIntOrThrow(@NotNull String str) {
+  try {
+    return Integer.parseInt(str);
+  } catch (NumberFormatException e) {
+    return null
+  }
+}
+```
+
+
+
+### in kotlin
+
+```kotlin
+fun parseIntOrThrow(str: String) : Int? {
+  try {
+    return str.toInt()
+  } catch (e: NumberFormatException) {
+    null
+  }
+}
+```
+
+* 코틀린에서는 try-catch 구문 역시 expression 이다.
+* 즉 리턴할 수 있다.
+
+```kotlin
+fun parseIntOrThrow(str: String) : Int? {
+  return try {
+    str.toInt()
+  } catch (e: NumberFormatException) {
+    null
+  }
+}
+```
+
+
+
+## 2. Checked Exception과 Unchecked Exception
+
+* 예제 : 프로젝트 내 파일의 내용물을 읽어오는 예제
+
+### in java
+
+```java
+public void readFile() throws IOException {
+  File currentFile = new File(".");
+  File file = new File(currentFile.getAbsolutePath() + "/a.txt");
+  BufferedReader reader = new BufferedReader(new FileReader(file));
+  
+  reader.close();
+}
+```
+
+* IOException은 Checked Exception이라사용하는 곳에서  try-catch로 캐치해서 unchecked Exception으로 전환해야한다
+* 그래서 메소드 시그니처에 IOException을 적어놓았다.
+
+### in kotlin
+
+```kotlin
+fun readFile() {
+  val currentFile = File(".")
+  val file = File(currentFile.absolutePath + "/a.txt")
+  val reader = BufferedReader(FileReader(file))
+  
+  reader.close()
+}
+```
+
+* 코틀린에서는 throws 구문이 없다.
+* 코틀린에서는  Checked Exception과 UncheckedException을 구분하지 않는다.
+* 모두 Unchecked Exception이다. 
+
+
+
+## 3. try with resources
+
+
+
+### in java
+
+```java
+public void readFile(String path) throws IOException {
+  try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
+    ...
+  }
+}
+```
+
+
+
+### in kotlin
+
+코틀린에는 try-with-resources 구문이 없다.   
+
+대신 `use` 라는 `inline 확장함수 `를 사용해야 한다. 
+
+
+
+```kotlin
+fun readFile(path: String) {
+  BufferedReader(FileReader(path)).use {
+    reader -> ...
+  }
+}
+```
+
