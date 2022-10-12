@@ -1048,11 +1048,112 @@ fun gudgeNumber(number: Int) {
 
 
 
+# Lec06.코틀린에서 반복문을 다루는 방법
 
 
 
+1. for-each문
+2. 전통적인 for문
+3. Progression과 Range
+4. while 문
 
 
+
+## 1. for-each문
+
+리스트를 in절로 접근할 수 있다.
+
+```kotlin
+val numbers = listOf(1L, 2L, 3L)
+
+for (number in numbers) {
+  println(number)
+}
+```
+
+* listOf 함수는 컬렉션을 만든다. 
+* `in ~` 는 iterable이 구현된 타입이라면 모두 들어갈 수 있다. 
+
+## 2. 전통적인 for문
+
+* 
+
+```kotlin
+for (i in 1..3) {
+  println(i)
+}
+```
+
+* 1..3 : 1부터 3까지 접근 
+
+
+
+### 2...n 씩 증가 (step n)
+
+```kotlin
+for (i in 1..5 step 2) {
+  println(i)
+}
+```
+
+* step 키워드 사용. 
+
+
+
+### -- (감소연산) 
+
+```kotlin
+for (i in 3 downTo 1) {
+  print(i)
+}
+```
+
+* i가 1씩 `-` 줄이면서 내려간다   
+
+* downTo 2로 설정하면 2씩 줄인다.
+
+
+
+## 3. Progression과 Range
+
+동작 원리
+
+* .. 연산자 : 범위를 만들어 내는 연산자
+  * Progression(등차수열) 클래스를 이용
+* 1..3 : 1부터 3의 범위
+
+* `Range` 라는 클래스 
+
+  * IntRange.. 등
+
+  * ```kotlin
+    public operator fun rangeTo(other: Int): IntRange
+    ```
+
+* Range라는 클래스는 Progression(등차수열) 을 상속 받고있다.
+
+등차수열 - (시작 값..끝 값 step (or downTo) 공차)
+1) 시작 값
+2) 끝 값
+3) 공차
+
+
+
+* downTo, step도 함수이다. (중위 호출 함수)
+
+## 4. while 문
+
+
+
+java와 완전히 동일
+
+```kotlin
+var i = 1 // 가변 변수
+while (i <= 3) {
+  println(i)
+  i++
+}
+```
 
 
 

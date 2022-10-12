@@ -10,8 +10,12 @@ fun main() {
 
 
 fun startsWith(obj: Any) : Boolean {
+
+    for (i in 1..3)
+
     return when(obj) {
         is String -> obj.startsWith("A")
         else -> false
     }
 }
+
