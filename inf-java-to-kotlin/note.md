@@ -436,3 +436,259 @@ public class Person {
 
 
 
+# Lec 03 코틀린에서 Type을 다루는 방법
+
+
+
+1. 기본 타입
+2. 타입 캐스팅
+3. Kotlin의 3가지 특이한 타입
+4. String Interpolation, String indexing
+
+
+
+
+
+## 1. 기본 타입
+
+Byte
+Short
+Int
+Long
+Float
+Double
+부호 없는 정수들
+
+
+
+* 코틀린에서는 선언된 기본 값을 보고 타입을 추론한다. 
+
+```kotlin
+val number1 = 3 // int
+val number2 = 3L // Long
+val number3 = 3.0f // Float
+val number4 = 3.0 // Double
+```
+
+
+
+* Java에서는 기본 타입간의 변환은 암시적으로 이루어 질 수 있다.
+* 그러나 코틀린에서는 기본타입간의 변환은 명시적으로 이루어져야 한다.
+
+### in java
+
+```java
+int number1 = 4;
+long number2 = number1; // 암시적으로 변경 되었다. 
+```
+
+### in kotlin
+
+```kotlin
+val number1: Int = 4
+val number2: Long = number1.toLong() // 명시적으로 to변환타입() 사용
+```
+
+* 코틀린에서는 to변환타입()을 사용해야 한다.
+
+* to기본타입() 함수를 지원한다. 
+
+### 만약 변수가 nullable이라면 적절한 처리가 필요하다.
+
+```kotlin
+val number1: Int? = 3
+val number2: Long = number1?.toLong ?: 0
+```
+
+* number1이 널이라면 0 반환 
+
+## 2. 타입 캐스팅
+
+
+
+코틀린에서의 타입 캐스팅은 `is` ~ `as` 를 사용한다 
+
+> 코틀린에서 자바의 instanceof는 `is` 로 사용한다. 
+>
+> 코틀린에서 자바의 (타입)은 as 타입 으로 사용한다.
+
+### in java
+
+```java
+public static void printAgeIfPerson(Object obj) {
+  if (obj instanceof Person) {
+    Person person = (Person) obj;
+  }
+}
+```
+
+### in kotlin
+
+```kotlin
+fun printAgeIfPerson(obj : Any) {
+  if (obj is Person) {
+    val person = obj as Person
+  }
+}
+```
+
+* obj을 Person 타입으로 간주한다. 
+
+* 또한 스마트 캐스트로 `as 타입` 을 생략할 수 있다.
+
+
+
+### instanceof의 반대는? (!instanceOf)
+
+```kotlin
+if (obj !is Person) {
+  ...
+}
+```
+
+* `is` 앞에 `!` 을 붙여서 `!is` 를 사용한다.
+
+
+
+### 만약 obj가 nullable 이라면? 
+
+```kotlin
+fun printAgeIfPerson(obj: Any?) {
+  val person = obj as? Person
+}
+```
+
+* `as` 뒤에 `?` 를 붙여 `as?` 를 사용한다.
+* null이라면 Safe Call 처럼 전체가 null이 되어서 바로 사용 못하고 `변수명?.메서드` 를 사용한다.
+  * person?.age
+
+
+
+## 3. Kotlin의 3가지 특이한 타입
+
+* Any
+* Unit
+* Nothing
+
+
+
+### Any
+
+* Java의 Object 역할. (모든 객체의 최상위 타입)
+
+- 모든 Primitive Type의 최상의 타입도 Any이다.
+- Any 자체로는 null을 포함할 수 없어 null을 포함하고 싶다면, Any?로 표현.
+- Any 에 equals / hashCode / toString 존재
+
+
+
+### Unit
+
+- Unit은 Java의 void와 동일한 역할.
+- (살짝 어려운 내용) void와 다르게 Unit은 그 자체로 타입 인자로
+  사용 가능하다.
+  - void와 다른점은,( 소문자 보이드, 대문자는 클래스타입) Unit 자체만으로 리턴타입, 또는 타입이 될 수 있다.   
+- 함수형 프로그래밍에서 Unit 은 단 하나의 인스턴스만 갖는 타입을
+  의미. `즉, 코틀린의 Unit은 실제 존재하는 타입이라는 것을 표현`
+
+
+
+### Nothing
+
+* Nothing은 함수가 정상적으로 끝나지 않았다는 사실을 표현하는역할
+
+- 무조건 예외를 반환하는 함수 / 무한 루프 함수 등
+
+```kotlin
+fun fail(message: String): Nothing {
+  throw IllegalArgumentException(message)
+}
+```
+
+* 이 함수는 무조건 예외가 나온다. 
+* 예외를 반환하는 함수나 무한루프 함수처럼  Nothing을 반환타입으로 지정한다.
+
+
+
+## 4. String Interpolation, String indexing
+
+
+
+### in java
+
+```java
+Person person = new Person("김영수", 28);
+String log = String.format("이름 %s, 나이 %s세", person.getName(), person.getAge());
+```
+
+### in kotlin
+
+```kotlin
+val person = Person("김영수", 28)
+val log = "이름 ${person.name}, 나이 ${person.age}"
+```
+
+
+
+* `${변수}` 를 사용하면 값이 대입된다. 
+* `$변수` 도 사용 가능하다. -> 중괄호 생략. 
+  * 즉 String.format을 $로 지원
+
+* 하지만, 변수 이름만 사용하더라도 ${변수}를 사용하는 것이
+
+  1) 가독성
+
+  2. 일괄 변환
+
+  3. 정규식 활용
+
+에서 좋다. 
+
+
+
+* 코틀린에서는 여러 줄에 걸친 문자열을 작성해야 할 때 `""" `를 사용하면 좀더 편하게 사용할 수 있다.
+  * 자바에서는 append, StringBuilder와 함께 사용해야함
+
+```kotlin
+val number1: Int = 3
+
+println(
+"""
+       ABCD
+       EFG
+       ${number1}
+""".trimIndent())
+```
+
+* 공백이 제거되고 개행문자(\n) 포함해서 출력된다.
+
+```
+ABCD
+EFG
+3
+```
+
+
+
+### 코틀린에서의 특정 문자 가져오기 (String indexing)
+
+
+
+### in java
+
+```java
+String str = "ABCDE";
+char ch = str.charAt(1);
+```
+
+
+
+### in kotlin
+
+```kotlin
+val str = "ABCDE"
+val ch = str[1]
+```
+
+* 자바의 배열처럼 `[]` 을 사용할 수 있다. 
+
