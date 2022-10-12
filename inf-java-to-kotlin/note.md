@@ -1483,11 +1483,238 @@ printAll("A", "B", "C")
 
 
 
+# Lec 09.코틀린에서 클래스를 다루는 방법
 
 
 
+1. 클래스와 프로퍼티
+2. 생성자와 init
+3. 커스텀 getter, setter
+4. backing field
 
 
+
+## 1. 클래스와 프로퍼티
+
+
+
+### in java
+
+```java
+public class JavaPerson {
+    
+    private final String name;
+    
+    private int age;
+
+    public JavaPerson(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+}
+
+```
+
+
+
+### in kotlin
+
+코틀린에서는 필드만 만들면 getter, setter를 자동으로 만들어 준다. 
+
+프로퍼티 = 필드 + getter + setter
+
+```kotlin
+class Person constructor(name: String, age: Int) {
+    val name = name
+    var age = age
+}
+```
+
+* constructor는 생략할 수 있다.
+* public 은 생략할 수 있다.
+
+```kotlin
+class Person (
+	val name: String,
+	var age: Int
+)
+```
+
+* 객체.필드를 통해 getter와 setter를 바로 호춣한다. 
+
+* Java클래스에 대해서도 .필드 로 getter, setter를 사용한다. 
+
+
+
+## 2. 생성자와 init
+
+
+
+### in java
+
+```java
+public class JavaPerson {
+  public JavaPerson(String name, int age) {
+    if (age <= 0) {
+      throw new IllegalArgumentException();
+    }
+    
+    this.name = name;
+    this.age = age;
+  }
+}
+```
+
+
+
+### in kotlin
+
+```kotlin
+class Person(
+	val name: String,
+  var age: Int,
+) {
+  
+  init {
+    if (age < 0) {
+      throw IllegalArgumentException();
+    }
+    println("초기화 블록")
+  }
+  
+  // 다른 생성자 
+  constructor(name: String) : this(name, 1) {
+    println("부 생성자 1")
+  }
+  
+  constructor() : this("김영수") {
+    println("부 생성자 2")
+  }
+  
+}
+```
+
+* 주 생성자(primary constructor) 반드시 존재해야 this 사용 가능
+* 단, 주 생성자에 파라미터가 하나도 없다면 생략 가능
+
+* 부 생성자(secondary constructor)는 최종적으로 주 생성자를 this로 호출해야 한다.
+  * body를 가질 수 있다.
+
+부 생성자2 -> 부 생성자 1 -> 초기화 블록 순으로 호출된다. 
+
+* 현재 2에서 1 호출,  1에서 주 생성자 호출되는 구조임
+
+
+
+### 하지만 부 생성자보다는 default parameter를 권장한다.
+
+```kotlin
+class Person (
+	val name: String = "김영수",
+  var age: Int = 1,
+) {
+  init {
+    if (age < 0) {
+      throw IllegalArgumentException();
+    }
+  } 
+}
+```
+
+
+
+* 다른 객체로 변환해야 하는 Converting과 같은 경우 부생성자를 사용할 수 있지만, 그보다는 정적 팩토리 메소드(companoin object) 사용
+  * 코틀린은 static이 없다.  
+
+
+
+## 3. 커스텀 getter, setter
+
+* 성인인지 확인하는 기능 
+
+```kotlin
+fun isAdult(): Boolean {
+  return this.age >= 20
+}
+```
+
+* 함수를 정의해도 되지만, 함수 대신 프로퍼티로 만든다. 
+
+```kotlin
+val isAdult: Boolean get() = this.age >= 20
+// 또는
+val isAdult: Boolean 
+	get() {
+    return this.age >= 20
+  }
+```
+
+* 위 코드와 아래 코드는 같은 기능을 한다. 
+* get() 했을 때 어떤 로직을 실행 시킬지 정의한다. 
+* 객체의 속성이라면, custom getter 
+* 그렇지 않다면 함수를 정의해서 사용하는것이 좋다. 
+
+또한,  custom getter를 사용하면 자기 자신을 변형해서 돌려줄수도 있다. 
+
+```kotlin
+class Person(
+	name: String,
+  var age: Int,
+) {
+  
+	val name: String = name
+		get() = field.uppercase()
+  
+}
+```
+
+* `field`를 사용하는 이유는, 무한루프를 막기위한 예약어이다. 자기 자신을 가리킨다. 
+  * 무한루프?
+    * name은 name에 대한 getter를 호출하니 다시 get을 호출
+    * get은 다시 name이 있고, 다시  name을 호출하고 get을 호출 -> 무한루프 
+* `filed` = backing field
+
+<br>
+
+* set()도 똑같이 사용해주면 된다.
+
+```kotlin
+var name: String = name
+	set(value) {
+    field = value.uppercase()
+  }
+```
+
+
+
+### 정리
+
+
+
+- 코틀린에서는 필드를 만들면 getter와 (필요에 따라) setter가
+자동으로 생긴다.
+- 때문에 이를 프로퍼티 라고 부른다.
+- 코틀린에서는 주생성자가 필수이다.
+- 코틀린에서는 consturctor 키워드를 사용해 부생성자를 추가로
+  만들 수 있다.
+- 단, default parameter나 정적 팩토리 메소드를 추천한다.
+- 실제 메모리에 존재하는 것과 무관하게 custom getter와
+  custom setter를 만들 수 있다.
+- custom getter, custom setter에서 무한루프를 막기 위해
+field라는 키워드를 사용한다.
+- 이를 backing field 라고 부른다.
 
 
 
