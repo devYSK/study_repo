@@ -1874,3 +1874,190 @@ class Derived(
 - open을 사용해주어야 한다.
 - 상위 클래스의 생성자 또는 초기화 블록에서 open 프로퍼티를
 사용하면 얘기치 못한 버그가 생길 수 있다
+
+
+
+# Lec11. 코틀린에서 접근 제어를 다루는 방법
+
+
+
+1. 자바와 코틀린의 가시성 제어
+2. 코틀린 파일의 접근 제어
+3. 다양한 구성요소의 접근 제어
+4. Java와 Kotlin을 함께 사용할 경우 주의할 점
+
+
+
+## 1.자바와 코틀린의 가시성 제어
+
+
+
+1. java와 kotlin의 접근제어 ( 왼쪽(주황)은 Java, 오른쪽(파랑)은 kotlin)
+
+
+
+<img src="images//image-20221014164854528.png" width=850 height=400>
+
+
+
+
+
+* 모듈 : 한 번에 컴파일 되는 Kotlin 코드
+  * IDEA Module
+  * Maven Project\
+  * Gradle Source Set
+  * Ant Task <kotlinc>의 호출로 컴파일 파일의 집합
+
+
+
+#### 표로 정리
+
+| java      | kotlin    | 설명                                                         |
+| --------- | --------- | ------------------------------------------------------------ |
+| public    | public    | 모든곳에서 접근 가능                                         |
+| protected | protected | 자바 : 같은 패키지 또는 하위 클래스 <br />코틀린 : `선언된 클래스` 또는 하위 클래스 |
+| default   | internal  | 같은 모듈에서만 접근 가능                                    |
+| private   | private   | 선언된 클래스에서만 접근 가능                                |
+
+
+
+* 코틀린에서는 기본적으로 패키지 라는 개념을, namespace를 관리하기 위한 용도
+  * 어떤 클래스가 어떤 패키지에 있다.
+  * 가시성 제어는 사용하지 않는다. -> protected가 달라진 이유 
+
+
+
+## 2.코틀린 파일의 접근 제어
+
+* 코틀린의 `기본 접근 지시어는 public`
+
+* 코틀린은 .kt파일에 변수 함수, 클래스 여러개를 바로 만들 수 있다.
+
+<img src="images//image-20221014162816270.png" width=400 height=400>
+
+
+
+
+
+## 3.다양한 구성요소의 접근 제어
+
+* 생성자에 접근 지시어를 붙이려면 constructor를 써야 한다
+
+```kotlin
+class Bus internal constructor(
+	val price: Int
+)
+```
+
+* public은 생략되어있다.
+
+* final도 기본적으로 붙여져있는데, 생략되어있다.
+
+
+
+### java에서의 유틸성 코드
+
+```java
+public abstract class StringUtils {
+
+  private StringUtils() {}
+
+  public boolean isDirectoryPath(String path) {
+    return path.endsWith("/");
+  }
+
+}
+
+```
+
+* 자바에서는 유틸성 코드를 만들 때 abstact class + private constructor를 사용해서 인스턴스 화도, 상속도 할 수 없게  막았다.
+
+
+
+### kotlin에서의 유틸성 코드
+
+* 파일 최상단에 유틸 함수를 작성하면 매우 편리하다.
+
+```kotlin
+fun isDirectoryPath(path: String) : Boolean {
+    return path.endsWith("/")
+}
+
+class StringUtils {
+}
+
+// bytecode -> java 로 변환
+
+@Metadata(
+   mv = {1, 5, 1},
+   k = 2,
+   d1 = {"\u0000\u000e\n\u0000\n\u0002\u0010\u000b\n\u0000\n\u0002\u0010\u000e\n\u0000\u001a\u000e\u0010\u0000\u001a\u00020\u00012\u0006\u0010\u0002\u001a\u00020\u0003¨\u0006\u0004"},
+   d2 = {"isDirectoryPath", "", "path", "", "kotlin-with-java"}
+)
+public final class StringUtilsKt {
+   public static final boolean isDirectoryPath(@NotNull String path) {
+      Intrinsics.checkNotNullParameter(path, "path");
+      return StringsKt.endsWith$default(path, "/", false, 2, (Object)null);
+   }
+}
+```
+
+* StringUtils라는 kt파일이 StringUtilsKt 라는 클래스로 바뀌고, 이 안에 static 메서드로 isDirectoryPath가 존재한다.
+
+
+
+자바에서도 StringUtilsKt.isDirectoryPath() 라는 메서드를, 마치 정적 메서드가 있는것처럼 사용이 가능하다
+
+```java
+public class Test {
+  public static void main(String[] args) {
+    StringUtilsKt.isDirectoryPath("~~~");
+  }
+}
+```
+
+
+
+### property, field의 가시성(접근제어) 제어방법
+
+```kotlin
+class Car (
+	internal val name: String,
+  private val owner: String,
+	_price: Int
+) {
+	var price = _price
+		private set
+}
+```
+
+* getter, setter 한번에 접근 지시어를 정하거나 -> internal 
+* setter에만 접근제어를 부여할 수 있다 -> private set 
+
+
+
+
+
+## 4. Java와 Kotlin을 함께 사용할 경우 주의할 점
+
+* internal은 바이트코드상 public이 되므로, Java코드에서는 Kotlin 모듈의 internal 코드를 가져올 수 있다. 
+
+* Kotlin의 protected와 Java의 protected는 다르다.
+  * Java는 같은 패키지의 Kotlin protected 멤버에 접근할 수 있다.
+
+
+
+## 정리
+
+* Kotlin에서 패키지는 namespace 관리용이기 때문에 protected는 의미가 달라졌다.
+
+- Kotlin에서는 default가 사라지고, 모듈간의 접근을 통제하는
+internal이 새로 생겼다.
+- 생성자에 접근 지시어를 붙일 때는 constructor를 명시적으로
+써주어야 한다.
+- 유틸성 함수를 만들 때는 파일 최상단을 이용하면 편리하다
+
+* 프로퍼티의 custom setter에 접근 지시어를 붙일 수 있다.
+
+- Java에서 Kotlin 코드를 사용할 때 internal과 protected는
+주의해야 한다
