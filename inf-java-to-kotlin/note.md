@@ -2061,3 +2061,584 @@ internal이 새로 생겼다.
 
 - Java에서 Kotlin 코드를 사용할 때 internal과 protected는
 주의해야 한다
+
+
+
+# Lec12. 코틀린에서 object키워드를 다루는 방법
+
+
+
+1. static 함수와 변수
+2. 싱글톤
+3. 익명 클래스
+
+
+
+## 1. static 함수와 변수
+
+* java에서는 object라는 지시어가 없지만, kotlin에서 추가되었다.
+
+* 코틀린은 static 이라는 키워드가 없다 
+* compain object(동행 객체) 라는 키워드를 이용한다. 
+
+### in java
+
+```java
+public class JavaPerson {
+
+  private static final int MIN_AGE = 1;
+
+  public static JavaPerson newBaby(String name) {
+    return new JavaPerson(name, MIN_AGE);
+  }
+
+  private String name;
+
+  private int age;
+
+  private JavaPerson(String name, int age) {
+    this.name = name;
+    this.age = age;
+  }
+
+}
+```
+
+
+
+### in kotlin
+
+```kotlin
+class Person(
+    val name: String,
+    val age: Int,
+) {
+
+    companion object Factory : Log{
+        private const val MIN_AGE = 1
+        fun newBaby(name: String): Person {
+            return Person(name, MIN_AGE)
+        }
+
+        override fun log() {
+            println("나는 Person 클래스의 companion object이다.")
+        }
+    }
+}
+
+interface Log {
+    fun log()
+}
+
+fun main() {
+    val factory = Person.Factory.newBaby("영수")
+		// val factory = Person.newBaby("영수") // 생략
+    println(factory.name)
+
+}
+```
+
+
+
+* static : 클래스가 인스턴스화 될 때 새로운 값이 복제되는게아니라 정적으로 인스턴스 끼리의 값을 공유
+* companion object: 클래스와 동행하는 유일한 오브젝트 
+  * 클래스라는 설계도와 동행하는 오브젝트
+
+* const라는 키워드는 컴파일 시에 변수가 할당
+  * 붙이지 않으면 런타임시에 할당된다.
+  * const는 즉, 진짜 상수에 붙이기 위한 용도. 기본타입과 String에만 붙일 수 있다. 
+
+* companion object는 하나의 객체로 간주된다. 
+  * 이름을 붙일 수도 있고, interface를 구현할 수도 있다.
+    * 이름은 사용시에 생략이 가능하다.  
+  * 위 예제에서는  Log 인터페이스를 구현했다.
+  * 
+
+* companion object에 유틸성 함수들을 넣어도 되지만, 유틸성 함수들은 파일 최상단을 이용하는 것이 좋다. 
+
+
+
+### Java에서 코틀린의 companion object(static)을 사용하고 싶다면?
+
+* 반드시  코틀린 코드에서` @JvmStatic`을 붙여야 한다.
+
+```java
+Person person = Person.newBaby("A");
+```
+
+```kotlin
+companion object {
+  private const val MIN_AGE = 0
+  
+  @JvmStatic
+  fun newBaby(name: String): Person {
+    return Person(name, MIN_AGE)
+  }
+}
+```
+
+* 만약 companion object의 이름이 있다면 이름을 사용하면 된다. 
+  * 이름이 없다면 `Companion` 이라는 이름이 생략된것. 
+
+## 2. 싱글톤
+
+
+
+```java
+public class JavaSingleton {
+
+  private static final JavaSingleton INSTANCE = new JavaSingleton();
+
+  private JavaSingleton() { }
+
+  public static JavaSingleton getInstance() {
+    return INSTANCE;
+  }
+
+}
+```
+
+* 동시성 처리를 더 해주거나, enum class를 활용하는 방법도 있다.
+* 코틀린에서는 object 키워드를 붙이면 싱글톤 클래스다..
+
+```kotlin
+object Singleton {
+  var a: Int = 0
+}
+
+fun main() {
+  println(Singleton.a)
+}
+```
+
+* 클래스 이름으로 접근할 수 있다. 
+
+
+
+## 3. 익명 클래스
+
+
+
+익명클래스 : 특정 인터페이스나 클래스를 상속받은 구현체를 일회성으로 사용할 때 쓰는 클래스
+
+```java
+public interface Movable {
+
+  void move();
+
+  void fly();
+
+  
+}
+
+private static void moveSomething(Movable movable) {
+  movable.move();
+  movable.fly();
+}
+
+public static void main(String[] args) {
+  moveSomething(new Movable() {
+    @Override
+    public void move() {System.out.println("move");}
+    
+    @Override
+    public void fly() {System.out.println("난다~~")}
+ 
+  });
+}
+```
+
+
+
+### in kotlin
+
+```kotlin
+fun main() {
+
+    moveSomething(object : Movable{
+        override fun move() {
+            println("move")
+        }
+
+        override fun fly() {
+            println("fly")
+        }
+    })
+
+}
+
+private fun moveSomething(movable: Movable) {
+    movable.move()
+    movable.fly()
+}
+```
+
+
+
+* 자바에서는 new 타입이름(), 코틀린에서는 object : 타입
+
+
+
+### 정리
+
+- Java의 static 변수와 함수를 만드려면,
+Kotlin에서는 companion object를 사용해야 한다.
+- companion object도 하나의 객체로 간주되기 때문에 이름을
+붙일 수 있고, 다른 타입을 상속받을 수도 있다.
+- Kotlin에서 싱글톤 클래스를 만들 때 object 키워드를 사용한다.
+- Kotlin에서 익명 클래스를 만들 때 object : 타입을 사용한다.
+
+
+
+# Lec13.코틀린에서 중첩 클래스를 다루는 방법
+
+1. 중첩 클래스의 종류
+2. 코틀린의 중첩 클래스와 내부 클래스
+
+## 1.중첩 클래스의 종류
+
+1. static을 사용하는 중첩 클래스
+   1. 클래스 안에 static을 붙인 클래스! 밖의 클래스 직접 참조 불가
+2. static을 사용하지 않는 중첩 클래스
+   1. 클래스 안의 클래스, 밖의 클래스 직접 참조 가능!
+
+
+
+<img src="images//image-20221014173753932.png" width= 800 height = 300>
+
+
+
+### 자바의 내부클래스 주의점
+
+Effective Java 3rd Edition – Item24, Item86
+1. 내부 클래스는 숨겨진 외부 클래스 정보를 가지고 있어,
+참조를 해지하지 못하는 경우 메모리 누수가 생길 수 있고,
+이를 디버깅 하기 어렵다.
+2. 내부 클래스의 직렬화 형태가 명확하게 정의되지 않아
+직렬화에 있어 제한이 있다
+
+
+
+> 클래스 안에 클래스를 만들 때는 static 클래스를 사용하라
+
+
+
+* Kotlin에서는 이러한 Guide를 충실히 따르고 있다
+
+## 2. 코틀린의 중첩 클래스와 내부 클래스
+
+
+
+### in java
+
+```java
+
+public class JavaHouse {
+
+  private String address;
+  private LivingRoom livingRoom;
+
+  public JavaHouse(String address) {
+    this.address = address;
+    this.livingRoom = new LivingRoom(10);
+  }
+
+  public LivingRoom getLivingRoom() {
+    return livingRoom;
+  }
+
+  public class LivingRoom {
+    private double area;
+
+    public LivingRoom(double area) {
+      this.area = area;
+    }
+
+    public String getAddress() {
+      return JavaHouse.this.address;
+    }
+  }
+
+}
+```
+
+
+
+### in kotlin
+
+```kotlin
+class House (
+    private var address: String,
+    private var livingRoom: LivingRoom = LivingRoom(10.0)
+) {
+
+    class LivingRoom(
+        private var area: Double,
+    )
+}
+```
+
+
+
+* 기본적으로 바깥 클래스에 대한 연결이 없는 중첩 클래스가 만들어진다. 
+
+
+
+> 코틀린에서는 내부 클래스는 static으로 만들어지게 권장하는 것을 따르고 있다. 
+
+
+
+### 권장되지 않은 inner 클래스인 내부 클래스를 만들라면? (non-static inner class)
+
+* 명시적으로 `inner` 라는 키워드를 사용해야 한다.
+
+```kotlin
+class House (
+    private var address: String,
+    ) {
+    private var livingRoom = this.LivingRoom(10.0)
+    
+    inner class LivingRoom(
+        private var area: Double,
+    ) {
+        val address: String
+            get() = this@House.address
+    }
+
+}
+```
+
+* 바깥 클래스 참조를 위해  `this@바깥클래스`를 사용한다. 
+
+
+
+Kotlin에서는 이러한 Guide를 충실히 따르고 있다.
+
+기본적으로 바깥 클래스 참조하지 않는다.
+
+바깥 클래스를 참조하고 싶다면 inner 키워드를 추가한다
+
+
+
+- 코틀린에서는 이러한 가이드를 따르기 위해
+- 클래스 안에 기본 클래스를 사용하면 바깥 클래스에 대한 참조가 없고
+- 바깥 클래스를 참조하고 싶다면, inner 키워드를 붙여야 한다.
+- 코틀린 inner class에서 바깥 클래스를 참조하려면 this@바깥클래스를 사용해야 한다
+
+
+
+
+
+<img src="images//image-20221014175341495.png" width=900 height=350 >
+
+
+
+# Lec14.코틀린에서 다양한 클래스를 다루는 방법
+
+1. Data Class
+2. Enum Class
+3. Sealed Class, Sealed Interface
+
+
+
+## 1. Data Class
+
+
+
+### 1. DTO
+
+
+
+#### in java
+
+```java
+public class JavaPersonDto {
+
+  private final String name;
+  private final int age;
+
+  public JavaPersonDto(String name, int age) {
+    this.name = name;
+    this.age = age;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public int getAge() {
+    return age;
+  }
+}
+```
+
+
+
+* 데이터(필드)
+* 생성자와 getter
+* equals, hashCode
+* toString
+
+
+
+IDE를 활용할 수도 있고, lombok을 활용할 수도 있지만   
+클래스가 장황해지거나,  
+클래스 생성 이후 추가적인 처리를 해줘야 하는 단점이 있다.  
+
+
+
+#### in kotlin
+
+```kotlin
+data class PersonDto(
+    val name: String,
+    val age: Int,
+) {
+}
+```
+
+* `data` 키워드를 붙여주면 equals, hashCode, toString을 자동으로 만들어준다 
+* named argument까지 활용하면 builder pattern을 쓰는 것 같은 효과를 얻을 수 있다.
+
+
+
+### java 16
+
+Java에서는 JDK16부터 Kotlin의 data class 같은 record class를 도입했다. 
+
+
+
+
+
+## 2. Enum Class
+
+
+
+### in java
+
+```java
+public enum JavaCountry {
+
+  KOREA("KO"),
+  AMERICA("US"),
+  ;
+
+  private final String code;
+
+  JavaCountry(String code) {
+    this.code = code;
+  }
+
+  public String getCode() {
+    return code;
+  }
+
+}
+```
+
+enum의 특징
+
+* 추가적인 클래스를 상속받을 수 없다. 
+
+* 인터페이스는 구현할 수 있으며, 각 코드가 싱글톤이다
+
+
+
+### in kotlin
+
+```kotlin
+enum class Country(
+    val code: String
+) {
+    
+    KOREA("KO"),
+    AMERICA("US"),
+    ;
+}
+```
+
+
+
+#### when
+
+when은 Enum Class 혹은 Sealed Class와 함께 사용할 경우, 더욱더 진가를 발휘한다
+
+
+
+``` kotlin
+private fun handleCountry(country: Country) {
+    when (country) {
+        Country.KOREA -> TODO()
+        Country.AMERICA -> TODO()
+    }
+}
+```
+
+* 조금 더 읽기 쉬운 코드.
+* 컴파일러가 모든 타입을 알기 때문에 else를 쓰지 않아도 괜찮다.
+
+* IDE 단에서 warning을 주거나 하는 방식으로 알 수 있다.
+
+## 3. Sealed Class, Sealed Interface
+
+
+
+Sealed : 봉인을 한 이라는 뜻 
+
+
+
+### ex
+
+상속이 가능하도록 추상클래스를 만들까 하는데...
+외부에서는 이 클래스를 상속받지 않았으면 좋겠어!! 하위 클래스를 봉인하자!!!
+
+
+
+### Shealed Class
+
+* 컴파일 타임 때 하위 클래스의 타입을 모두 기억한다.
+
+* 즉, 런타임때 클래스 타입이 추가될 수 없다.
+
+* 하위 클래스는 같은 패키지에 있어야 한다.
+
+* Enum과 다른 점
+
+  - 클래스를 상속받을 수 있다.
+
+  - 하위 클래스는 멀티 인스턴스가 가능하다 
+
+```kotlin
+sealed class HyundaiCar(
+    val name: String,
+    val price: Long
+)
+
+
+class Avante : HyundaiCar("아반떼", 1000L)
+
+class Sonata : HyundaiCar("소나타", 2000L)
+
+class Grandeur : HyundaiCar("그렌저", 3000L)
+```
+
+
+
+* `컴파일 타임 때 하위 클래스의 타입을 모두 기억한다.`
+  * 즉, 런타임때 클래스 타입이 추가될 수 없다.
+
+
+
+* 추상화가 필요한 Entity or DTO에 sealed class를 활용
+* JDK17 에서도 Sealed Class가 추가
+
+
+
+### 정리
+
+- Kotlin의 Data class를 사용하면 equals, hashCode, toString을
+자동으로 만들어준다.
+- Kotlin의 Enum Class는 Java의 Enum Class와 동일하지만,
+when과 함께 사용함으로써 큰 장점을 갖게 된다.
+- Enum Class보다 유연하지만, 하위 클래스를 제한하는
+Sealed Class 역시 when과 함께 주로 사용된다.
