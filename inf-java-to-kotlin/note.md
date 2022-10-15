@@ -3412,4 +3412,399 @@ flatMap / flatten
 
 
 
-## 4. 중첩된 컬렉션 처리
+
+
+
+
+# Lec19. 코틀린의 이모저모
+
+1. Type Alias와 as import
+2. 구조분해와 componentN 함수
+3. Jump와 Label
+4. TakeIf와 TakeUnless
+
+
+
+
+
+## 1. Type Alias와 as import
+
+긴 이름의 클래스 혹은 함수 타입이 있을때 축약하거나 더 좋은 이름을 쓰고 싶다면?
+
+```kotlin
+fun filterFruits(fruits: List<Fruit>, filter: (Fruit) -> Boolean) {
+  ...
+}
+```
+
+* (Fruit) -> Boolean 이란 타입이 너무 길고, 파라미터가 더 많아진다면 `타입 별칭`을 선언할 수 있다.
+
+
+
+```kotlin
+typealias FruitFilter = (Fruit) -> Boolean
+
+fun filterFruits(fruits: List<Fruit>, filter: FruitFilter) {
+  
+}
+```
+
+
+
+이름 긴 클래스를 컬렉션에 활용할 때도 간단히 줄일 수 있다.
+
+```kotlin
+data class UltraSuperGuardianlTribe(val name: String)
+// to 
+typealias USGTMap = Map<String, UltraSuperGuardianTribe>
+```
+
+
+
+### 다른 패키지의 같은 이름 함수를 동시에 가져오고 싶다면?!
+
+* `as import` : 어떤 클래스나 함수를 임포트 할 때 이름을 바꾸는 기능
+
+
+
+```kotlin
+package com.ys.lec20.a
+
+fun printHelloWorld() {
+  println()
+}
+
+// 다른 파일
+package com.ys.lec21.b
+fun printHelloWorld() {
+  println()
+} 
+
+// 다음처럼 바꾼다
+
+import com.ys.lec20.a.printHelloWorld as printHelloWorldA
+import com.ys.lec21.b.printHelloWorld as printHelloWorldB
+
+fun main() {
+  printHelloWorldA()
+  printHelloWorldB()
+}
+```
+
+패키지명 자체에 별칭을 지을 수 있다. 
+
+
+
+
+
+## 2. 구조분해와 componentN 함수
+
+* 구조분해 : 복합적인 값을 분해하여 여러 변수를 한 번에 초기화하는 것
+
+```kotlin
+data class Person (
+	val name: String,
+  val age: Int
+)
+
+val person = Person("최태현", 100)
+val (name, age) = person
+//
+
+val name = person.component1()
+val age = person.component2()
+```
+
+* Data Class는 componentN이란 함수도 자동으로 만들어 준다.
+  * 첫번재 프로퍼티는 첫번째 변수, 두번째 프로퍼티는 두번째 변수 
+
+<br>
+
+Data Class가 아닌데 구조분해를 사용하고 싶다면,  componentN 함수를 직접 구현해줄 수도 있다.
+
+```kotlin
+data class Person (
+	val name: String,
+  val age: Int
+) {
+  operator fun component1(): String {
+    return this.name
+  }
+  
+  operator fun component2(): Int {
+    return this.age
+  }
+}
+```
+
+
+
+## 3. Jump와 Label
+
+return / break / continue
+
+
+
+- return : 기본적으로 가장 가까운 enclosing function 또는익명함수로 값이 반환된다
+- break : 가장 가까운 루프가 제거된다
+- continue : 가장 가까운 루프를 다음 step으로 보낸다
+
+
+
+for문 및 while 문에서 break, continue 기능은 동일.
+
+단!! forEach문과 함께 break 또는 continue를 꼭 쓰고 싶다면?!
+
+
+
+```kotlin
+val numbers = listOf(1, 2, 3, 4, 5)
+
+run {
+  numbers.forEach { number -> 
+  	if (number == 3) {
+      return@run // break
+    }           
+		println(number)
+  }
+} 
+// 
+
+numbers.forEach {
+  println(it)
+  if (it == 3) {
+    return@forEach // continue
+  }
+}
+```
+
+
+
+### Label
+
+특정 expression에 라벨이름@ 을 붙여 하나의 라벨로 간주하고 break, continue, return 등을 사용하는 기능
+
+```kotlin
+loop@ for (i in 1..100) {
+  for (j in 1..100) {
+    if (j == 2) {
+      break@loop
+    }
+    print("${i} ${j}")
+  }
+}
+```
+
+
+
+> 라벨을 사용한 Jump는 사용하지 않는 것을 강력 추천
+
+## 4. TakeIf와 TakeUnless
+
+Kotlin에서는 `method chaning`을 위한 특이한 함수를 제공
+
+
+
+```kotlin
+fun getNumberOrNullV2(): Int? {
+  return number.takeIf { it > 0}
+}
+
+fun getNumberOrNullV2(): Int? {
+  return number.takeUnless { it > 0}
+}
+
+```
+
+* takeIf : 주어진 조건을 만족하면 값이 반환, 그렇지 않다면 null 반환
+* takeUnless : 주어진 조건을 만족하면 그 값이 반환, 그렇지 않으면 null 반환 
+
+
+
+
+
+- 타입에 대한 별칭을 줄 수 있는 typealias 라는 키워드가 존재한다.
+- Import 당시 이름을 바꿀 수 있는 as import 기능이 존재한다.
+- 변수를 한 번에 선언할 수 있는 구조분해 기능이 있으며
+componentN 함수를 사용한다.
+- for문, while문과 달리 forEach에는 break와 continue를
+사용할 수 없다.
+- takeIf와 takeUnless를 활용해 코드양을 줄이고
+method chaning을 활용할 수 있다.
+
+
+
+# Lec20.코틀린의 scope$function
+
+
+
+1. scope function이란 무엇인가?!
+2. scope function의 분류
+3. 언제 어떤 scope function을 사용해야 할까?!
+4. scope function과 가독성
+
+
+
+
+
+## 1. scope function이란 무엇인가?!
+
+scope : 영역
+function : 함수
+
+
+
+* scope function : 일시적인 영역을 형성하는 함수
+
+
+
+```kotlin
+fun printPerson(person: Person?) {
+  if (person != null) {
+    println(person.name)
+    println(person.age)
+  }
+}
+```
+
+* 위 코드를 다음과 같이 리팩토링이 가능하다
+
+```kotlin
+fun printPerson(person: Person?) {
+  person?.let {
+    println(it.name)
+    println(it.age)
+  }
+}
+```
+
+* Safe Call (?.) 을 사용 : person이 null이 아닐때에 let을 호출
+* let : scope function의 한 종류
+* let : 확장함수. 람다를 받아, 람다 결과를 반환한다
+
+```kotlin
+public inline fun <T, R> T.let(block: (T) -> R): R {
+  return block(this)
+}
+```
+
+람다를 사용해 일시적인 영역을 만들고
+코드를 더 간결하게 만들거나, method chaning에 활용하는 함수가 `scope function`
+
+## 2. scope function의 분류
+
+
+
+| 반환(return)      | it 사용 | this 사용 |
+| :---------------- | :-----: | :-------: |
+| 람다의 결과 반환  |   let   |    run    |
+| 객체 그 자체 반환 |  also   |   apply   |
+|                   |  with   |           |
+
+
+
+this : 생략이 가능한 대신, 다른 이름을 붙일 수 없다.
+it : 생략이 불가능한 대신, 다른 이름을 붙일 수 있다.
+
+
+
+* 둘의 차이점. 
+
+```kotlin
+public inline fun <T, R> T.let(block: (T) -> R): R {
+  return block(this)
+}
+
+public inline fun <T, R> T.run(block: T.() -> R): R {
+  return block()
+}
+```
+
+* let은 일반 함수를 받는다.
+
+* run은 확장 함수를 받는다.
+
+
+
+### with?
+
+with(파라미터, 람다) : this를 사용해 접근하고, this는 생략 가능하다
+
+```kotlin
+val person = Person("김영수", 100)
+with(person) {
+  println(name)
+  println(this.age)
+}
+```
+
+
+
+## 3. 언제 어떤 scope function을 사용해야 할까?!
+
+
+
+### let 사용
+
+* 하나 이상의 함수를 call chain 결과로 호출할 때 
+
+```kotlin
+val strings = listOf("APPLE", "CAR")
+strings.map {it.length}
+	.filter {it > 3}
+	.let(::println)
+```
+
+* non-null 값에 대해서만 code block을 실행시킬 때
+* 일회성으로 제한된 영역에 지역 변수를 만들 때
+
+
+
+### run 사용
+
+객체 초기화와 반환 값의 계산을 동시에 해야 할 때
+
+객체를 만들어 DB에 바로 저장하고, 그 인스턴스를 활용할 때
+
+```kotlin
+val person = Person("영수", 100).run(personRepository::save)
+```
+
+* but 반복되는 생성 후처리는 생성자, 프로퍼티, init block으로 넣는 것이 좋다
+
+```kotlin
+val person = personRepository.save(Person("영수", 100))
+```
+
+
+
+### apply 사용
+
+* apply 특징 : 객체 그 자체가 반환된다.
+* 객체 설정을 할 때에 객체를 수정하는 로직이 call chain 중간에 필요할 때
+
+
+
+### also 사용
+
+
+
+also 특징 : 객체 그 자체가 반환된다.
+객체를 수정하는 로직이 call chain 중간에 필요할 때
+
+
+
+### with 사용
+
+특정 객체를 다른 객체로 변환해야 하는데,
+모듈 간의 의존성에 의해 정적 팩토리 혹은 toClass 함수를 만들기 어려울 때
+
+
+
+
+
+## 4. scope function과 가독성
+
+- scope function을 사용한 코드는 사람에 따라 가독성을 다르게
+느낄 수 있기 때문에, 함께 프로덕트를 만들어 가는 팀끼리
+convention을 잘 정해야 한다.
