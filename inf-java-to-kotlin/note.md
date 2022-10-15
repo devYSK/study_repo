@@ -3159,3 +3159,121 @@ fun createPerson(firstName: String, lastName: String): Person {
 
 * 함수로 추출하면 좋을 것 같은데, 이 함수를 지금 함수 내에서만 사용하고 싶을 때 사용
 * but depth가 깊어지기도 하고, 코드가 그렇게 깔끔하지는 않다
+
+
+
+# Lec17. 코틀린에서 람다를 다루는 방법
+
+1. Java에서 람다를 다루기 위한 노력
+2. 코틀린에서의 람다
+3. Closure
+4. 다시 try with resources
+
+
+
+## 1. Java에서 람다를 다루기 위한 노력
+
+
+
+## 2. 코틀린에서의 람다
+
+Java와는 근본적으로 다른 한 가지가 있다.
+코틀린에서는 함수가 그 자체로 값이 될 수 있다.
+변수에 할당할수도, 파라미터로 넘길 수도 있다.
+
+
+
+```kotlin
+fun main() {
+    // 람다 직접 호출 1
+    isApple(Fruit("사과", 1000))
+
+    // 람다 직접 호출 2
+    isApple.invoke(Fruit("사과", 1000))
+}
+
+// 람다를 만드는 방법 1
+val isApple = fun(fruit: Fruit): Boolean {
+    return fruit.name == "사과"
+}
+
+// 람다를 만드는 방법 2
+val isApple2 = {fruit: Fruit -> fruit.name == "사과"}
+```
+
+* 함수의 타입 : (파라미터타입 ..) -> 반환 타입
+
+
+
+* 코틀린에서 함수는 `1급 시민(first citizen)`이다(Java에서는 2급)
+
+## 3. Closure
+
+
+
+Java에서는 람다를 쓸 때 사용할 수 있는 변수에 제약이 있다.
+
+```java
+String targetFruitName = "바나나";
+targetFruitName = "수박";
+
+filterFruits(fruits, (fruit) -> targetFruitName.equals(fruit.getName()));
+```
+
+
+
+코틀린에서는 아무런 문제 없이 동작한다
+
+```kotlin
+var targetFruitName = "바나나"
+targetFruitName = "수박"
+
+filterFruits(fruits) {it.name == targetFruitName}
+```
+
+코틀린에서는 람다가 시작하는 지점에 참조하고 있는 변수들을 모두 포획하여 그 정보를 가지고 있다.
+
+* 그러므로 모든 변수의 정보를 가지고 있다. 
+
+
+
+>  이렇게 해야만, 람다를 진정한 일급 시민으로 간주할 수 있다.
+> 이 데이터 구조를 `Closure`라고 부른다
+
+
+
+
+
+## 4. 다시 try with resources
+
+
+
+```kotlin
+fun readFile(path: String) {
+  BufferedReader(FileReader(path)).use {
+    reader -> println(reader.readLine())
+  }
+}
+```
+
+* 사실 이 `use`는 Closeable 구현체에 대한 확장함수이다.
+
+```kotlin
+public inline fun <T : Closeable?, R> T.use(block: (T) -> R): R {...}
+```
+
+
+
+
+
+- 함수는 Java에서 2급시민이지만, 코틀린에서는 1급시민이다.
+- 때문에, 함수 자체를 변수에 넣을 수도 있고
+파라미터로 전달할 수도 있다.
+- 코틀린에서 함수 타입은 (파라미터 타입, ...) -> 반환타입 이었다.
+
+- 코틀린에서 람다는 두 가지 방법으로 만들 수 있고, { } 방법이 더
+많이 사용된다.
+
+- 함수를 호출하며, 마지막 파라미터인 람다를 쓸 때는 소괄호 밖으로
+람다를 뺄 수 있다
+- - 람다의 마지막 expression 결과는 람다의 반환 값이다

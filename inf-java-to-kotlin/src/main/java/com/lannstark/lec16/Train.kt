@@ -1,8 +1,5 @@
 package com.lannstark.lec16
 
-import java.lang.IllegalArgumentException
-import kotlin.IllegalArgumentException
-
 /**
  *
  * @author   : ysk
