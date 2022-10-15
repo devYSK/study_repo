@@ -2642,3 +2642,520 @@ class Grandeur : HyundaiCar("그렌저", 3000L)
 when과 함께 사용함으로써 큰 장점을 갖게 된다.
 - Enum Class보다 유연하지만, 하위 클래스를 제한하는
 Sealed Class 역시 when과 함께 주로 사용된다.
+
+
+
+# Lec15. 코틀린에서 배열과 컬렉션을 다루는 방법
+
+1. 배열
+2. 코틀린에서의 Collection – List, Set, Map
+3. 컬렉션의 null 가능성, Java와 함께 사용하기
+
+
+
+
+
+## 1. 배열
+
+* 사실 잘 사용하지 않지만 문법을 간략히 설명한다.
+
+* 이펙티브자바 - 배열보단 리스트를 사용하라 
+
+### in java
+
+```java
+int[] array = {100, 200};
+
+for (int i = 0; i < array.legth; i++) {
+  System.out.printf()
+}
+
+```
+
+
+
+### in kotlin
+
+```kotlin
+val array = arrayOf(100, 200)
+
+for (i in array.indices) {
+  println("%{i} %{array[i]}")
+}
+```
+
+* indices : 0부터 마지막 index 까지의 Range
+
+```kotlin
+val array = arrayOf(100, 200)
+
+for ((idx, value) in array.withIndex()) {
+  println("${idx} ${value}")
+}
+```
+
+* withIndex()를 사용하면 인덱스와 값을 한번에 가져올 수 있다. 
+
+* array.plus(value) 를 사용하면 값을 넣을 수 있다.
+
+```kotlin
+val array = arrayOf(100, 200)
+array.plus(300)
+```
+
+
+
+## 2. 코틀린에서의 Collection – List, Set, Map
+
+* 컬렉션을 만들어줄 때 불변인지, 가변인지를 설정해야 한다
+
+
+
+<img src="images//image-20221015160113344.png" width=600 height=400>
+
+
+
+* 가변(Mutable) 컬렉션 : 컬렉션에 element를 추가, 삭제할 수 있다.
+* 불변 컬렉션 : 컬렉션에 element를 추가, 삭제할 수 없다.
+
+Collection을 만들자 마자 Collections.unmodifiableList() 등을 붙여준것이 불변  
+불변 컬렉션이라 하더라도 Reference Type인 Element의 필드는 바꿀 수 있다
+
+* list.get(index)에 접근해서 요소 내의 필드는 바꿀 수 있다. - 자바랑 같음
+
+> Kotlin은 불변/가변을 지정해 주어야 한다는 사실
+
+
+
+### in java
+
+```java
+final List<Integer> numbers = Arrays.asList(100, 200);
+```
+
+
+
+### in kotlin
+
+```kotlin
+val numbers = listOf(100, 200)
+```
+
+* listOf를 통해 `불변리스트` 를 만든다. 
+
+```kotlin
+val emptyList = emptyList<Int>()
+```
+
+* emptyList<타입>()
+  * 이 비어있는 리스트에 들어올 타입을 명시적으로 지정
+
+
+
+### in java
+
+```java
+// 한 요소 접근
+System.out.println(numbers.get(0));
+
+//foreach
+for (int number: numbers) {
+  System.out.println(number);
+}
+
+// 전통적 for문
+for (int i = 0; i < numbers.size(); i++) {
+  System.out.printf("%s %s", i, numbers.get(i));
+}
+```
+
+
+
+### in kotlin
+
+```kotlin
+// 한 요소 접근
+println(numbers[0])
+
+// for each
+for (number in numbers) {
+  println(number)
+}
+
+// 전통적인 for문 느낌
+for ((index, number) in numbers.withIndex()) {
+  println("$index %number")
+}
+
+```
+
+
+
+### 코틀린에서 가변(mutable) 리스트를 만들고 싶다면?
+
+```kotlin
+val numbers = mutableListOf(100, 200)
+numbers.add(300)
+```
+
+* 기본 구현체는 ArrayList이고, 사용법은 Java와 동일 
+
+
+
+> 우선 불변 리스트를 만들고, 꼭 필요한 경우 가변 리스트로 바꾸자!
+
+
+
+### collection - Set
+
+집합은 List와 다르게 순서가 없고, 같은 element는 하나만 존재할 수 있다.  
+
+자료구조적 의미만 제외하면 모든 기능이 List와 비슷
+
+```kotlin
+val numbers = setOf(100, 200)
+
+// for each
+for (number in numbers) {
+  println(number)
+}
+
+// 전통적인 for문 느낌
+for ((index, number) in numbers.withIndex()) {
+  println("$index %number")
+}
+```
+
+* 가변(Mutable) 집합을 만들고 싶다면?
+
+```kotlin
+val numbers = mutableSetOf(100, 200)
+```
+
+* 기본 구현체는 LinkedHashSet
+
+
+
+### collection - Map
+
+Kotlin도 동일하게 MutableMap을 만들어 넣을 수도 있고,
+정적 팩토리 메소드를 바로 활용할 수도 있다.
+
+
+
+```kotlin
+val map = mutableMapOf<Int, String>()
+map[1] = "MONDAY"
+map[2] = "TUESDAY"
+
+mapOf(1 to "MONDAY", 2 to "TUESDAY")
+```
+
+* 자바처럼 map.put()을 쓸 수도 있고, map[key] = value를 사용할 수도 있다.
+* `mapOf(key to value)`를 사용해 불변 map을 만들 수 있다. 
+
+
+
+## 3. 컬렉션의 null 가능성, Java와 함께 사용하기
+
+* `List<Int?>` : 리스트에 null이 들어갈 수 있지만, 리스트는 절대 null이 아님
+* `List<Int>?` : 리스트에는 null이 들어갈 수 없지만, 리스트는 null일 수 있음
+* `List<Int?>?` : 리스트에 null이 들어갈 수도 있고, 리스트가 null일 수도 있음
+
+
+
+> ? 위치에 따라 null가능성 의미가 달라진다.
+
+
+
+but, Java는 읽기 전용 컬렉션과 변경 가능 컬렉션을 구분하지 않는다.
+
+
+
+### 버그 조심 2가지
+
+1. 코틀린의 불변 리스트를 자바에서 가져와 사용할 때 요소를 추가하여 코틀린에서 사용한다면, 버그가 생긴다
+2. 코틀린의 non-nullable 리스트를 자바에서 가져와 사용할 때 null을 넣고 코틀린에서 사용한다면 버그가 생긴다.
+
+
+
+
+
+### 그렇다면?
+
+* Kotlin 쪽의 컬렉션이 Java에서 호출되면 컬렉션 내용이 변할 수 있음을 감안해야 한다.
+* 코틀린 쪽에서 `Collections.unmodifableXXX()`를 활용하면 변경 자체를 막을 수는 있다!
+* Kotlin에서 Java 컬렉션을 가져다 사용할때 플랫폼 타입을 신경써야 한다
+
+* Java 코드를 보며, 맥락을 확인하고 Java 코드를 가져오는 지점을 wrapping한다
+
+
+
+### 정리
+
+- 코틀린에서는 컬렉션을 만들 때도 불변/가변을 지정해야 한다.
+- List, Set, Map 에 대한 사용법이 변경, 확장되었다.
+- Java와 Kotlin 코드를 섞어 컬렉션을 사용할 때에는 주의해야 한다.
+- Java에서 Kotlin 컬렉션을 가져갈 때는 불변 컬렉션을 수정할수도 있고, non-nullable 컬렉션에 null을 넣을 수도 있다.
+- Kotlin에서 Java 컬렉션을 가져갈 때는 플랫폼타입을 주의해야한다
+
+
+
+# Lec16.코틀린에서 다양한 함수를 다루는 방법
+
+
+
+1. 확장함수
+2. infix 함수
+3. inline 함수
+4. 지역함수
+
+
+
+
+
+## 1. 확장함수
+
+코틀린은 Java와 100% 호환하는 것을 목표로 하고 있다
+
+
+
+Java로 만들어진 라이브러리를 유지보수, 확장할 때 Kotlin 코드를 덧붙이고 싶다면?!  
+
+* 어떤 클래스안에 있는 메소드처럼 호출할 수 있지만, 함수는 밖에 만들 수 있게 하자!!!
+
+```kotlin
+fun String.lastChar(): Char {
+  return this.[this.length - 1]
+}
+```
+
+* `String`.lastChar() 라는건 ` String` Class를 확장한다는 뜻
+* this를 활용해 인스턴에 접근한다. 
+
+```
+fun 확장하려는클래스명.함수이름(파라미터): 리턴타입 {
+	this를 이용해 실제 클래스 안의 값에 접근
+}
+```
+
+* this : 수신객체
+* 확장하려는클래스명 : 수신객체 타입 
+
+```kotlin
+val str: String = "ABC"
+str.lastChar() // 확장함수 
+```
+
+* 원래 String에 있는 멤버 함수 처럼 사용할 수 있다. 
+
+
+
+### 확장함수 의 캡슐화?
+
+확장함수가 public이고, 확장함수에서 수신객체클래스의 private 함수를 가져오면 캡슐화가 깨지는거 아닌가?!!
+
+
+
+> 확장함수는 클래스에 있는 private 또는 protected 멤버를 가져올 수 없다!!
+
+
+
+### 멤버함수와 확장함수의 시그니처가 같다면?!
+
+* 멤버함수가 우선적으로 호출된다.
+* 확장함수를 만들었지만, 다른 기능의 똑같은 멤버함수가 생기면 오류가 발생할 수 있다!!
+
+
+
+### 확장함수 오버라이드
+
+```kotlin
+open class Train(
+    val name: String = "새마을 기차",
+    val price: Int = 5_000,
+) {
+
+}
+
+fun Train.isExpensive(): Boolean {
+    println("Train의 확장 함수")
+    return this.price >= 10000
+}
+
+class Srt: Train("SRT", 40_000)
+
+fun Srt.isExpensive(): Boolean {
+    println("Srt의 확장 함수")
+    return this.price >= 10000
+}
+
+fun main() {
+    val train: Train = Train()
+    train.isExpensive()
+
+    val srt1: Train = Srt()
+    srt1.isExpensive()
+
+    val srt2: Srt = Srt()
+    srt2.isExpensive()
+}
+```
+
+* 실행결과
+
+```
+Train의 확장 함수
+Train의 확장 함수
+Srt의 확장 함수
+```
+
+* 해당 변수의 `현재 타입` 즉 정적인 타입에 의해 어떤 확장함수가 호출될지 결정된다.
+  * srt1같은 경우 Train 타입이니 Train의 확장함수가 호출된다.  
+  * srt2같은 경우 현재 타입이 Srt 이니 Srt의 확장함수가 호출된다.
+
+
+
+1. 확장함수는 원본 클래스의 private, protected 멤버 접근이 안된다!
+2. 멤버함수, 확장함수 중 멤버함수에 우선권이 있다!
+3. 확장함수는 현재 타입을 기준으로 호출된다!
+
+
+
+### Java에서 Kotlin 확장함수를 가져다 사용할 수 있나?!
+
+정적 메소드를 부르는 것처럼 사용 가능하다
+
+* 확장함수 라는 개념은 확장프로퍼티와도 연결
+
+#### 확장 프로퍼티
+
+* 확장 프로퍼티의 원리는 확장함수 + custom getter와 동일
+
+```kotlin
+fun String.lastChar(): Char {
+  return this[this.length - 1]
+}
+
+val String.lastChar: Char
+	get() = this[this.length - 1]
+```
+
+
+
+## 2. infix 함수
+
+infix : 중위함수, 함수를 호출하는 새로운 방법
+
+
+
+원래는 함수를 호출할 때 `변수.함수이름(argument)` 를 사용했지만, 대신에 
+
+```kotlin
+변수 함수이름 argument
+```
+
+를 호출
+
+* downTo, step 도 함수이다 (infix 함수)
+
+```kotlin
+fun Int.add(other: Int): Int {
+  return this.order
+}
+
+infix fun Int.add2(other: Int): Int {
+  return this + other
+}
+
+fun main() {
+  3 add2 4 // infix 함수 
+}
+```
+
+* infix 함수는 `infix` 키워드를 fun 키워드 앞에 사용한다. 
+
+```kotlin
+```
+
+
+
+
+
+## 3. inline 함수
+
+함수가 호출되는 대신, 함수를 호출한 지점에 함수 본문을 그대로 복붙하고 싶은 경우에 사용
+
+
+
+```kotlin
+fun main() {
+  3.add(4)
+}
+
+inline fun Int.add(other: Int): Int {
+  return this + other
+}
+```
+
+to java
+
+```java
+public static final void main() {
+  byte $this$add$iv = 3;
+  int other$iv = 4;
+  int $i$f$add = false;
+  int var10000 = $this$add$iv + other$iv;
+}
+```
+
+* 함수를 파라미터로 전달할 때에 오버헤드를 줄일 수 있다.
+* 하지만 inline 함수의 사용은 성능 측정과 함께 신중하게 사용되어야 한다.
+
+
+
+## 4. 지역함수
+
+함수 안에 함수를 선언할 수 있다
+
+
+
+다음과 같은 코틀린 함수를
+
+```kotlin
+fun createPerson(firstName: String, lastName: String): Person {
+    if (firstName.isEmpty()) {
+        throw IllegalArgumentException()
+    }
+
+    if (lastName.isEmpty()) {
+        throw IllegalArgumentException()
+    }
+
+    return Person(firstName, lastName, 1)
+}
+```
+
+
+다음과 같이 변경
+
+```kotlin
+fun createPerson(firstName: String, lastName: String): Person {
+
+  	fun validateName(name: String, fieldName: String) {
+      if (name.isEmpty()) {
+        throw IllegalArgumentException()
+      }
+    }
+ 	
+  validateName(firstName, "firstName")
+  validateName(lastName, "lastName")
+  
+  return Person(firstName, lastName, 1)
+}
+```
+
+
+
+* 함수로 추출하면 좋을 것 같은데, 이 함수를 지금 함수 내에서만 사용하고 싶을 때 사용
+* but depth가 깊어지기도 하고, 코드가 그렇게 깔끔하지는 않다
