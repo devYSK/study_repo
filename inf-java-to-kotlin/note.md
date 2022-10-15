@@ -3276,4 +3276,140 @@ public inline fun <T : Closeable?, R> T.use(block: (T) -> R): R {...}
 
 - 함수를 호출하며, 마지막 파라미터인 람다를 쓸 때는 소괄호 밖으로
 람다를 뺄 수 있다
-- - 람다의 마지막 expression 결과는 람다의 반환 값이다
+- 람다의 마지막 expression 결과는 람다의 반환 값이다
+
+
+
+# Lec18. 코틀린에서 컬렉션을 함수형으로 다루는 방법
+
+1. 필터와 맵
+2. 다양한 컬렉션 처리 기능
+3. List를 Map으로
+4. 중첩된 컬렉션 처리
+
+
+
+## 1. 필터와 맵
+
+
+
+Fruit 예제의 filter
+
+```kotlin
+val apples = fruits.filter {fruit -> fruit.name == "사과"}
+```
+
+
+
+* 필터에서 인덱스(index)가 필요하다면?
+
+```kotlin
+val apples = fruits.filterIndexed {idx, fruit -> 
+    println(idx)
+    fruit.name == "사과"
+}
+```
+
+
+
+* map
+
+```kotlin
+val applePrices = fruits.filter {fruit -> fruit.name == "사과"}
+	.map { fruit -> fruit.currentPrice }
+```
+
+* map에서 인덱스가 필요하다면?
+
+```kotlin
+val applePrices = fruits.filter {fruit -> fruit.name == "사과"}
+	.mapIndexed { idx, fruit ->
+      println(idx)         
+      fruit.currentPrice 
+   }
+```
+
+
+
+* filter / filterIndexed
+* map / mapIndexed / 
+* mapNotNull
+
+
+
+## 2. 다양한 컬렉션 처리 기능
+
+* all : 조건을 모두 만족하면 true 그렇지 않으면 false
+
+```kotlin
+val isAllApple = fruits.all {fruit -> fruit.name == "사과"}
+```
+
+
+
+* none : 조건을 모두 불만족하면 true 그렇지 않으면 false
+
+```kotlin
+val isNoApple = fruits.none {fruit -> fruit.name == "사과"}
+```
+
+
+
+* none : 조건을 모두 불만족하면 true 그렇지 않으면 false
+
+```kotlin
+val isNoApple = fruits.any {fruit -> fruit.factoryPrice >= 10_000}
+```
+
+
+
+* count : 개수를 센다
+* sortedBy : (오름차순) 정렬을 한다
+* sortedByDescending : (내림차순) 정렬을 한다
+* distinctBy : 변형된 값을 기준으로 중복을 제거한다
+
+```kotlin
+val distinctFruitNames = fruits.distinctBy {fruit -> fruit.name} 
+	.map {fruit -> fruit.name}
+```
+
+* first : 첫번째 값을 가져온다 (무조건 null이 아니어야함)
+* firstOrNull : 첫번째 값 또는 null을 가져온다
+* last : 마지막 값을 가져온다 (무조건 null이 아니어야함)
+* lastOrNull : 첫번째 값 또는 null을 가져온다
+
+
+
+## 3. List를 Map으로
+
+* 과일 이름 기준으로 묶은 List<과일> Map이 필요하다면?
+
+```kotlin
+val map: Map<String, List<Fruit>> = fruits.groupBy {fruit -> fruit.name}
+```
+
+* id 값을 기준으로 묶은 과일이 Map이 필요하다면
+
+```kotlin
+val map: Map<Long, Fruit> = fruits.associateBy {fruit -> fruit.id}
+```
+
+
+
+* Key와 value를 동시에 처리할 수도 있다.
+
+```
+filter / filterIndexed
+map / mapIndexed / mapNotNull
+all / none / any
+count / sortedBy / sortedByDescending / distinct
+first / firstOrNull / last / lastOrNull
+groupBy / associateBy
+flatMap / flatten
+```
+
+
+
+
+
+## 4. 중첩된 컬렉션 처리
