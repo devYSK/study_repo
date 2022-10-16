@@ -9,6 +9,8 @@ import com.group.libraryapp.dto.book.request.BookLoanRequest
 import com.group.libraryapp.dto.book.request.BookRequest
 import com.group.libraryapp.dto.book.request.BookReturnRequest
 import com.group.libraryapp.dto.book.response.BookStatResponse
+import com.group.libraryapp.repository.BookQuerydslRepository
+import com.group.libraryapp.repository.UserLoanHistoryQuerydslRepository
 import com.group.libraryapp.util.fail
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -18,7 +20,8 @@ import java.lang.IllegalArgumentException
 class BookService(
     private val bookRepository: BookRepository,
     private val userRepository: UserRepository,
-    private val userLoanHistoryRepository: UserLoanHistoryRepository,
+    private val userLoanHistoryRepository: UserLoanHistoryQuerydslRepository,
+    private val bookQuerydslRepository: BookQuerydslRepository,
 ) {
 
 
@@ -29,7 +32,7 @@ class BookService(
 
     @Transactional
     fun loanBook(request: BookLoanRequest) {
-        if (userLoanHistoryRepository.findByBookNameAndStatus(
+        if (userLoanHistoryRepository.find(
                 request.bookName,
                 UserLoanStatus.LOANED
             ) != null
@@ -53,12 +56,12 @@ class BookService(
     fun countLoanedBook(): Int {
 //        return userLoanHistoryRepository.findAllByStatus(UserLoanStatus.LOANED).size
 
-        return userLoanHistoryRepository.countByStatus(UserLoanStatus.LOANED).toInt()
+        return userLoanHistoryRepository.count(UserLoanStatus.LOANED).toInt()
     }
 
     @Transactional(readOnly = true)
     fun getBookStatistics(): List<BookStatResponse> {
-        return bookRepository.getStats()
+        return bookQuerydslRepository.getStats()
     }
 
 }

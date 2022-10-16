@@ -739,3 +739,242 @@ Decompile을 활용해보면 쉽게 감이 올 것이다
 * 이벤트 발행과 메시징 큐를 이용한 구조
 
 
+# `@Query`의 단점
+
+
+JPQL의 단점과 Spring Data JPA의 단점을 알아보자! 이들은 다음 몇 가지 단점을 가지고 있다.
+
+1. 문자열로 쿼리를 작성하기에 버그를 찾기 어렵다.
+2. 문법이 조금 달라 그때마다 검색해 찾아보아야 한다.
+3. 동적 쿼리 작성이 어렵다.
+4. 도메인 코드 변경에 취약하다.
+5. 함수 이름 구성에 제약이 있다. (의미있는 이름을 붙이기 어렵다)
+
+때문에 이런 단점을 보완하기 위해서 Querydsl을 함께 사용해야 한다
+
+
+## Querydsl을 프로젝트에 설정
+
+* build.gradle 에 다음 부분을 추가
+
+```gradle
+plugins {
+  // plugins 안에 아래 내용 추가
+  id "org.jetbrains.kotlin.kapt" version "1.6.21"
+} 
+
+dependencies {
+  // dependencies 안에 아래 내용 추가
+  implementation("com.querydsl:querydsl-jpa:5.0.0")
+  kapt("com.querydsl:querydsl-apt:5.0.0:jpa")
+  kapt("org.springframework.boot:spring-boot-configuration-processor")
+}
+```
+
+
+## kapt??? -> Kotlin Annotation Processing Tool
+
+KAPT : Kotlin Annotation Processing Tool
+
+Kotlin에서 Annotation처리를 위해서 KAPT(Kotlin Annotation Processing Tool)을 제공합니다.
+
+Project 내부에서 Hilt, Room, Databinding 등 library가 사용된다면 기존에 annotationProcessor에서 kapt로 바꾸어 선언하는 게 필요합니다.
+
+ 
+
+Kotlin은 kotlinc로 컴파일되기 때문에 기존에 Java로 작성된 Annotation Process로는 Kotlin의 Annotation이 제대로 처리되지 않습니다.
+
+예를 들어 Android의 Room library를 사용하다가 아래와 같은 Exception을 만날 수도 있습니다.
+
+* Gradle에 kapt plugin을 적용하는 방법은 아래와 같다.
+
+* plugin 추가
+
+```gradle
+plugins {
+    kotlin("kapt") version "버전" 
+}
+또는
+
+apply plugin: 'kotlin-kapt'
+```
+
+* Library를 사용할 때 annotationProcessor를 kapt로 변경해 주어야 한다.
+
+```gradle
+dependencies {
+    // annotationProcessor -> kapt
+    kapt ("org.springframework.boot:spring-boot-configuration-processor")
+}
+```
+
+
+
+* kapt 사용 시 호환성에 주의 
+  * 사용하는 library가 kapt를 지원하는지 확인해야 합니다.
+
+* 만약 지원하지 않는다면 라이브러리가 정상적으로 동작하지 않을 수 있다.
+
+## QueryDsl
+
+* 모든 스크립트를 추가하였다면 gradle refresh를 해주고, build Click
+
+
+![](.note_images/c192c74a.png)
+
+* build 결과물에서 `QClass` 확인
+
+![](.note_images/6e4b75ae.png)
+
+
+
+# Querydsl 첫번째 방법
+
+
+먼저, 기존 Repository 구조에서 UserRepositoryCustom interface를 추가한다.
+UserRepositoryCustom 은 UserRepository 와 같은 패키지에 넣어주었다.
+
+![](.note_images/f28c9daf.png)
+
+```kotlin
+interface UserRepositoryCustom {
+} 
+
+interface UserRepository : JpaRepository<User, Long>, UserRepositoryCustom {
+fun findByName(userName: String): User?
+}
+```
+
+
+* 다음으로 UserRepositoryCustomImpl Class를 만들어 UserRepositoryCustom 을 구현하도록 한다.
+
+
+* UserRepositoryCustomImpl 역시 UserRepository , UserRepositoryCustom 과 같은패키지에 넣어주자
+
+![](.note_images/672c3276.png)
+
+```kotlin
+class UserRepositoryCustomImpl: UserRepositoryCustom {
+}
+```
+
+* 이제 다음과 같이 JPAQueryFactory 를 스프링 Bean으로 등록해준다. 이 JPAQueryFactory 를 활용해서 querydsl 코드를 작성
+
+
+* config 패키지는 따로 만드는 것을 추천
+
+```kotlin
+@Configuration
+class QuerydslConfig(
+  private val em: EntityManager,
+) {
+  @Bean
+  fun querydsl(): JPAQueryFactory {
+    return JPAQueryFactory(em)
+  }
+}
+```
+
+* 이제 UserRepositoryCustom 에 필요한 함수를 입력하고, UserRepositoryCustomImpl에 querydsl을 이용해 구현하면 된다
+
+```kotlin
+import com.group.libraryapp.domain.user.QUser.user
+import com.group.libraryapp.domain.user.loanhistory.QUserLoanHistory.userLoanHistory
+import com.querydsl.jpa.impl.JPAQueryFactory
+
+class UserRepositoryCustomImpl(
+    private val queryFactory: JPAQueryFactory,
+    ) : UserRepositoryCustom {
+
+    override fun findAllWithHistories(): List<User> {
+        return queryFactory.select(user).distinct()
+            .from(user)
+            .leftJoin(userLoanHistory).on(userLoanHistory.user.id.eq(user.id))
+            .fetchJoin()
+            .fetch()
+    }
+}
+```
+
+
+* select(user) : select user
+* distinct() : select 결과에 DISTINCT를 추가한다.
+* from(user) : from user
+* leftJoin(userLoanHistory) : left join user_loan_history
+* on(userLoanHistory.user.id.eq(user.id)) : on user_loan_history.user_id = user.id
+* fetchJoin : 앞의 join을 fetch join으로 처리한다.
+* fetch() : 쿼리를 실행하여 결과를 List 로 가져온다.
+
+
+## QueryDsl - 두번째 방법
+
+다음과 같은 Bean(Component)를 추가
+
+* JPAQueryFactory 를 주입 받을 수 있도록 `@Component` 어노테이션을 붙여주자! 
+
+* `@Repository` 를 붙이더라도 상관 없다.
+
+```kotlin
+@Component
+class BookQuerydslRepository(
+    private val queryFactory: JPAQueryFactory
+) {
+
+    fun getStats(): List<BookStatResponse> {
+        return queryFactory
+            .select(
+                Projections.constructor(
+                    BookStatResponse::class.java,
+                    book.type,
+                    book.id.count(),
+                )
+            ) .
+            from(book)
+            .groupBy(book.type)
+            .fetch()
+    }
+}
+```
+
+
+* Projections.constructor() : 주어진 DTO의 생성자를 호출한다는 뜻이다.
+
+* Projections.constructor() 안에는 세 가지 파라미터가 들어갔다.
+  * BookStatResponse::class.java , book.type , book.id.count()
+
+* select from을 포함해 SQL으로 바꾸면 다음과 같다.
+  * select book.type, count(book.id) from book
+
+* groupBy(book.type) 은 SQL로 다음과 같다.
+  * group by type
+
+
+* 이 Repository를 사용하려면 사용하는 서비스에서 의존성을 추가로 불러와야 한다.
+
+* 이 예제에서는  BookService 에서 BookQuerydslRepository 에 대한 의존성을 추
+가로 불러와야 한다.
+
+<br>
+이 방법의 장단점은 첫 번째 방법과 반대이다.
+
+<br>
+
+장점은
+
+* 클래스만 바로 만들면 되어 간결하다는 점이고
+
+단점은
+* 서비스단에서 필요에 따라 두 Repository를 모두 사용해주어야 한다는 점이다.
+
+
+
+> 두 번째 방법을 선호한다.   
+ 멀티 모듈을 사용할 경우, 모듈별로 각기 다른 Repository를 사용하는 경우가 많아, 단점이 상쇄되고 장점이 극대화되기
+때문이다
+
+
+
+
+
+
+

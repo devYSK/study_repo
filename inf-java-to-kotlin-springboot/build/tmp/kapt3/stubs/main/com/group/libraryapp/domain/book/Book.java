@@ -16,6 +16,8 @@ public final class Book {
     private final java.lang.Long id = null;
     @org.jetbrains.annotations.NotNull()
     public static final com.group.libraryapp.domain.book.Book.Companion Companion = null;
+    @org.jetbrains.annotations.NotNull()
+    public static final java.lang.String ELIS = "\uc774\uc0c1\ud55c \ub098\ub77c\uc758 \uc5d8\ub9ac\uc2a4";
     
     public Book(@org.jetbrains.annotations.NotNull()
     java.lang.String name, @org.jetbrains.annotations.NotNull()
@@ -43,7 +45,7 @@ public final class Book {
         return 0;
     }
     
-    @kotlin.Metadata(mv = {1, 6, 0}, k = 1, d1 = {"\u0000&\n\u0002\u0018\u0002\n\u0002\u0010\u0000\n\u0002\b\u0002\n\u0002\u0018\u0002\n\u0000\n\u0002\u0010\u000e\n\u0000\n\u0002\u0018\u0002\n\u0000\n\u0002\u0010\t\n\u0002\b\u0002\b\u0086\u0003\u0018\u00002\u00020\u0001B\u0007\b\u0002\u00a2\u0006\u0002\u0010\u0002J+\u0010\u0003\u001a\u00020\u00042\b\b\u0002\u0010\u0005\u001a\u00020\u00062\b\b\u0002\u0010\u0007\u001a\u00020\b2\n\b\u0002\u0010\t\u001a\u0004\u0018\u00010\n\u00a2\u0006\u0002\u0010\u000b\u00a8\u0006\f"}, d2 = {"Lcom/group/libraryapp/domain/book/Book$Companion;", "", "()V", "fixture", "Lcom/group/libraryapp/domain/book/Book;", "name", "", "type", "Lcom/group/libraryapp/domain/book/BookType;", "id", "", "(Ljava/lang/String;Lcom/group/libraryapp/domain/book/BookType;Ljava/lang/Long;)Lcom/group/libraryapp/domain/book/Book;", "library-app"})
+    @kotlin.Metadata(mv = {1, 6, 0}, k = 1, d1 = {"\u0000(\n\u0002\u0018\u0002\n\u0002\u0010\u0000\n\u0002\b\u0002\n\u0002\u0010\u000e\n\u0000\n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0018\u0002\n\u0000\n\u0002\u0010\t\n\u0002\b\u0002\b\u0086\u0003\u0018\u00002\u00020\u0001B\u0007\b\u0002\u00a2\u0006\u0002\u0010\u0002J+\u0010\u0005\u001a\u00020\u00062\b\b\u0002\u0010\u0007\u001a\u00020\u00042\b\b\u0002\u0010\b\u001a\u00020\t2\n\b\u0002\u0010\n\u001a\u0004\u0018\u00010\u000b\u00a2\u0006\u0002\u0010\fR\u000e\u0010\u0003\u001a\u00020\u0004X\u0086T\u00a2\u0006\u0002\n\u0000\u00a8\u0006\r"}, d2 = {"Lcom/group/libraryapp/domain/book/Book$Companion;", "", "()V", "ELIS", "", "fixture", "Lcom/group/libraryapp/domain/book/Book;", "name", "type", "Lcom/group/libraryapp/domain/book/BookType;", "id", "", "(Ljava/lang/String;Lcom/group/libraryapp/domain/book/BookType;Ljava/lang/Long;)Lcom/group/libraryapp/domain/book/Book;", "library-app"})
     public static final class Companion {
         
         private Companion() {
