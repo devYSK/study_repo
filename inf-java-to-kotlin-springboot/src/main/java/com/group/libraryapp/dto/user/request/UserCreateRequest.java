@@ -13,4 +13,8 @@ public class UserCreateRequest {
     return age;
   }
 
+  public UserCreateRequest(String name, Integer age) {
+    this.name = name;
+    this.age = age;
+  }
 }

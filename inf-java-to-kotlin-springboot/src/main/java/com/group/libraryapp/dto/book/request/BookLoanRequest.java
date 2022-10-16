@@ -13,4 +13,8 @@ public class BookLoanRequest {
     return bookName;
   }
 
+  public BookLoanRequest(String userName, String bookName) {
+    this.userName = userName;
+    this.bookName = bookName;
+  }
 }

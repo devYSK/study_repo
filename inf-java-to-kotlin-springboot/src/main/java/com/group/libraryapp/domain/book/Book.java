@@ -1,5 +1,7 @@
 package com.group.libraryapp.domain.book;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -28,6 +30,7 @@ public class Book {
     this.name = name;
   }
 
+  @NotNull
   public String getName() {
     return name;
   }
