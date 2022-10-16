@@ -670,5 +670,72 @@ companion object {
 
 
 
+# Kotlin Jacson Module을 사용하지 않은 경우 생기는 원인
+
+* 응답에는 isReturn 대신 return 이라는 이름이 있는 것을 확인할 수 있다.
+
+* dto code
+```kotlin
+data class BookHistoryResponse(
+    val name: String,
+
+    @get:JsonProperty("isReturn")
+    val isReturn: Boolean
+) {
+
+    companion object {
+        fun of(userLoanHistory: UserLoanHistory): BookHistoryResponse {
+            return BookHistoryResponse(
+                name = userLoanHistory.bookName,
+                isReturn = userLoanHistory.status == UserLoanStatus.RETURNED
+            )
+        }
+    }
+
+}
+```
+
+* 이러한 이유는 바로 Jackson의 동작 원리에 있다. 
+* Jackson은 객체를 JSON 형태로 바꾸어 클라이언트로 전달해주는 역할을 한다. 이때 Jackson은 객체의 getter를 보고 이름을 정하게 되는데 원래는 다음과 같다.
+  * getApple(): String → apple
+  * isReturn(): Boolean → return
+
+* 반환 타입이 Boolean인 getter는 관례상 is필드이름 이 사용되고 때문에 필드이름 만 JSON에 사용하게 되는 것이다.
+
+* 이는 Java와 Lombok을 함께 사용하더라도 동일하게 적용된다.
+
+
+## 해결하는 방법은 다음과 같다.
+```kotlin
+data class BookHistoryResponse(
+  val name: String, // 책의 이름
+  @get:JsonProperty("isReturn")
+  val isReturn: Boolean
+)
+```
+
+* Jackson에서 제공하는 어노테이션인 `@JsonProperty` 를 사용해, 필드 이름을 직접 지정해주어야 한다.
+
+* 코틀린에서는 `val isReturn: Boolean`
+만 보았을 때 여러 의미가 있을 수 있다.
+  1. isReturn이라는 생성자 파라미터일 수도 있고
+  2. isReturn 이라는 필드일 수도 있고
+  3. isReturn 이라는 getter일 수도 있다.
+
+* 때문에 @get: 을 앞에 붙여, 어디에 어노테이션을 붙이려는지 명확히 보여주어야 한다.
+Decompile을 활용해보면 쉽게 감이 올 것이다
+
+
+## 전체 데이터 쿼리 vs group by 쿼리
+
+![](.note_images/588db7c8.png)
+
+* 상황에 따라서 코드 역시 변경되어야 하는 것
+* 데이터가 일정 수준을 넘어가면 다양한 컴포넌트를 활용하는 시스템 아키텍처를 고민해야 한다. 
+
+예를 들어 다음과 같은 구성을 고민할 수 있다.
+
+* 대용랑 통계 처리 배치를 이용한 구조
+* 이벤트 발행과 메시징 큐를 이용한 구조
 
 
