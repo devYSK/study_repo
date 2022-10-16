@@ -582,6 +582,91 @@ implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3'
 ```
 
 
+# Test fixtrue
+
+
+* 테스트 코드를 바로 수정하기 전에, 잠깐 생각을 해보자.
+* 테스트 코드 역시 우리가 유지보수 해야하는 대상이다. 프로덕션 코드에 약간의 변경이 있을
+때 테스트 코드까지 수정이 필요하다면 유지보수 비용이 올라갈 것이다.
+
+* 테스트 수가 지금은 적지만 프로덕트의 규모가 커질 수록 테스트 수의 개수는 수백, 수천개
+가 되고 이는 무시할 수준이 되지 못한다
+
+* 테스트 객체(or 테스트 엔티티)를 만드는 함수(메소드)를 미리 만들어 놓자. 
+
+> companion object를
+만들고 fixture라는 이름을 가진 정적 팩토리 메소드를 만들어주자
+
+* 이때 default parameter 를 활용해주면 더욱 좋다.
+
+* companion object 는 Kotlin Coding Convention 상 클래스의 가장 마지막 부분에 위치하게 된다
+
+* 테스트에 이용할 객체를 만드는 함수를 어려운 말로 Object Mother라고 부르고, 이렇게 생겨난 테스트용 객체를 Test Fixture라고 부른다.
+
+
+```kotlin
+// in class
+
+companion object {
+  fun fixture(
+  name: String = "책 이름",
+  type: String = "COMPUTER",
+  id: Long? = null
+  ): Book {
+    return Book(
+    name = name,
+    type = type,
+    id = id,
+    )
+  }
+}
+```
+
+* 테스트용 fixture 정적 팩토리 메소드를 만들어주면, 테스트에 있어 편리함이 증가한다.
+
+
+
+# 새 API를 만들 때 Controller의 위치
+
+1. 새로운 Controller를 만들어야 할까?!
+2. 아니면 기존의 Controller에 추가해야 할까?!
+    * a. 만약 기존 Controller에 추가 한다면 어떤 Controller에 추가해야할까?!
+
+## Controller를 나누는 기준
+
+1. 화면에서 사용되는 API 끼리 모아두는 경우도 있고, 
+2. 화면과는 무관하게 같은 도메인을 대상으로 하는 API 끼리 모아두기도 한다. 
+3. 간혹 한 Controller는 하나의 API만 을 가지고 있게 만들기도 한다
+
+
+## 1. 화면에서 사용되는 API 끼리 모은다
+
+장점
+* 화면에서 어떤 API가 사용되는지 한눈에 알기 용이하다
+
+단점
+* 한 API가 여러 화면에서 사용되면 위치가 애매하다.
+* 서버 코드가 화면에 종속적이다
+
+## 2. 동일한 도메인끼리 API를 모아둔다
+
+장점
+
+* 화면 위치와 무관하게 서버 코드는 변경되지 않아도 된다.
+* 비슷한 API끼리 모이게 되며 코드의 위치를 예측할 수 있다.
+
+단점
+* 이 API가 어디서 사용되는지 서버 코드만 보고 알기는 어렵다.
+
+## 3. 1 API 1 Contoller
+
+장점
+* 화면 위치와 무관하게 서버 코드는 변경되지 않아도 된다.
+
+단점
+* 이 API가 어디서 사용되는지 서버 코드만 보고 알기는 어렵다.
+
+
 
 
 
