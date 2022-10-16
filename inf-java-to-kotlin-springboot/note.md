@@ -394,13 +394,192 @@ User는 본인과 관계를 맺고 있는 UserLoanHistory의 equals() 를 호출
 
 
 
+# Kotlin Service 클래스 이슈
+
+
+> Methods annotated with '@Transactional' must be overridable
+
+
+* 이 에러는 다음 이유로 발생한다.
+* @Transactional 어노테이션이 정상 동작하려면, UserService.saveUser() 메소드를 상속 받을 수 있어야 한다.
+
+* 하지만 Kotlin에서는 기본적으로 final class, final method이다. 즉, 클래스에 대한 상속 이나 메소드에 대한 오버라이드가 불가능하다.
+
+
+> 이 에러에 대한 해결책은 다음 플러그인을 사용해주는 것이다! kotlin-spring 플러그인을 사용하면 필요한 클래스에 대해 상속과 오버라이드를 자동 허용해준다.
+
+* 또는 class와 method에 `open` 키워드를 붙이면되지만, 번거롭기 때문에 플러그인이 존재한다. 
+
+```gradle
+plugins {
+  id "org.jetbrains.kotlin.plugin.spring" version "1.6.21"
+} 
+```
+
+
+## Kotlin에서의 Optional 제거 방법
+
+
+JDK8에서 등장한 Optional은 null이 될 가능성을 가진 값을 wrapping 하기 위해 생긴 타입
+으로, Kotlin에서는 타입 시스템에서 ? 를 활용해 null 가능성을 판단할 수 있기 때문에 더이상 사용할 필요가 없다
+
+
+* 다음처럼 메소드 시그니처 변경
+
+```kotlin
+interface UserRepository: JpaRepository<User, Long> {
+
+    fun findByName(name: String): User?
+
+}
+```
+
+* 다음에 레포지토리 등 orElseThrow 같은 Optional 메소드를 사용하는 곳을 `Elvis(엘비스)` 연산자로 바꾼다
+
+```kotlin
+ @Transactional
+    fun deleteUser(name: String) {
+        val user = userRepository.findByName(name).orElseThrow(::IllegalArgumentException)
+        userRepository.delete(user)
+    }
+
+
+// to
+
+    @Transactional
+    fun deleteUser(name: String) {
+        val user = userRepository.findByName(name) ?: throw java.lang.IllegalArgumentException()
+        userRepository.delete(user)
+    }
+
+```
+
+* orElseThrow -> ?:
+
+
+* 조금 더 나아가보자.
+
+* 이렇게 ?: throw IllegalArgumentException() 이 반복되게 되면 나중에 예외 종류를 바꾸어야 한다거나, 적절한 메시지를 넣어주어야 할 때 많은 부분에 변경이 일어나게 된다.
+
+* 때문에 이 부분을 `함수로 만들어 처리해주자.`
+
+* Exceptiontils.kt 파일을 만들고, 그 안에 fail() 이 란 함수를 만들어주었다.
+
+```kotlin
+fun fail(): Nothing { // Nothing 타입은 이 함수는 항상 정상적으로 종료되지 않는다는 의미이다.
+    throw IllegalArgumentException()
+}
+// BookService
+
+
+@Transactional
+    fun loanBook(request: BookLoanRequest) {
+        if (userLoanHistoryRepository.findByBookNameAndIsReturn(request.bookName, false) != null) {
+            throw IllegalArgumentException("진작 대출되어 있는 책입니다")
+        }
+
+        val book = bookRepository.findByName(request.bookName) ?: fail()
+        val user = userRepository.findByName(request.userName) ?: fail()
+
+        user.loanBook(book)
+    }
+
+```
+
+* 또는 확장함수를 사용할 수 있다.
+
+
+> 스프링 프레임워크는 Kotlin과 CrudRepository를 함께 사용할 때   
+이런 상황에 대비하여 `CrudRepositoryExtension.kt` 이라는 확장함수가 담긴파일을 만들어 두었다
+
+```kotlin
+@Transactional
+fun updateUserName(request: UserUpdateRequest) {
+    val user = userRepository.findByIdOrNull(request.id) ?: fail()
+    user.updateName(request.name)
+}
+```
+
+## 우리도 확장함수를 만들 수 있다. 한단계 더 나아가 보자
+
+JpaRepositoryExtension.kt 파일을 만든다.
+
+```kotlin
+fun <T, ID> CrudRepository<T, ID>.findByIdOrThrow(id: ID): T {
+    return this.findByIdOrNull(id) ?: fail()
+}
+```
+
+* 이렇게 되면 한번 더 감싸서, fail()도 적을 필요가 없게된다. 
+
+```kotlin
+@Transactional
+fun updateUserName(request: UserUpdateRequest) {
+    val user = userRepository.findByIdOrThrow(request.id)
+    user.updateName(request.name)
+}
+```
+
+* 확장함수를 이용해서 코드를 간략하게 만들 수 있다.
+
+
+# Convert Java File to Kotlin File 
+
+Intelij에서 지원하는 기능이다.
+
+
+패키지 우클릭 -> Convert Java File to Kotlin File
+
+
+* `Convert Java To Kotlin 블라블라~ Yes Or No` 라는 창이 뜨고 Yes를 누르면 바뀐 파일들을 볼 수 있다.
+
+* 그러나 의도한대로 바뀌지 않는 경우가 있으니, 직접 열어서 코드를 확인해보자
 
 
 
+### 정적 팩토리 메소드
+
+```kotlin
+data class UserResponse(
+    val id: Long,
+    val name: String,
+    val age: Int?
+
+) {
+
+    companion object {
+        fun of(user: User): UserResponse {
+            return UserResponse(
+                id = user.id!!,
+                name = user.name,
+                age = user.age
+            )
+        }
+    }
+}
+```
 
 
 
+## Jackson Error
 
+> Resolved [org.springframework.http.converter.HttpMessageNotReadableException: JSON par
+se error: Cannot construct instance of `com.group.libraryapp.dto.book.request.BookRequ
+est` (although at least one Creator exists): cannot deserialize from Object value (no
+delegate- or property-based Creator); nested exception is com.fasterxml.jackson.datab
+ind.exc.MismatchedInputException: Cannot construct instance of `com.group.libraryapp.d
+to.book.request.BookRequest` (although at least one Creator exists): cannot deserializ
+e from Object value (no delegate- or property-based Creator)<EOL> at [Source: (org.spr
+ingframework.util.StreamUtils$NonClosingInputStream); line: 1, column: 2]]
+
+
+* Kotlin Jackson Module을 의존성에 추가해 해결할수 있다! 이 에러는 Jackson이 Kotlin
+Class를 생성하지 못해 발생하는 에러이다.
+
+
+```kotlin
+implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3'
+```
 
 
 
