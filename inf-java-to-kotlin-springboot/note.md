@@ -194,8 +194,7 @@ val people = listOf(Person("A"), Person("B"))
 assertThat(people).extracting("name").containsExactlyInAnyOrder("A", "B")
 ```
 
-* 주어진 컬렉션 안의 item 들에서 name 이라는 프로퍼티를 추출한 후 (extracting), 그
-값을 검증한다.
+* 주어진 컬렉션 안의 item 들에서 name 이라는 프로퍼티를 추출한 후 (extracting), 그값을 검증한다.
     * 이때 순서도 중요하다.
 
 ```kotlin
@@ -203,13 +202,75 @@ val people = listOf(Person("A"), Person("B"))
 assertThat(people).extracting("name").containsExactly("A", "B")
 ```
 
+* 함수( function1() )를 실행했을 때 원하는 예외가 나오는지 검증한다.
+```kotlin
+assertThrows<IllegalArgumentException> {
+  function1()
+}
+```
+
+* 예외 메시지까지 검증할 수 있다.
+
+```kotlin
+val message = assertThrows<IllegalArgumentException> {
+  function1()
+}.message
+assertThat(message).isEqualTo("잘못된 값이 들어왔습니다")
+```
+
+## Kotlin No-arg-constructor
+
+```
+Class 'Book' should have [pubilc, protected] no-arg constructor
+```
+* 이 에러가 발생하는 이유는 다음과 같다.
+    * JPA를 사용하기 위해서는 아무런 argument를 받지 않는 기본 생성자가 필요하다
+
+* 하지만 코틀린 코드에서는 ‘주 생성자'를 만들 때 프로퍼티를 함께 만들어주는 방식을 사
+용함으로써, 아무런 argument를 받지 않는 기본 생성자가 존재하지 않는다.
+
+* 이 에러를 해결해주기 위해서는 다음과 같은 kotlin-jpa 플러그인이 필요하다
 
 
+```gradle
+// build.gradle
+plugins {
+id "org.jetbrains.kotlin.plugin.jpa" version "1.6.21" 
+}
+```
+
+## 코틀린에러
+
+코틀린으로 스프링 사용 시 ClassNotFoundException: kotlin.reflect.full.KClasses
+
+에러시 kotlin-reflect 의존성을 추가해주면 해결된다.
 
 
+```
+이 에러는 코틀린 클래스에 대한 리플렉션을 할 수 없어 발생하는데, 이를 해결하기 위해
+Kotlin 리플렉션 라이브러리를 넣어주어야 한다. 리플렉션이란, 클래스나 메소드 등을 런타
+임으로 제어하기 위한 기술을 의미한다
+```
 
+```xml
+<!-- https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-reflect -->
 
+<dependency>
 
+    <groupId>org.jetbrains.kotlin</groupId>
+
+    <artifactId>kotlin-reflect</artifactId>
+
+    <version>사용 버전에 맞게</version>
+
+</dependency>
+```
+
+```gradle
+dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-reflect'
+}
+```
 
 
 

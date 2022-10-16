@@ -30,8 +30,8 @@ public class BookService {
 
   @Transactional
   public void saveBook(BookRequest request) {
-    Book newBook = new Book(request.getName());
-    bookRepository.save(newBook);
+    Book newJavaBook = new Book(request.getName(), null);
+    bookRepository.save(newJavaBook);
   }
 
   @Transactional
