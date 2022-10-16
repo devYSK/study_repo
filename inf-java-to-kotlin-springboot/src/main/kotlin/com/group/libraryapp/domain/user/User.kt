@@ -6,7 +6,7 @@ import javax.persistence.*
 
 @Entity
 class User constructor(
-    var name: String,
+    name: String,
     var age: Int?,
 
     @OneToMany(
@@ -41,4 +41,7 @@ class User constructor(
         this.userLoanHistory.first { history -> history.bookName == bookName }
             .doReturn()
     }
+
+    var name = name
+        private set
 }

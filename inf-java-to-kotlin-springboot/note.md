@@ -273,28 +273,124 @@ dependencies {
 ```
 
 
+# Kotlin과 JPA를 함께 사용할 때 이야기거리 3가지
+
+
+
+## 코틀린에서의 `setter`를 막는 방법
+
+
+### 1. backing property
+
+
+```kotlin
+@Entity
+class User constructor(
+
+    private var _name: String,
+
+    ) {
+
+    val name: String
+        get() = this._name
+}
+```
+
+* 이렇게 _name 이라는 프로퍼티를 만들고, 읽기 전용으로 추가 프로퍼티 name 을 만든다
+
+> 다만, JpaRepository에서 쿼리메소드가 동작하지 않을 수 있다. _name을 못찾는 경우가 있다. 
+
+### 2. custom setter
+
+
+```kotlin
+class User(
+  name: String // 프로퍼티가 아닌, 생성자 인자로만 name을 받는다
+) {
+
+  var name = name
+    private set
+}
+```
+
+User의 생성자에서 name을 프로퍼티가 아닌, 생성자 인자로만 받고 이 name을 변경가능
+한 name 프로퍼티로 넣어주되, name 프로퍼티에 private setter를 달아두는 것이다.
+
+### 3. setter를 그냥 열어두고, 사용하지 않는것
+
+* setter를 그냥 열어두고, 사용하지 않는다
+
+> 결국 어느 방법이든, setter를 열어두고 사용하지 않는것이든,  Trade-Off의 영역이라 생각하고, 팀간의 컨벤션을 잘 맞추는 것이 중요하지 않을까 싶
+다
 
 
 
 
+---
+
+## 생성자 안의 프로퍼티, 클래스 body 안의 프로퍼티
+
+다시 User 클래스를 보자. User 클래스 주생성자 안에 있는 userLoanHistories 와 id 는 꼭
+주생성자 안에 있을 필요가 없다. 아래와 같이 코드가 바뀔 수 있는 것이다.
+
+
+```kotlin
+@Entity
+class User  (
+  var name: String,
+  val age: Int?,
+) {
+  @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemovel = true)
+  val userLoanHistories: MutableList<UserLoanHistory> = mutableListOf(),
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  val id: Long? = null,
+
+  
+}
+```
+
+테스트를 하기 위한 객체를 만들어 줄 때도 정적
+팩토리 메소드를 사용하다 보니 프로퍼티가 안에 있건, 밖에 있건 두 경우 모두 적절히 대응
+할 수 있다.
+하지만 명확한 가이드가 있는 것은 함께 개발을 할 때에 중요하므로
+1. 모든 프로퍼티를 생성자에 넣거나
+2. 프로퍼티를 생성자 혹은 클래스 body 안에 구분해서 넣을 때 명확한 기준이 있거나
+해야한다고 생각한다
+
+
+# JPA와 data class
+
+
+* JPA Entity는 data class를 피하는 것이 좋다.
+
+* data class는 equals, hashCode, toString 등의 함수를 자동으로 만들어준다. 
+
+* 사실 원래 세 함수는 JPA Entity와 궁합이 그렇게 좋지 못했다. 
+  * 연관관계 상황에서 문제가 될 수 있는 경우들이 존재했기 때문이다
 
 
 
+예를 들어, User와 USerLoanHistory Entity가 `1:N` 관계를 맺고 있을 떄, 
 
 
+> 1 : N 연관관계를 맺고 있는 상황에서 User 쪽에 equals() 가 호출된다면,   
+User는 본인과 관계를 맺고 있는 UserLoanHistory의 equals() 를 호출하게 되고, 다시 UserLoanHistory 는 본인과 관계를 맺고 있는 User의 equals() 를 호출하게 된다.  
+때문에 JPA Entity는 data class를 피하는 것이 좋다.
 
 
+* -> 무한으로 서로 참조할 수도 있기 때문.. 
+
+---
+
+## Entity (Class) 가 생성되는 로직을 찾고 싶은 경우, constructor 지시어를 명시적으로 작성하고 추적하면 훨씬 편하다.
 
 
+![](.note_images/68dbe1ef.png)
 
 
-
-
-
-
-
-
-
+* constructor를 클릭하면 생성자가 호출되는 지점만 추적할 수 있다 (in intelij IDEA)
 
 
 
