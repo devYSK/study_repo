@@ -1,4 +1,4 @@
-package hello.advanced.v0;
+package hello.advanced.app.v0;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -14,7 +14,7 @@ public class OrderRepositoryV0 {
         // 저장 로직
 
         if (itemId.equals("ex")) {
-            throw new IllegalArgumentException();
+            throw new IllegalStateException();
         }
         sleep(1000);
     }

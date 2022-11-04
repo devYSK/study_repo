@@ -78,12 +78,9 @@ Repository로 이어지는 흐름을 최대한 단순하게 만든다.
 [b7119f27] OrderController.request()
 [b7119f27] |-->OrderService.orderItem()
 [b7119f27] | |-->OrderRepository.save()
-[b7119f27] | |<X-OrderRepository.save() time=0ms
-ex=java.lang.IllegalStateException: 예외 발생!
-[b7119f27] |<X-OrderService.orderItem() time=10ms
-ex=java.lang.IllegalStateException: 예외 발생!
-[b7119f27] OrderController.request() time=11ms
-ex=java.lang.IllegalStateException: 예외 발생!
+[b7119f27] | |<X-OrderRepository.save() time=0ms ex=java.lang.IllegalStateException: 예외 발생!
+[b7119f27] |<X-OrderService.orderItem() time=10ms ex=java.lang.IllegalStateException: 예외 발생!
+[b7119f27] OrderController.request() time=11ms ex=java.lang.IllegalStateException: 예외 발생!
 ```
 
 ## 로그추적기 V1 - 프로토타입 개발 
@@ -99,7 +96,7 @@ ex=java.lang.IllegalStateException: 예외 발생!
     * traceId : 내부에 트랜잭션ID와 level을 가지고 있다.
 
     * startTimeMs : 로그 시작시간이다. 로그 종료시 이 시작 시간을 기준으로 시작~종료까지 전체 수행
-시간을 구할 수 있다. 
+    시간을 구할 수 있다. 
     * message : 시작시 사용한 메시지이다. 이후 로그 종료시에도 이 메시지를 사용해서 출력한다
 
 
@@ -108,24 +105,224 @@ ex=java.lang.IllegalStateException: 예외 발생!
 
 
 
+동기화문제 - 쓰레드로컬
+
+
+
+필드 동기화 - 동시성 문제
+잘 만든 로그 추적기를 실제 서비스에 배포했다 가정해보자.
+테스트 할 때는 문제가 없는 것 처럼 보인다. 사실 직전에 만든 FieldLogTrace 는 심각한 동시성 문제를
+가지고 있다.
 
 
 
 
 
+FieldLogTrace 는 싱글톤으로 등록된 스프링 빈이다. 
+
+이 객체의 인스턴스가 애플리케이션에 딱 1
+존재한다는 뜻이다. 
+
+이렇게 하나만 있는 인스턴스의 FieldLogTrace.traceIdHolder 필드를 여러
+쓰레드가 동시에 접근하기 때문에 문제가 발생한다.
+실무에서 한번 나타나면 개발자를 가장 괴롭히는 문제도 바로 이러한 동시성 문제이다. 
 
 
 
 
 
+> 싱글톤 빈을 여러 쓰레드가 동시에 접근하기 때문에 발생한 문제 
+
+
+
+동시성 문제는 지역 변수에서는 발생하지 않는다. 지역 변수는 쓰레드마다 각각 다른 메모리 영역이 할당된다.
+> 동시성 문제가 발생하는 곳은 같은 인스턴스의 필드(주로 싱글톤에서 자주 발생), 또는 static 같은 공용
+> 필드에 접근할 때 발생한다.
+> 동시성 문제는 값을 읽기만 하면 발생하지 않는다. 어디선가 값을 변경하기 때문에 발생한다
+
+싱글톤 객체의 필드를 사용하면서 동시성 문제를 해결하려면 -> 쓰레드 로컬
+
+
+
+## ThreadLocal - 소개
+쓰레드 로컬은 해당 쓰레드만 접근할 수 있는 특별한 저장소
+
+쓰레드 로컬을 사용하면 각 쓰레드마다 별도의 내부 저장소를 제공
+
+자바는 언어차원에서 쓰레드 로컬을 지원하기 위한 `java.lang.ThreadLocal` 제공
+
+
+
+ThreadLocal 사용법
+값 저장: ThreadLocal.set(xxx)
+값 조회: ThreadLocal.get()
+값 제거: ThreadLocal.remove()
+
+주의
+
+> `해당 쓰레드가 쓰레드 로컬을 모두 사용하고 나면 ThreadLocal.remove() 를 호출해서 쓰레드 로컬에
+> 저장된 값을 제거해주어야 한다. ` -> 메모리 누수 발생 가능 
+
+
+
+ 쓰레드 로컬을 모두 사용하고 나면 꼭 ThreadLocal.remove() 를 호출해서 쓰레드 로컬에 저장된
+값을 제거해주어야 한다
+
+
+
+쓰레드 로컬 - 주의사항
+쓰레드 로컬의 값을 사용 후 제거하지 않고 그냥 두면 WAS(톰캣)처럼 쓰레드 풀을 사용하는 경우에 심각한
+문제가 발생할 수 있다.
+
+
+
+WAS는 쓰레드풀에서 미리 쓰레드를 생성해놓고, 요청이 요면 쓰레드를 넘겨주는데,
+
+A라는 사용자의 요청이 A쓰레드를 할당받고 쓰레드로컬을 통해 사용자 A의 요청을 처리하고 데이터를 지우지 않았다.
+
+(A쓰레드 전용 저장소에 데이터를 보관.)
+
+그리고 A쓰레드를 반납했다.
+
+B라는 사용자가 요청을 보냈는데 A쓰레드가 다시 할당되었다(물론 다른 쓰레드가 할당될 수 있다. ) 
+
+A쓰레드에서 지워지지않고 남아있떤 사용자 A의 데이터가 조회되는 심각한 문제가 발생하게 된다.
+
+그러므로 요청이 끝나서 쓰레드를 반납하기 전에 꼭 쓰레드 로컬의 값을 ThreadLocal.remove()로 제거하자. 
 
 
 
 
 
+# 템플릿 메서드 패턴
 
 
 
+핵심 기능 vs 부가 기능
+핵심 기능은 해당 객체가 제공하는 고유의 기능이다. 
+
+부가 기능은 핵심 기능을 보조하기 위해 제공되는 기능이다. 예를 들어서 로그 추적 로직, 트랜잭션 기능이
+있다. 이러한 부가 기능은 단독으로 사용되지는 않고, 핵심 기능과 함께 사용된다
+
+그러니까 핵심 기능을 보조하기 위해 존재한다
+
+부가 기능과 관련된 코드가 중복이니 중복을 별도의 메서드로 뽑아내면 된다.
+
+변하는 것과 변하지 않는 것을 분리
+좋은 설계는 변하는 것과 변하지 않는 것을 분리하는 것이다
+
+여기서 핵심 기능 부분은 변하고,  변하지 않는 부분은 부가기능이다.
+이 둘을 분리해서 모듈화해야 한다
+
+템플릿 메서드 패턴(Template Method Pattern)은 이런 문제를 해결하는 디자인 패턴이다
+
+
+
+```java
+@Slf4j
+public class TemplateMethodTest {
+
+    @Test
+    void templateMethodV0() {
+        logic1();
+        logic2();
+    }
+
+    private void logic1() {
+        long startTime = System.currentTimeMillis();
+
+        //비즈니스 로직 실행
+        log.info("비즈니스 로직1 실행");
+
+        //비즈니스 로직 종료
+        long endTime = System.currentTimeMillis();
+        long resultTime = endTime - startTime;
+        log.info("resultTime={}", resultTime);
+    }
+
+    private void logic2() {
+        long startTime = System.currentTimeMillis();
+
+        //비즈니스 로직 실행
+
+        log.info("비즈니스 로직2 실행");
+        //비즈니스 로직 종료
+
+        long endTime = System.currentTimeMillis();
+        long resultTime = endTime - startTime;
+        log.info("resultTime={}", resultTime);
+    }
+}
+```
+
+* 변하는 부분: 비즈니스 로직
+* 변하지 않는 부분: 시간 측정
+
+![image-20221104150535581](/Users/ysk/study/study_repo/inflearn-spring-core/spring-core/images//image-20221104150535581.png)
+
+![image-20221104152231274](/Users/ysk/study/study_repo/inflearn-spring-core/spring-core/images//image-20221104152231274.png)
+
+template1.execute() 를 호출하면 템플릿 로직인 AbstractTemplate.execute() 를 실행한다. 여기서
+중간에 call() 메서드를 호출하는데, 이 부분이 오버라이딩 되어있다.
+
+ 따라서 현재 인스턴스인 SubClassLogic1 인스턴스의 SubClassLogic1.call() 메서드가 호출된다.
+템플릿 메서드 패턴은 이렇게 다형성을 사용해서 변하는 부분과 변하지 않는 부분을 분리하는 방법이다
+
+
+
+템플릿 메서드 패턴 - 예제3
+익명 내부 클래스 사용하기
+템플릿 메서드 패턴은 SubClassLogic1 , SubClassLogic2 처럼 클래스를 계속 만들어야 하는 단점이
+있다. 익명 내부 클래스를 사용하면 이런 단점을 보완할 수 있다
+
+
+
+자바가 임의로 만들어주는 익명 내부 클래스 이름은 실행시키는 메서드가 속한 클래스 이름이다.
+
+
+
+템플릿 메서드 패턴 - 정의
+GOF 디자인 패턴에서는 템플릿 메서드 패턴을 다음과 같이 정의했다.
+> 템플릿 메서드 디자인 패턴의 목적은 다음과 같습니다.
+> "작업에서 알고리즘의 골격을 정의하고 일부 단계를 하위 클래스로 연기합니다. 템플릿 메서드를 사용하면
+> 하위 클래스가 알고리즘의 구조를 변경하지 않고도 알고리즘의 특정 단계를 재정의할 수 있습니다." [GOF]$
+
+![image-20221104153504506](/Users/ysk/study/study_repo/inflearn-spring-core/spring-core/images//image-20221104153504506.png)
+
+부모 클래스에 알고리즘의 골격인 템플릿을 정의하고, 일부 변경되는 로직은 자식 클래스에 정의하는
+것이다. 이렇게 하면 자식 클래스가 알고리즘의 전체 구조를 변경하지 않고, 특정 부분만 재정의할 수 있다.
+결국 상속과 오버라이딩을 통한 다형성으로 문제를 해결하는 것이다.
+하지만
+템플릿 메서드 패턴은 상속을 사용한다. 따라서 상속에서 오는 단점들을 그대로 안고간다. 특히 자식
+클래스가 부모 클래스와 컴파일 시점에 강하게 결합되는 문제가 있다. 이것은 의존관계에 대한 문제이다.
+자식 클래스 입장에서는 부모 클래스의 기능을 전혀 사용하지 않는다
+
+
+
+상속을 받는 다는 것은 특정 부모 클래스를 의존하고 있다는 것이다. 자식 클래스의 extends 다음에 바로
+부모 클래스가 코드상에 지정되어 있다. 따라서 부모 클래스의 기능을 사용하든 사용하지 않든 간에 부모
+클래스를 강하게 의존하게 된다. 여기서 강하게 의존한다는 뜻은 자식 클래스의 코드에 부모 클래스의
+코드가 명확하게 적혀 있다는 뜻이다. UML에서 상속을 받으면 삼각형 화살표가 자식 -> 부모 를 향하고
+있는 것은 이런 의존관계를 반영하는 것이다.
+
+자식 클래스 입장에서는 부모 클래스의 기능을 전혀 사용하지 않는데, 부모 클래스를 알아야한다. 이것은
+좋은 설계가 아니다. 그리고 이런 잘못된 의존관계 때문에 부모 클래스를 수정하면, 자식 클래스에도 영향을
+줄 수 있다.
+
+추가로 템플릿 메서드 패턴은 상속 구조를 사용하기 때문에, 별도의 클래스나 익명 내부 클래스를 만들어야
+하는 부분도 복잡하다.
+
+지금까지 설명한 이런 부분들을 더 깔끔하게 개선하려면 어떻게 해야할까?
+
+템플릿 메서드 패턴과 비슷한 역할을 하면서 상속의 단점을 제거할 수 있는 
+
+디자인 패턴이 바로 전략 패턴
+(Strategy Pattern)이다
+
+
+
+# 전략 패턴 - 시작
+전략 패턴의 이해를 돕기 위해 템플릿 메서드 패턴에서 만들었던 동일한 예제를 사용해보자
 
 
 
