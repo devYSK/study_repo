@@ -1,20 +1,22 @@
-package hello.advanced.trace;
+package hello.advanced.trace.logtrace;
 
+import hello.advanced.trace.TraceId;
+import hello.advanced.trace.TraceStatus;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ThreadLocalLogTrace implements LogTrace {
+public class FieldLogTrace implements LogTrace {
 
     private static final String START_PREFIX = "-->";
     private static final String COMPLETE_PREFIX = "<--";
     private static final String EX_PREFIX = "<X-";
 
-    private ThreadLocal<TraceId> traceIdHolder = new ThreadLocal<>();
+    private TraceId traceIdHolder; //traceId 동기화, 동시성 이슈 발생
 
     @Override
     public TraceStatus begin(String message) {
         syncTraceId();
-        TraceId traceId = traceIdHolder.get();
+        TraceId traceId = traceIdHolder;
         Long startTimeMs = System.currentTimeMillis();
         log.info("[{}] {}{}", traceId.getId(), addSpace(START_PREFIX,
             traceId.getLevel()), message);
@@ -35,7 +37,6 @@ public class ThreadLocalLogTrace implements LogTrace {
         Long stopTimeMs = System.currentTimeMillis();
         long resultTimeMs = stopTimeMs - status.getStartTimeMs();
         TraceId traceId = status.getTraceId();
-
         if (e == null) {
             log.info("[{}] {}{} time={}ms", traceId.getId(),
                 addSpace(COMPLETE_PREFIX, traceId.getLevel()), status.getMessage(),
@@ -49,20 +50,18 @@ public class ThreadLocalLogTrace implements LogTrace {
     }
 
     private void syncTraceId() {
-        TraceId traceId = traceIdHolder.get();
-        if (traceId == null) {
-            traceIdHolder.set(new TraceId());
+        if (traceIdHolder == null) {
+            traceIdHolder = new TraceId();
         } else {
-            traceIdHolder.set(traceId.createNextId());
+            traceIdHolder = traceIdHolder.createNextId();
         }
     }
 
     private void releaseTraceId() {
-        TraceId traceId = traceIdHolder.get();
-        if (traceId.isFirstLevel()) {
-            traceIdHolder.remove();//destroy
+        if (traceIdHolder.isFirstLevel()) {
+            traceIdHolder = null; //destroy
         } else {
-            traceIdHolder.set(traceId.createPreviousId());
+            traceIdHolder = traceIdHolder.createPreviousId();
         }
     }
 
