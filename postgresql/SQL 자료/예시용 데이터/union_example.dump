@@ -1,0 +1,579 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 10.10 (Ubuntu 10.10-0ubuntu0.18.04.1)
+-- Dumped by pg_dump version 11.8
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: boards; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.boards (
+    id bigint NOT NULL,
+    title character varying,
+    content text,
+    user_id integer,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+ALTER TABLE public.boards OWNER TO postgres;
+
+--
+-- Name: boards_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.boards_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.boards_id_seq OWNER TO postgres;
+
+--
+-- Name: boards_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.boards_id_seq OWNED BY public.boards.id;
+
+
+--
+-- Name: canned_food; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.canned_food (
+    id bigint NOT NULL,
+    name character varying(20),
+    quantity integer,
+    weight integer
+);
+
+
+ALTER TABLE public.canned_food OWNER TO postgres;
+
+--
+-- Name: canned_food_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.canned_food_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.canned_food_id_seq OWNER TO postgres;
+
+--
+-- Name: canned_food_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.canned_food_id_seq OWNED BY public.canned_food.id;
+
+
+--
+-- Name: company_json; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.company_json (
+    id integer NOT NULL,
+    information json NOT NULL
+);
+
+
+ALTER TABLE public.company_json OWNER TO postgres;
+
+--
+-- Name: company_jsonb; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.company_jsonb (
+    id integer NOT NULL,
+    information jsonb NOT NULL
+);
+
+
+ALTER TABLE public.company_jsonb OWNER TO postgres;
+
+--
+-- Name: drink; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.drink (
+    id bigint NOT NULL,
+    name character varying(20),
+    quantity integer,
+    shelf_life integer,
+    volume integer
+);
+
+
+ALTER TABLE public.drink OWNER TO postgres;
+
+--
+-- Name: drink_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.drink_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.drink_id_seq OWNER TO postgres;
+
+--
+-- Name: drink_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.drink_id_seq OWNED BY public.drink.id;
+
+
+--
+-- Name: ramen; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.ramen (
+    id bigint NOT NULL,
+    name character varying(20),
+    quantity integer,
+    is_spicy boolean,
+    shelf_life integer
+);
+
+
+ALTER TABLE public.ramen OWNER TO postgres;
+
+--
+-- Name: ramen_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.ramen_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ramen_id_seq OWNER TO postgres;
+
+--
+-- Name: ramen_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.ramen_id_seq OWNED BY public.ramen.id;
+
+
+--
+-- Name: rating; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.rating (
+    id bigint NOT NULL,
+    item_type character varying(20),
+    user_id integer,
+    rating integer,
+    item_id integer
+);
+
+
+ALTER TABLE public.rating OWNER TO postgres;
+
+--
+-- Name: rating_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.rating_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.rating_id_seq OWNER TO postgres;
+
+--
+-- Name: rating_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.rating_id_seq OWNED BY public.rating.id;
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.users (
+    id bigint NOT NULL,
+    name character varying(20),
+    email character varying(20)
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- Name: user_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.user_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.user_id_seq OWNER TO postgres;
+
+--
+-- Name: user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.user_id_seq OWNED BY public.users.id;
+
+
+--
+-- Name: boards id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.boards ALTER COLUMN id SET DEFAULT nextval('public.boards_id_seq'::regclass);
+
+
+--
+-- Name: canned_food id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.canned_food ALTER COLUMN id SET DEFAULT nextval('public.canned_food_id_seq'::regclass);
+
+
+--
+-- Name: drink id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.drink ALTER COLUMN id SET DEFAULT nextval('public.drink_id_seq'::regclass);
+
+
+--
+-- Name: ramen id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.ramen ALTER COLUMN id SET DEFAULT nextval('public.ramen_id_seq'::regclass);
+
+
+--
+-- Name: rating id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.rating ALTER COLUMN id SET DEFAULT nextval('public.rating_id_seq'::regclass);
+
+
+--
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.user_id_seq'::regclass);
+
+
+--
+-- Data for Name: boards; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.boards (id, title, content, user_id, created_at, updated_at) FROM stdin;
+1	Jacob Have I Loved	It is our choices, Harry, that show what we truly are, far more than our abilities.	8	2020-09-08 12:51:59.098829	2020-09-08 12:51:59.098829
+2	Mother Night	To the well-organized mind, death is but the next great adventure.	9	2020-09-08 12:51:59.146225	2020-09-08 12:51:59.146225
+3	The Wind's Twelve Quarters	Never trust anything that can think for itself if you can't see where it keeps its brain.	2	2020-09-08 12:51:59.153118	2020-09-08 12:51:59.153118
+4	Carrion Comfort	It’s wingardium leviOsa, not leviosAH.	3	2020-09-08 12:51:59.158391	2020-09-08 12:51:59.158391
+5	Noli Me Tangere	If you want to know what a man’s like, take a good look at how he treats his inferiors, not his equals.	3	2020-09-08 12:51:59.163707	2020-09-08 12:51:59.163707
+6	Lilies of the Field	Things we lose have a way of coming back to us in the end, if not always in the way we expect.	1	2020-09-08 12:51:59.168739	2020-09-08 12:51:59.168739
+7	The Moving Finger	It is the unknown we fear when we look upon death and darkness, nothing more.	1	2020-09-08 12:51:59.175111	2020-09-08 12:51:59.175111
+8	The Moon by Night	I solemnly swear that I am up to no good.	3	2020-09-08 12:51:59.182313	2020-09-08 12:51:59.182313
+9	The Moving Toyshop	Dark and difficult times lie ahead. Soon we must all face the choice between what is right and what is easy.	1	2020-09-08 12:51:59.188237	2020-09-08 12:51:59.188237
+10	The Green Bay Tree	After all this time? Always.	10	2020-09-08 12:51:59.193619	2020-09-08 12:51:59.193619
+\.
+
+
+--
+-- Data for Name: canned_food; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.canned_food (id, name, quantity, weight) FROM stdin;
+1	참치	14	350
+2	고추참치	5	200
+3	연어	3	400
+4	곰과 연어	14	400
+5	삼치	50	450
+\.
+
+
+--
+-- Data for Name: company_json; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.company_json (id, information) FROM stdin;
+1	{\n\t"회사이름" : "와따마시따",\n\t"대표자" : "홍길동",\n\t"설립년월" : 20200504,\n\t"사이트" : {\n\t\t"메인페이지" : "mainwm.com",\n\t\t"홍보페이지" : "wmad.com"\n\t},\n\t"제품 카테고리" : ["통조림", "라면", "음료"]\n\t}
+\.
+
+
+--
+-- Data for Name: company_jsonb; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.company_jsonb (id, information) FROM stdin;
+1	{"대표자": "홍길동", "사이트": {"메인페이지": "mainwm.com", "홍보페이지": "wmad.com"}, "설립년월": 20200504, "회사이름": "와따마시따", "제품 카테고리": ["통조림", "라면", "음료"]}
+\.
+
+
+--
+-- Data for Name: drink; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.drink (id, name, quantity, shelf_life, volume) FROM stdin;
+1	에너지드링크	36	30	300
+2	오렌지주스	38	25	1500
+3	무안단물	41	35	600
+4	순진맥주	47	60	900
+5	더맛	3	35	1000
+6	오랜지주스	1	10	120
+\.
+
+
+--
+-- Data for Name: ramen; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.ramen (id, name, quantity, is_spicy, shelf_life) FROM stdin;
+1	진라멘	2	f	90
+2	고추짜장면	15	f	30
+3	리얼짬뽕	47	t	40
+4	추풍라면	18	f	90
+5	겨울이라면	50	t	60
+\.
+
+
+--
+-- Data for Name: rating; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.rating (id, item_type, user_id, rating, item_id) FROM stdin;
+1	ramen	2	1	2
+2	drink	10	4	5
+3	ramen	9	3	5
+4	drink	5	3	5
+5	ramen	6	4	5
+6	ramen	2	4	1
+7	canned_food	8	4	3
+8	ramen	8	3	2
+9	canned_food	4	1	4
+10	canned_food	10	2	3
+11	ramen	10	1	2
+12	canned_food	9	3	5
+13	ramen	7	2	2
+14	canned_food	5	1	3
+15	canned_food	4	4	3
+16	ramen	10	1	2
+17	drink	7	1	1
+18	ramen	7	1	5
+19	ramen	10	1	2
+20	ramen	4	1	4
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.users (id, name, email) FROM stdin;
+11	Prof. Domenica Mraz	wiley.zieme@koelpin-
+12	Gov. Missy Vandervor	tierra_maggio@doyle-
+13	Leslie Upton	caridad_mann@sanford
+14	Dr. Tran Daugherty	margert@green.io
+15	Bruna Wilkinson	palma@wehner.org
+16	Rev. Delois VonRuede	evan.kling@jakubowsk
+17	Nicholas Lehner	lee_rutherford@pfann
+18	Hector Upton	larissa@terry.biz
+19	Naida Harris	donn_ratke@stokes-go
+20	Inell Frami	jesus@walter-brown.o
+1	Prof. Domenica Mraz	wiley.zieme@koelpin-
+2	Gov. Missy Vandervor	tierra_maggio@doyle-
+3	Leslie Upton	caridad_mann@sanford
+4	Dr. Tran Daugherty	margert@green.io
+5	Bruna Wilkinson	palma@wehner.org
+6	Rev. Delois VonRuede	evan.kling@jakubowsk
+7	Nicholas Lehner	lee_rutherford@pfann
+8	Hector Upton	larissa@terry.biz
+9	Naida Harris	donn_ratke@stokes-go
+10	Inell Frami	jesus@walter-brown.o
+\.
+
+
+--
+-- Name: boards_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.boards_id_seq', 10, true);
+
+
+--
+-- Name: canned_food_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.canned_food_id_seq', 5, true);
+
+
+--
+-- Name: drink_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.drink_id_seq', 8, true);
+
+
+--
+-- Name: ramen_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ramen_id_seq', 5, true);
+
+
+--
+-- Name: rating_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.rating_id_seq', 20, true);
+
+
+--
+-- Name: user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.user_id_seq', 20, true);
+
+
+--
+-- Name: boards boards_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.boards
+    ADD CONSTRAINT boards_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: canned_food canned_food_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.canned_food
+    ADD CONSTRAINT canned_food_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: company_json company_json_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.company_json
+    ADD CONSTRAINT company_json_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: company_jsonb company_jsonb_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.company_jsonb
+    ADD CONSTRAINT company_jsonb_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: drink drink_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.drink
+    ADD CONSTRAINT drink_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ramen ramen_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.ramen
+    ADD CONSTRAINT ramen_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: rating rating_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.rating
+    ADD CONSTRAINT rating_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users user_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT user_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: dring_name_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX dring_name_idx ON public.drink USING btree (name);
+
+
+--
+-- Name: hash_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hash_idx ON public.users USING hash (name);
+
+
+--
+-- Name: item_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX item_idx ON public.rating USING btree (item_type, item_id DESC);
+
+
+--
+-- Name: name_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX name_idx ON public.ramen USING btree (name);
+
+
+--
+-- Name: spicy_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX spicy_idx ON public.ramen USING btree (shelf_life) WHERE is_spicy;
+
+
+--
+-- PostgreSQL database dump complete
+--
+

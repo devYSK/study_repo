@@ -589,3 +589,647 @@ ContextV1 , ContextV2 두 가지 방식 다 문제를 해결할 수 있지만, �
 
 
 
+* @Import(AppV1Config.class)
+  * 클래스를 스프링 빈으로 등록한다. 
+  * 여기서는 AppV1Config.class 를스프링 빈으로 등록한다. 일반적으로 @Configuration 같은 설정 파일을 등록할 때 사용하지만, 스프링 빈을 등록할 때도 사용할 수 있다
+
+* @SpringBootApplication(scanBasePackages = "hello.proxy.app") 
+  *  @ComponentScan 의기능과 같다. 컴포넌트 스캔을 시작할 위치를 지정한다. 이 값을 설정하면 해당 패키지와 그 하위 패키지를
+    컴포넌트 스캔한다. 
+  * 이 값을 사용하지 않으면 ProxyApplication 이 있는 패키지와 그 하위 패키지를
+    스캔한다. 
+
+
+
+
+
+# 프록시, 프록시 패턴, 데코레이터 패턴 - 소개
+프록시에 대해서 알아보자
+
+![image-20221105152421706](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221105152421706.png)
+
+클라이언트와 서버
+클라이언트( Client )와 서버( Server )라고 하면 개발자들은 보통 서버 컴퓨터를 생각한다
+
+사실 클라이언트와 서버의 개념은 상당히 넓게 사용된다. 
+
+클라이언트는 의뢰인이라는 뜻이고, 서버는 '서비스나 상품을 제공하는 사람이나 물건'을 뜻한다. 
+
+따라서 클라이언트와 서버의 기본 개념을 정의하면
+클라이언트는 서버에 필요한 것을 요청하고, 서버는 클라이언트의 요청을 처리하는 것이다.
+
+이 개념을 우리가 익숙한 컴퓨터 네트워크에 도입하면 클라이언트는 웹 브라우저가 되고, 요청을 처리하는
+서버는 웹 서버가 된다.
+
+이 개념을 객체에 도입하면, 요청하는 객체는 클라이언트가 되고, 요청을 처리하는 객체는 서버가 된다.
+
+
+
+### 직접 호출과 간접 호출
+
+![image-20221105152505243](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221105152505243.png)
+
+그런데 클라이언트가 요청한 결과를 서버에 직접 요청하는 것이 아니라 어떤 대리자를 통해서 대신
+간접적으로 서버에 요청할 수 있다. 예를 들어서 내가 직접 마트에서 장을 볼 수도 있지만, 누군가에게 대신
+장을 봐달라고 부탁할 수도 있다.
+여기서 대신 장을 보는` 대리자를 영어로 프록시(Proxy)`라 한다
+
+
+
+예시
+재미있는 점은 직접 호출과 다르게 간접 호출을 하면 대리자가 중간에서 여러가지 일을 할 수 있다는
+점이다.
+
+* 엄마에게 라면을 사달라고 부탁 했는데, 엄마는 그 라면은 이미 집에 있다고 할 수도 있다. 그러면 기대한 것
+  보다 더 빨리 라면을 먹을 수 있다. (접근 제어, 캐싱)
+* 아버지께 자동차 주유를 부탁했는데, 아버지가 주유 뿐만 아니라 세차까지 하고 왔다. 클라이언트가 기대한
+  것 외에 세차라는 부가 기능까지 얻게 되었다. (부가 기능 추가)
+* 그리고 대리자가 또 다른 대리자를 부를 수도 있다. 
+  * 예를 들어서 내가 동생에게 라면을 사달라고 했는데, 동생은 또 다른 누군가에게 라면을 사달라고 다시 요청할 수도 있다. 
+  * 중요한 점은 클라이언트는 대리자를통해서 요청했기 때문에 그 이후 과정은 모른다는 점이다. 
+  * 동생을 통해서 라면이 나에게 도착하기만 하면 된다. (프록시 체인)
+
+![image-20221105152735402](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221105152735402.png)
+
+
+
+### 대체 가능
+그런데 여기까지 듣고 보면 아무 객체나 프록시가 될 수 있는 것 같다.
+객체에서 프록시가 되려면, 클라이언트는 서버에게 요청을 한 것인지, 프록시에게 요청을 한 것인지 조차
+몰라야 한다.
+쉽게 이야기해서 서버와 프록시는 같은 인터페이스를 사용해야 한다. 그리고 클라이언트가 사용하는 서버
+객체를 프록시 객체로 변경해도 클라이언트 코드를 변경하지 않고 동작할 수 있어야 한다.
+
+![image-20221105152833257](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221105152833257.png)
+
+서버와 프록시가 같은 인터페이스 사용
+
+
+
+클래스 의존관계를 보면 클라이언트는 서버 인터페이스( ServerInterface )에만 의존한다. 
+
+그리고 서버와 프록시가 같은 인터페이스를 사용한다. 
+
+따라서 DI를 사용해서 대체 가능하다.
+
+* 클라이언트는 프록시인지 서버인지 알 수가 없다. 인터페이스를 통하기때문 
+
+
+
+![image-20221105153312822](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221105153312822.png)
+
+이번에는 런타임 객체 의존 관계를 살펴보자. 런타임(애플리케이션 실행 시점)에 클라이언트 객체에 DI를
+사용해서 Client -> Server 에서 Client -> Proxy 로 객체 의존관계를 변경해도 클라이언트 코드를
+전혀 변경하지 않아도 된다. 클라이언트 입장에서는 변경 사실 조차 모른다.
+DI를 사용하면 클라이언트 코드의 변경 없이 유연하게 프록시를 주입할 수 있다.
+
+## 프록시의 주요 기능
+프록시를 통해서 할 수 있는 일은 크게 2가지로 구분할 수 있다.
+
+* 접근 제어
+  * 권한에 따른 접근 차단
+  * 캐싱
+  * 지연 로딩
+* 부가 기능 추가
+  * 원래 서버가 제공하는 기능에 더해서 부가 기능을 수행한다.
+  * 예) 요청 값이나, 응답 값을 중간에 변형한다.
+  * 예) 실행 시간을 측정해서 추가 로그를 남긴다.
+
+
+
+프록시 객체가 중간에 있으면 크게 접근 제어와 부가 기능 추가를 수행할 수 있다
+
+
+
+
+
+
+
+## GOF 디자인 패턴 - 프록시
+둘다 프록시를 사용하는 방법이지만 GOF 디자인 패턴에서는 
+
+`이 둘을 의도(intent)에 따라서 프록시 패턴과 데코레이터 패턴으로 구분한다.`
+
+* 프록시 패턴: 접근 제어가 목적
+* 데코레이터 패턴: 새로운 기능 추가가 목적
+
+
+
+* 프록시 패턴 : 디자인 패턴, 
+* 프록시 : 실제 행위를 수행하는 객체
+
+
+
+`용어가 프록시 패턴이라고 해서 이 패턴만 프록시를 사용하는 것은 아니다. `
+
+ 데코레이터 패턴도 프록시를 사용한다.
+
+이왕 프록시를 학습하기로 했으니 GOF 디자인 패턴에서 설명하는 프록시 패턴과 데코레이터 패턴을 나누어 학습해보자
+
+
+
+>  참고: 프록시라는 개념은 클라이언트 서버라는 큰 개념안에서 자연스럽게 발생할 수 있다. 
+>
+> 프록시는 객체안에서의 개념도 있고, 웹 서버에서의 프록시도 있다. 
+>
+> 객체안에서 객체로 구현되어있는가, 웹 서버로구현되어 있는가 처럼 규모의 차이가 있을 뿐 근본적인 역할은 같다
+
+
+
+
+
+## 프록시 패턴 - 예제 코드 작성
+프록시 패턴을 이해하기 위한 예제 코드를 작성해보자. 
+
+먼저 프록시 패턴을 도입하기 전 코드를 아주 단순하게 만들어보자.
+
+
+
+```java
+public interface Subject {
+    String operation();
+}
+
+//
+
+@Slf4j
+public class RealSubject implements Subject { //호출시 1초 걸림
+
+    @Override
+    public String operation() { 
+        log.info("실제 객체 호출");
+        sleep(1000);
+        return "data";
+    }
+
+    private void sleep(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+public class ProxyPatternClient {
+
+    private Subject subject;
+
+    public ProxyPatternClient(Subject subject) {
+        this.subject = subject;
+    }
+
+    public void execute() {
+        subject.operation();
+    }
+
+}
+```
+
+
+
+테스트코드 
+
+```java
+
+public class ProxyPatternTest {
+
+    @Test
+    void noProxyTest() {
+        RealSubject realSubject = new RealSubject();
+        ProxyPatternClient client = new ProxyPatternClient(realSubject);
+        client.execute();
+        client.execute();
+        client.execute();
+    }
+
+}
+```
+
+* execute 호출마다 1초씩 걸리므로 총 3초++ 가 걸린다
+
+
+
+Proxy를 이용하여 Cache 구현
+
+```java
+
+@Slf4j
+public class CacheProxy implements Subject {
+
+    private Subject target;
+    private String cacheValue;
+
+    public CacheProxy(Subject target) {
+        this.target = target;
+    }
+
+    @Override
+    public String operation() {
+        log.info("프록시 호출");
+
+        if (cacheValue == null) {
+            cacheValue = target.operation();
+        }
+
+        return cacheValue;
+    }
+}
+
+//
+
+public class ProxyPatternTest {
+
+    @Test
+    void proxyTest() {
+        RealSubject realSubject = new RealSubject();
+
+        Subject subject = new CacheProxy(realSubject);
+        ProxyPatternClient client = new ProxyPatternClient(subject);
+        client.execute();
+        client.execute();
+        client.execute();
+    }
+}
+```
+
+* 1초 ++가 걸린다. 첫 execute 호출시에만 1초가 걸리고 나머지는 캐싱된 데이터를 리턴하기 때문이다.
+
+
+
+client.execute()을 3번 호출하면 다음과 같이 처리된다.
+1. client의 cacheProxy 호출 cacheProxy에 캐시 값이 없다. realSubject를 호출, 결과를 캐시에
+  저장 (1초)
+2. client의 cacheProxy 호출 cacheProxy에 캐시 값이 있다. cacheProxy에서 즉시 반환 (0초)
+3. client의 cacheProxy 호출 cacheProxy에 캐시 값이 있다. cacheProxy에서 즉시 반환 (0초)
+  결과적으로 캐시 프록시를 도입하기 전에는 3초가 걸렸지만, 캐시 프록시 도입 이후에는 최초에 한번만 1
+  초가 걸리고, 이후에는 거의 즉시 반환한다.
+
+
+
+### 정리
+프록시 패턴의 핵심은 RealSubject 코드와 클라이언트 코드를 전혀 변경하지 않고, 프록시를 도입해서
+`접근 제어를 했다는 점이다.`
+
+그리고 클라이언트 코드의 변경 없이 자유롭게 프록시를 넣고 뺄 수 있다. 실제 클라이언트 입장에서는
+프록시 객체가 주입되었는지, 실제 객체가 주입되었는지 알지 못한다.
+
+
+
+* OCP와 DIP를 지키게 된다. 
+
+
+
+
+
+## 데코레이터 패턴 - 예제 코드1
+데코레이터 패턴을 이해하기 위한 예제 코드를 작성해보자. 먼저 데코레이터 패턴을 도입하기 전 코드를
+아주 단순하게 만들어보자
+
+
+
+```java
+public interface Component {
+	String operation();
+}
+//
+
+@Slf4j
+public class RealComponent implements Component {
+	@Override
+	public String operation() {
+		log.info("RealComponent 실행");
+		return "data";
+	}
+}
+
+//
+
+
+@Slf4j
+public class DecoratorPatternClient {
+
+    private Component component;
+
+    public DecoratorPatternClient(Component component) {
+        this.component = component;
+    }
+
+    public void execute() {
+        String result = component.operation();
+        log.info("result={}", result);
+    }
+}
+
+//
+@Slf4j
+public class DecoratorPatternClientTest {
+
+    @Test
+    void noDecorator() {
+        Component realComponent = new RealComponent();
+        DecoratorPatternClient client = new
+            DecoratorPatternClient(realComponent);
+
+        client.execute();
+    }
+
+}
+```
+
+
+
+클라이언트 코드는 단순히 Component 인터페이스를 의존한다.
+execute() 를 실행하면 component.operation() 을 호출하고, 그 결과를 출력한다.
+
+
+
+### 부가 기능 추가
+앞서 설명한 것 처럼 프록시를 통해서 할 수 있는 기능은 크게 접근 제어와 부가 기능 추가라는 2가지로
+구분한다. 앞서 프록시 패턴에서 캐시를 통한 접근 제어를 알아보았다. 이번에는 프록시를 활용해서 부가
+기능을 추가해보자. `이렇게 프록시로 부가 기능을 추가하는 것을 데코레이터 패턴이라 한다`
+
+데코레이터 패턴: 원래 서버가 제공하는 기능에 더해서 부가 기능을 수행한다.
+예) 요청 값이나, 응답 값을 중간에 변형한다.
+예) 실행 시간을 측정해서 추가 로그를 남긴다
+
+![image-20221105155915221](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221105155915221.png)
+
+
+
+```java
+@Slf4j
+public class MessageDecorator implements Component{
+
+    private Component component;
+
+    public MessageDecorator(Component component) {
+        this.component = component;
+    }
+
+    @Override
+    public String operation() {
+        log.info("MessageDecorator 실행");
+        String result = component.operation();
+        String decoResult = "*****" + result + "*****";
+      
+      	log.info("MessageDecorator 꾸미기 적용 전={}, 적용 후={}", 
+                 result,
+                 decoResult);
+      
+        return decoResult;
+    }
+}
+```
+
+
+
+MessageDecorator 는 Component 인터페이스를 구현한다.
+프록시가 호출해야 하는 대상을 component 에 저장한다.
+operation() 을 호출하면 프록시와 연결된 대상을 호출( component.operation()) 하고, 그 응답 값에
+***** 을 더해서 꾸며준 다음 반환한다.
+예를 들어서 응답 값이 data 라면 다음과 같다.
+
+* 꾸미기 전: data
+* 꾸민 후 : *****data*****
+
+```java
+
+@Slf4j
+public class DecoratorPatternClientTest {
+
+    @Test
+    void decorator1() {
+        Component realComponent = new RealComponent();
+        Component messageDecorator = new MessageDecorator(realComponent);
+       
+        DecoratorPatternClient client = new
+            DecoratorPatternClient(messageDecorator);
+      
+        client.execute();
+    }
+}
+```
+
+실행 결과를 보면 MessageDecorator 가 RealComponent 를 호출하고 반환한 응답 메시지를 꾸며서
+반환한 것을 확인할 수 있다.
+
+
+
+### 데코레이터 패턴 - 예제 코드3
+실행 시간을 측정하는 데코레이터
+이번에는 기존 데코레이터에 더해서 실행 시간을 측정하는 기능까지 추가해보자
+
+![image-20221105160134471](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221105160134471.png)
+
+* 즉 프록시 체이닝 이 된다
+
+```java
+@Slf4j
+public class TimeDecorator implements Component {
+
+    private Component component;
+
+    public TimeDecorator(Component component) {
+        this.component = component;
+    }
+
+    @Override
+    public String operation() {
+        log.info("TimeDecorator 실행");
+
+        long startTime = System.currentTimeMillis();
+
+        String result = component.operation();
+
+        long endTime = System.currentTimeMillis();
+        long resultTime = endTime - startTime;
+        log.info("TimeDecorator 종료 resultTime={}ms", resultTime);
+        return result;
+    }
+
+}
+
+// 
+@Slf4j
+public class DecoratorPatternClientTest {
+
+
+    @Test
+    void decorator2() {
+        Component realComponent = new RealComponent();
+        Component messageDecorator = new MessageDecorator(realComponent);
+        Component timeDecorator = new TimeDecorator(messageDecorator);
+        DecoratorPatternClient client = new DecoratorPatternClient(timeDecorator);
+        client.execute();
+    }
+
+}
+```
+
+
+
+실행 결과를 보면 TimeDecorator 가 MessageDecorator 를 실행하고 실행 시간을 측정해서 출력한 것을
+확인할 수 있다.
+
+![image-20221105160544429](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221105160544429.png)
+
+
+
+여기서 생각해보면 Decorator 기능에 일부 중복이 있다. 
+
+꾸며주는 역할을 하는 Decorator 들은 스스로 존재할 수 없다. 
+
+항상 꾸며줄 대상이 있어야 한다. 
+
+따라서 내부에 호출 대상인 component 를 가지고 있어야한다. 그리고 component 를 항상 호출해야 한다.
+
+이 부분이 중복이다. 
+
+이런 중복을 제거하기 위해
+component 를 속성으로 가지고 있는 Decorator 라는 추상 클래스를 만드는 방법도 고민할 수 있다.
+
+
+
+이렇게 하면 추가로 클래스 다이어그램에서 어떤 것이 실제 컴포넌트 인지, 데코레이터인지 명확하게
+구분할 수 있다.
+
+여기까지 고민한 것이 바로 GOF에서 설명하는 데코레이터 패턴의 기본 예제이다.
+
+
+
+### 프록시 패턴 vs 데코레이터 패턴
+여기까지 진행하면 몇가지 의문이 들 것이다.
+
+* Decorator 라는 추상 클래스를 만들어야 데코레이터 패턴일까?
+* 프록시 패턴과 데코레이터 패턴은 그 모양이 거의 비슷한 것 같은데?
+
+
+
+### 의도(intent)
+사실 프록시 패턴과 데코레이터 패턴은 그 모양이 거의 같고, 상황에 따라 정말 똑같을 때도 있다. 그러면
+둘을 어떻게 구분하는 것일까?
+
+디자인 패턴에서 중요한 것은 해당 패턴의 겉모양이 아니라 그 패턴을 만든 의도가 더 중요하다. 
+
+따라서 의도에 따라 패턴을 구분한다.
+
+* 프록시 패턴의 의도: 다른 개체에 대한 접근을 제어하기 위해 대리자를 제공
+* 데코레이터 패턴의 의도: 객체에 추가 책임(기능)을 동적으로 추가하고, 기능 확장을 위한 유연한 대안 제공
+
+
+
+### 정리
+프록시를 사용하고 해당 프록시가 접근 제어가 목적이라면 프록시 패턴이고, 
+
+새로운 기능을 추가하는 것이 목적이라면 데코레이터 패턴이 된다.
+
+
+
+
+## 구체 클래스 기반 프록시
+
+그런데 자바의 다형성은 인터페이스를 구현하든,
+아니면 클래스를 상속하든 상위 타입만 맞으면 다형성이 적용된다. 쉽게 이야기해서 인터페이스가 없어도
+프록시를 만들수 있다는 뜻이다. 
+
+
+
+> 참고: 자바 언어에서 다형성은 인터페이스나 클래스를 구분하지 않고 모두 적용된다. 해당 타입과 그 타입의
+> 하위 타입은 모두 다형성의 대상이 된다. 자바 언어의 너무 기본적인 내용을 이야기했지만, 인터페이스가
+> 없어도 프록시가 가능하다는 것을 확실하게 집고 넘어갈 필요가 있어서 자세히 설명했다.
+
+
+
+## 클래스 기반 프록시의 단점
+
+* super(null) : OrderServiceV2 : 
+  * 자바 기본 문법에 의해 자식 클래스를 생성할 때는 항상 super() 로부모 클래스의 생성자를 호출해야 한다. 
+  * 이 부분을 생략하면 기본 생성자가 호출된다. 
+  * 그런데 부모 클래스인OrderServiceV2 는 기본 생성자가 없고, 생성자에서 파라미터 1개를 필수로 받는다. 
+  * 따라서 파라미터를 넣어서 super(..) 를 호출해야 한다.
+* 프록시는 부모 객체의 기능을 사용하지 않기 때문에 super(null) 을 입력해도 된다.
+* 인터페이스 기반 프록시는 이런 고민을 하지 않아도 된다.
+
+
+
+
+
+# 인터페이스 기반 프록시 vs 클래스 기반 프록시
+인터페이스가 없어도 클래스 기반으로 프록시를 생성할 수 있다.
+클래스 기반 프록시는 해당 클래스에만 적용할 수 있다. 
+
+인터페이스 기반 프록시는 인터페이스만 같으면 모든 곳에 적용할 수 있다.
+`클래스 기반 프록시는 상속을 사용하기 때문에 몇가지 제약이 있다.`
+
+* 부 모 클래스의 생성자를 호출해야 한다.(앞서 본 예제)
+
+* 클래스에 final 키워드가 붙으면 상속이 불가능하다.
+* 메서드에 final 키워드가 붙으면 해당 메서드를 오버라이딩 할 수 없다.
+
+이렇게 보면 인터페이스 기반의 프록시가 더 좋아보인다. 
+
+맞다. 인터페이스 기반의 프록시는 상속이라는 제약에서 자유롭다. 
+
+프로그래밍 관점에서도 인터페이스를 사용하는 것이 역할과 구현을 명확하게 나누기 때문에 더 좋다.
+
+
+
+인터페이스 기반 프록시의 단점은 인터페이스가 필요하다는 그 자체이다. 
+
+인터페이스가 없으면 인터페이스 기반 프록시를 만들 수 없다.
+
+* 참고: 인터페이스 기반 프록시는 캐스팅 관련해서 단점도 있다, 
+
+
+
+
+
+이론적으로는 모든 객체에 인터페이스를 도입해서 역할과 구현을 나누는 것이 좋다. 
+
+이렇게 하면 역할과 구현을 나누어서 구현체를 매우 편리하게 변경할 수 있다.
+
+ 하지만 실제로는 구현을 거의 변경할 일이 없는 클래스도 많다.
+인터페이스를 도입하는 것은 구현을 변경할 가능성이 있을 때 효과적인데, 구현을 변경할 가능성이 거의
+없는 코드에 무작정 인터페이스를 사용하는 것은 번거롭고 그렇게 실용적이지 않다.
+
+ 이런곳에는 실용적인 관점에서 인터페이스를 사용하지 않고 구체 클래스를 바로 사용하는 것이 좋다 생각한다.
+
+ (물론인터페이스를 도입하는 다양한 이유가 있다. 여기서 핵심은 인터페이스가 항상 필요하지는 않다는 것이다.)
+
+
+
+### 결론
+실무에서는 프록시를 적용할 때 V1처럼 인터페이스도 있고, V2처럼 구체 클래스도 있다. 
+
+따라서 2가지 상황을 모두 대응할 수 있어야 한다.
+
+### 너무 많은 프록시 클래스
+지금까지 프록시를 사용해서 기존 코드를 변경하지 않고, 로그 추적기라는 부가 기능을 적용할 수 있었다.
+그런데 문제는 프록시 클래스를 너무 많이 만들어야 한다는 점이다. 
+
+잘 보면 프록시 클래스가 하는 일은 LogTrace 를 사용하는 것인데, 그 로직이 모두 똑같다. 
+
+대상 클래스만 다를 뿐이다. 
+
+만약 적용해야 하는 대상 클래스가 100개라면 프록시 클래스도 100개를 만들어야한다.
+프록시 클래스를 하나만 만들어서 모든 곳에 적용하는 방법은 없을까?
+바로 다음에 설명할 `동적 프록시 기술 `이 이 문제를 해결해준다.
+
+
+
+# 리플렉션
+
+
+
+자바가 기본으로 제공하는 JDK 동적 프록시 기술이나 CGLIB 같은 프록시 생성 오픈소스 기술을 활용하면
+프록시 객체를 동적으로 만들어낼 수 있다. 
+
+쉽게 이야기해서 프록시 클래스를 지금처럼 계속 만들지 않아도 된다는 것이다. 
+
+프록시를 적용할 코드를 하나만 만들어두고 동적 프록시 기술을 사용해서 프록시 객체를 찍어내면 된다. 
+
+JDK 동적 프록시를 이해하기 위해서는 먼저 자바의 리플렉션 기술을 이해해야 한다.
+리플렉션 기술을 사용하면 클래스나 메서드의 메타정보를 동적으로 획득하고, 코드도 동적으로 호출할 수 있다.
+여기서는 JDK 동적 프록시를 이해하기 위한 최소한의 리플랙션 기술을 알아보자
+

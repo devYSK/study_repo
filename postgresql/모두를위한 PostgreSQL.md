@@ -796,18 +796,367 @@ SELECT '00:15:00'::TIME, '2020-08-11 12:15:03'::TIMESTAMP;
 
 
 
-* 데이터의 값 제한하기
-* Alter Table
+
+
+### 데이터의 값 제한하기
+
+무결성 : DB 내의 정확하고 유효한 데이터만을 유지시키는 속성.
+
+* 불필요한 데이터는 최대한 제거
+* 합칠 수 있는 데이터는 최대한 합하자는 것
+* 생성 조회 수정 삭제할 때의 데이터 값을 일관되고 정확하게 유지하자는 특성
 
 
 
-쿼리에 사용되는 연산자와 함수
+#### 무결성 제약조건
+
+1. 개체 무결성 (Entity integrity)
+2. 참조 무결성 (Referential integrity)
+3. 범위 무결성(Domain integrity)
+
+
+
+
+
+1. 개체 무결성 (Entity integrity)
+   * 모든 테이블은 프라이머리 키를 가져야 하며 프라이머리 키 컬럼은 고유하고 NULL 값을 허양하지 않아야 한다는 속성
+2. 참조 무결성 (Referential integrity)
+   * 외래 키 값이 null 값이거나 참조된 테이블의 기본 키 값과 동일해야 한다 
+3. 범위 무결성(Domain integrity)
+   * 사용자가 정의한  Domain(데이터 타입)내에서 관계형 데이터베이스의 모든 열을 정의하도록 규정한다. 
+
+```sql
+CREATE DOMAIN phoneint AS integer CHECK (VALUE > 0 AND VALUE < 9); 
+```
+
+* 위 SQL은 커스텀 사용자 정의 도메인 
+
+
+
+#### 컬럼 값 제한하기
+
+무결성을 유지하기 위함
+
+
+
+1. NOT NULL 제약조건
+2. UNIQUE 제약조건
+3. 프라이머리 키
+4. 외래 키
+5. CHECK 제약조건
+
+
+
+
+
+* NOT NULL : 빈 값을 허용하지 않는 조건
+* UNIQUE : 유일한 값을 가져야 하는 컬럼 제약 조건 
+
+* 프라이머리 키 : 주 식별자 Key, UNQUE & NOTNULL
+
+* 외래 키 
+  * 부모 테이블이 자식 테이블보다 먼저 생성되어야 한다
+  * 부모 테이블은 자식 테이블과 같은 데이터 타입을 가져야 한다
+  * 부모 테이블에서 참조 된 컬럼의 값만 자식 테이블에서 입력 가능하다
+  * 참조되는 컬럼은 모두 PK 이거나  UNIQUE 여야 한다 
+  * CASCADE, SET NULL, SET DFAULT 
+* CHECK 제약조건 : CHECK 뒤에 나오는 식이 불리언 형으로 반환해야 한다. 
+
+
+
+### Alter Table
+
+
+
+* 만들어진 테이블에 컬럼 추가하기
+
+```sql
+ALTER TABLE 테이블명
+ADD COLUMN 컬럼이름 데이터 타입 제약조건;
+```
+
+* 만들어진 테이블 컬럼 삭제하기
+
+```sql
+ALTER TABLE 테이블이름
+DROP COLUMN 컬럼이름;
+```
+
+* CACADE 속성 추가
+
+```sql
+ALTER TABLE 테이블이름
+DROP COLUMN 컬럼이름 CASCADE;
+```
+
+* 테이블 컬럼명 바꾸기
+  * 한번에 한 컬럼의 이름만 수정 가능
+  * 존재하지 않는 컬럼 이름 수정 불가
+  * 참조 관계에 있는 컬럼들까지 이름 변경함
+
+```sql
+ALTER TABLE 테이블이름
+RENAME 기존컬럼이름 TO 바꿀 컬럼이름
+// 또는
+ALTER TABLE 테이블이름
+RENAME COLUMN 기존컬럼이름 TO 바꿀 컬럼이름
+```
+
+
+
+
+
+* NotNULL 제약조건 추가 및 제거
+
+```sql
+ALTER TABLE 테이블명 
+ALTER COLUMN 컬럼이름 DROP NOT NULL;
+```
+
+
+
+* 프라이머리키 (PK) 제약조건 추가 및 제거
+
+```sql
+ALTER TABLE 테이블명
+ADD PRIMARY KEY (컬럼명);
+```
+
+
+
+
+
+# 쿼리에 사용되는 연산자와 함수
+
+
+
+테스트용 DB 덤프
+
+
+
+```sql
+$ createdb -U postgres function_example
+$ psql -U postgres -d function_example -f <경로>/function_example.dump
+```
+
+
+
+
 
 * 논리, 비교 연산자와 조건문 함수
-* 배열 연산자와 함수
+* 배열 연산자와 함수\
+
+![image-20221028111913383](/Users/ysk/study/study_repo/postgresql/images//image-20221028111913383.png)
+
 * JSON 연산자와 함수
+
+![image-20221028111925363](/Users/ysk/study/study_repo/postgresql/images//image-20221028111925363.png)
+
 * 날짜 및 시간 연산자와 함수
+
+![image-20221028111956948](/Users/ysk/study/study_repo/postgresql/images//image-20221028111956948.png)
+
+
+
+![image-20221028112012795](/Users/ysk/study/study_repo/postgresql/images//image-20221028112012795.png)
+
+
+
 * 자주 쓰이는 연산자와 함수
+
+
+
+###  Postgresql 불리언 표현식 (True, False)
+
+```sql
+<표현식> IS TRUE
+<표현식> IS NOT TRUE
+<표현식> IS FALSE
+<표현식> IS NOT FALSE
+<표현식> IS NULL
+<표현식> IS NOT NULL
+```
+
+
+
+### CASE함수
+
+조건문 함수 - IF-ELSE 문과 대응된다 
+
+
+
+```sql
+CASE
+	WHEN <조건문1> THEN <결과문1>
+	WHEN <조건문1> THEN <결과문1>
+	ELSE <결과문3>
+END
+```
+
+
+
+```sql
+SELECT id,
+			name,
+			score,
+	CASE
+		WHEN score <= 100 AND score >= 90 THEN 'A'
+		WHEN score <= 89 AND score >= 80 THEN 'B'
+		WHEN score <= 79 AND score >= 70 THEN 'C'
+		WHEN score < 70 THEN 'F'
+END grade
+
+FROM student_score;
+```
+
+
+
+### COALESCE 함수
+
+NULL 값을 다른 기본 값으로 대채할 때 사용
+
+```sql
+COALESCE(<매개변수1>, <매개변수2>, ...)
+```
+
+
+
+```sql
+SELECT COALESCE(null, null, null, '빈 값') AS column1;
+```
+
+
+
+### NULLIF 함수
+
+값을 NULL으로 바꾸고 싶을때 사용
+
+매개변수 1과 매개변수2 가 같은 경우  NULL 반환
+
+서로 다를 경우 매개변수 1반환
+
+```sql
+NULLIF (<매개변수1>, <매개변수2>)
+
+SELECT NULLIF(20, 20) as column1; -- NULL 반환
+```
+
+
+
+### 배열 연산자
+
+```sql
+SELECT ARRAY[5.1, 1.6, 3]::INTEGER[] = ARRAY[5,2,3] AS RESULT
+```
+
+순서대로 원소끼리 비교한다. 
+
+
+
+* 배열 연산자 포함관계
+
+![image-20221028115856061](/Users/ysk/study/study_repo/postgresql/images//image-20221028115856061.png)
+
+
+
+* 배열 연산자 병합
+
+![image-20221028120136221](/Users/ysk/study/study_repo/postgresql/images//image-20221028120136221.png)
+
+
+
+* 배열 함수
+
+![image-20221028120904921](/Users/ysk/study/study_repo/postgresql/images//image-20221028120904921.png)
+
+
+
+
+
+##  JSON 연산자와 함수
+
+![image-20221028121000198](/Users/ysk/study/study_repo/postgresql/images//image-20221028121000198.png)
+
+
+
+* ? 연산자를 사용하여 문자열의 키 값이 존재하는지 알 수 있따.
+
+![image-20221028123706004](/Users/ysk/study/study_repo/postgresql/images//image-20221028123706004.png)
+
+
+
+* ?| 연산자로 키 값으로 1개 이상 존재하는지 알 수 있다.
+
+![image-20221028123820365](/Users/ysk/study/study_repo/postgresql/images//image-20221028123820365.png)
+
+
+
+
+
+* ?& 연산자로 키 값으로 모두 존재하는지 알 수 있다.
+
+
+
+* JSON 병합 -> ||
+
+![image-20221028123948792](/Users/ysk/study/study_repo/postgresql/images//image-20221028123948792.png)
+
+
+
+
+
+* JSON 원소 삭제 `-`
+
+![image-20221028124009347](/Users/ysk/study/study_repo/postgresql/images//image-20221028124009347.png)
+
+
+
+* JSON 복수의 원소 삭제 - text[]
+
+![image-20221028124059049](/Users/ysk/study/study_repo/postgresql/images//image-20221028124059049.png)
+
+
+
+* JSON 인덱스 삭제 - 인덱스번호
+
+![image-20221028124131233](/Users/ysk/study/study_repo/postgresql/images//image-20221028124131233.png)
+
+
+
+![image-20221028124138565](/Users/ysk/study/study_repo/postgresql/images//image-20221028124138565.png)
+
+
+
+## JSON 생성과 처리함수
+
+
+
+### 생성함수 : json_build_object()
+
+* json_build_object("키1", "밸류1", "키2", "밸류2")
+* jsonb_build_object("키1", "밸류1", "키2", "밸류2")
+
+```sql
+select json_build_object('a', 1, 'b', 2) AS result;
+
+result
+----------
+{"a" : 1, "b": 2}
+
+```
+
+
+
+### JSON 배열 생성함수 : json_build_array()
+
+* json_build_array("원소1", "원소2", "원소3", "원소4")
+
+
+
+
+
+
+
 * (실습) 고등학교 졸업생들의 진로 분석
 
 
