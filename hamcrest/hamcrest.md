@@ -242,7 +242,9 @@ API에 대한 자세한 내용은 [Hamcrest JavaDoc](http://hamcrest.org/JavaHam
 
 
 
-<img src="images//image-20221113172020613.png" width=450 height=650>
+<img src="https://blog.kakaocdn.net/dn/kS0ni/btrQ3TCiDAu/cYoOnEnOFvtrumSTsGF16k/img.png" width=400 height=650>
+
+  
 
 * org.hamcrest.**core** : 오브젝트나 값들에 대한 기본적인 Matcher들
 
