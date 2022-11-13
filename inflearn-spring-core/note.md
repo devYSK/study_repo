@@ -859,11 +859,11 @@ public class ProxyPatternTest {
 
 client.execute()을 3번 호출하면 다음과 같이 처리된다.
 1. client의 cacheProxy 호출 cacheProxy에 캐시 값이 없다. realSubject를 호출, 결과를 캐시에
-  저장 (1초)
+    저장 (1초)
 2. client의 cacheProxy 호출 cacheProxy에 캐시 값이 있다. cacheProxy에서 즉시 반환 (0초)
 3. client의 cacheProxy 호출 cacheProxy에 캐시 값이 있다. cacheProxy에서 즉시 반환 (0초)
-  결과적으로 캐시 프록시를 도입하기 전에는 3초가 걸렸지만, 캐시 프록시 도입 이후에는 최초에 한번만 1
-  초가 걸리고, 이후에는 거의 즉시 반환한다.
+    결과적으로 캐시 프록시를 도입하기 전에는 3초가 걸렸지만, 캐시 프록시 도입 이후에는 최초에 한번만 1
+    초가 걸리고, 이후에는 거의 즉시 반환한다.
 
 
 
@@ -1233,3 +1233,1233 @@ JDK 동적 프록시를 이해하기 위해서는 먼저 자바의 리플렉션 
 리플렉션 기술을 사용하면 클래스나 메서드의 메타정보를 동적으로 획득하고, 코드도 동적으로 호출할 수 있다.
 여기서는 JDK 동적 프록시를 이해하기 위한 최소한의 리플랙션 기술을 알아보자
 
+
+
+리플렉션은 클래스나 메서드의 메타정보를 사용해서 동적으로 호출하는 메서드를 변경할 수 있다.
+
+
+
+```java
+package hello.proxy.jdkdynamic;
+
+@Slf4j
+public class ReflectionTest {
+
+    @Test
+    void reflection1() throws Exception {
+
+        Class classHello = Class.forName("hello.proxy.jdkdynamic.ReflectionTest$Hello");
+
+        Hello target = new Hello();
+
+        //callA 메서드 정보
+        Method methodCallA = classHello.getMethod("callA");
+        Object result1 = methodCallA.invoke(target);
+        log.info("result1 = {}", result1);
+
+        //callB 메서드 정보
+        Method methodCallB = classHello.getMethod("callB");
+        Object result2 = methodCallB.invoke(target);
+        log.info("result2 = {}", result2);
+    }
+
+    @Slf4j
+    static class Hello {
+
+        public String callA() {
+            log.info("callA");
+            return "A";
+        }
+
+        public String callB() {
+            log.info("callB");
+            return "B";
+        }
+    }
+}
+```
+
+* `class.forName("hello.proxy.jdkdynamic.ReflectionTest$Hello")`  
+  * 클래스 메타정보를 획득한다. 
+  * 참고로 내부 클래스는 구분을 위해 $ 를 사용한다.
+
+* `classHello.getMethod("call")` : 해당 클래스의 call 메서드 메타정보를 획득한다.
+* `methodCallA.invoke(target)` : 획득한 메서드 메타정보로 실제 인스턴스의 메서드를 호출한다
+  *  여기서methodCallA 는 Hello 클래스의 callA() 이라는 메서드 메타정보이다.
+  * `methodCallA.invoke(인스턴스)` 를 호출하면서 인스턴스를 넘겨주면 해당 인스턴스의 callA() 메서드를
+    찾아서 실행한다. 
+  * 여기서는 target 의 callA() 메서드를 호출한다.
+
+
+
+```java
+@Test
+    
+void reflection2() throws Exception {
+
+  Class classHello = Class.forName("hello.proxy.jdkdynamic.ReflectionTest$Hello");
+
+  Hello target = new Hello();
+
+  //callA 메서드 정보
+  Method methodCallA = classHello.getMethod("callA");  
+  dynamicCall(target, methodCallA);
+
+  //callB 메서드 정보
+  Method methodCallB = classHello.getMethod("callB");
+  dynamicCall(target, methodCallB);  
+}
+
+   
+private void  dynamicCall(Hello target, Method method) throws Exception {
+  log.info("start");
+  Object result = method.invoke(target);
+  log.info("result = {}", result);  
+}
+```
+
+
+
+* `Method method` : 첫 번째 파라미터는 호출할 메서드 정보가 넘어온다.  Method 라는 메타정보를 통해서 호출할 메서드 정보가
+  동적으로 제공된다.
+
+* `Object target `: 실제 실행할 인스턴스 정보가 넘어온다.
+  *  타입이 Object 라는 것은 어떠한 인스턴스도 받을 수 있다는 뜻이다. 
+  * 물론 method.invoke(target) 를 사용할 때 호출할 클래스와 메서드 정보가 서로 다르면 예외가 발생한다
+
+
+
+##### 주의
+리플렉션을 사용하면 클래스와 메서드의 메타정보를 사용해서 애플리케이션을 동적으로 유연하게 만들 수있다.   
+ 하지만 리플렉션 기술은 런타임에 동작하기 때문에, 컴파일 시점에 오류를 잡을 수 없다  
+가장 좋은 오류는 개발자가 즉시 확인할 수 있는 컴파일 오류이고, 가장 무서운 오류는 사용자가 직접 실행할
+때 발생하는 런타임 오류다  
+
+따라서 리플렉션은 일반적으로 사용하면 안된다.   
+ 지금까지 프로그래밍 언어가 발달하면서 타입 정보를기반으로 컴파일 시점에 오류를 잡아준 덕분에 개발자가 편하게 살았는데,   
+`리플렉션은 그것에 역행하는 방식이다.`
+
+
+
+주의
+> JDK 동적 프록시는 인터페이스를 기반으로 프록시를 동적으로 만들어준다. 
+> `따라서 인터페이스가 필수이다`
+
+
+
+
+
+### 자바 언어가 기본으로 제공하는 JDK 동적 프록시
+
+
+
+###  JDK 동적 프록시 InvocationHandler
+
+JDK 동적 프록시에 적용할 로직은 InvocationHandler 인터페이스를 구현해서 작성하면 된다.
+
+#### JDK 동적 프록시가 제공하는 InvocationHandler
+
+```java
+package java.lang.reflect;
+
+public interface InvocationHandler {
+  
+	public Object invoke(Object proxy, Method method, Object[] args)	throws Throwable;
+
+}
+```
+
+
+
+제공되는 파라미터는 다음과 같다.
+
+* Object proxy : 프록시 자신
+* Method method : 호출한 메서드
+* Object[] args : 메서드를 호출할 때 전달한 인수
+
+
+
+```java
+@Slf4j
+public class TimeInvocationHandler implements InvocationHandler {
+
+    private final Object target;
+
+    public TimeInvocationHandler(Object target) {
+        this.target = target;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        log.info("Time Proxy 실행");
+
+        long startTime = System.currentTimeMillis();
+        Object result = method.invoke(target, args);
+        long endTime = System.currentTimeMillis() - startTime;
+        
+        log.info("resultTime = {}", endTime);
+        return result;
+    }
+    
+}
+```
+
+
+
+* `TimeInvocationHandle`r 은 `InvocationHandler 인터페이스를 구현`한다. 
+  * 이렇게해서 JDK 동적프록시에 적용할 공통 로직을 개발할 수 있다.
+* Object target : 동적 프록시가 호출할 대상
+* method.invoke(target, args) : 리플렉션을 사용해서 target 인스턴스의 메서드를 실행한다. 
+  * args는 메서드 호출시 넘겨줄 인수이다.
+
+
+
+```java
+@Slf4j
+public class JdkDynamicProxyTest {
+
+    @Test
+    void dynamicA() {
+        AInterface target = new AImpl();
+
+        TimeInvocationHandler handler = new TimeInvocationHandler(target);
+
+        AInterface proxy = (AInterface)
+            Proxy.newProxyInstance(AInterface.class.getClassLoader(), new Class[]{AInterface.class}, handler);
+
+        proxy.call();
+
+        log.info("targetClass={}", target.getClass());
+        log.info("proxyClass={}", proxy.getClass());
+    }
+
+    @Test
+    void dynamicB() {
+        BInterface target = new BImpl();
+        TimeInvocationHandler handler = new TimeInvocationHandler(target);
+
+        BInterface proxy = (BInterface)
+            Proxy.newProxyInstance(BInterface.class.getClassLoader(), new Class[]
+                {BInterface.class}, handler);
+
+        proxy.call();
+
+        log.info("targetClass={}", target.getClass());
+        log.info("proxyClass={}", proxy.getClass());
+    }
+}
+```
+
+
+
+* new TimeInvocationHandler(target) : 동적 프록시에 적용할 핸들러 로직이다.
+* Proxy.newProxyInstance(AInterface.class.getClassLoader(), new Class[] {AInterface.class}, handler)
+  * `동적 프록시는 java.lang.reflect.Proxy 를 통해서 생성할 수 있다.` 
+  * 클래스 로더 정보, 인터페이스, 그리고 핸들러 로직을 넣어주면 된다. 그러면 해당 인터페이스를
+    기반으로 동적 프록시를 생성하고 그 결과를 반환한다.
+
+
+
+만들어진 동적 프록시는 핸들러 로직을 실행한다.
+
+
+
+실행 순서
+1. 클라이언트는 JDK 동적 프록시의 call() 을 실행한다.
+2. JDK 동적 프록시는 InvocationHandler.invoke() 를 호출한다. TimeInvocationHandler 가
+구현체로 있으로 TimeInvocationHandler.invoke() 가 호출된다.
+3. TimeInvocationHandler 가 내부 로직을 수행하고, method.invoke(target, args) 를 호출해서
+target 인 실제 객체( AImpl )를 호출한다.
+4. AImpl 인스턴스의 call() 이 실행된다.
+5. AImpl 인스턴스의 call() 의 실행이 끝나면 TimeInvocationHandler 로 응답이 돌아온다. 시간
+로그를 출력하고 결과를 반환한다.
+
+
+
+![image-20221112213458100](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221112213458100.png)
+
+
+
+인터페이스 기반 프록시는 JDK 동적 프록시를 사용해서 동적으로 만들고 Handler 는 공통으로 사용한다.
+
+적용 대상 만큼 프록시 객체를 만들지 않아도 된다.   
+그리고 같은 부가 기능 로직을 한번만 개발해서 공통으로 적용할 수 있다.  
+ 만약 적용 대상이 100개여도 동적 프록시를 통해서 생성하고, 각각 필요한 Handler 만 만들어서 넣어주면 된다
+
+
+
+결과적으로 프록시 클래스를 수 없이 만들어야 하는 문제도 해결하고, 부가 기능 로직도 하나의 클래스에
+모아서 단일 책임 원칙(SRP)도 지킬 수 있게 되었다.  
+
+
+
+### JDK Danymic Proxy에서 특정 메소드 이름을 제외하는법
+
+```java
+public class LogTraceFilterHandler implements InvocationHandler {
+
+    private final Object target;
+    private final LogTrace logTrace;
+    private final String[] patterns;
+    
+    public LogTraceFilterHandler(Object target, LogTrace logTrace, String[] patterns) {
+        this.target = target;
+        this.logTrace = logTrace;
+        this.patterns = patterns;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws
+        Throwable {
+        
+        // 메서드 이름 필터
+        String methodName = method.getName();
+        
+        if (!PatternMatchUtils.simpleMatch(patterns, methodName)) {
+            return method.invoke(target, args);
+        }
+        
+        TraceStatus status = null;
+        
+      try {
+            String message = method.getDeclaringClass().getSimpleName() + "."
+                + method.getName() + "()";
+            status = logTrace.begin(message);
+
+            //로직 호출
+            Object result = method.invoke(target, args);
+            logTrace.end(status);
+
+            return result;
+        } catch (Exception e) {
+            logTrace.exception(status, e);
+            throw e;
+        }
+    }
+}
+
+```
+
+* 메소드 이름으로 걸르면 된다 .
+
+
+
+스프링이 제공하는 `PatternMatchUtils.simpleMatch(..) `를 사용하면 단순한 매칭 로직을 쉽게 적용할 수 있다.
+
+* `xxx` : xxx가 정확히 매칭되면 참
+* `xxx*` : xxx로 시작하면 참
+* `*xxx` : xxx로 끝나면 참
+* `*xxx*` : xxx가 있으면 참
+
+
+
+#### JDK 동적 프록시 - 한계
+JDK 동적 프록시는 인터페이스가 필수이다.
+
+
+
+## CGLIB - 소개
+#### CGLIB: Code Generator Library
+
+* CGLIB는 바이트코드를 조작해서 동적으로 클래스를 생성하는 기술을 제공하는 라이브러리이다.
+* CGLIB를 사용하면 인터페이스가 없어도 구체 클래스만 가지고 동적 프록시를 만들어낼 수 있다.
+* CGLIB는 원래는 외부 라이브러리인데, 스프링 프레임워크가 스프링 내부 소스 코드에 포함했다. 따라서
+  스프링을 사용한다면 별도의 외부 라이브러리를 추가하지 않아도 사용할 수 있다.  
+
+  
+
+
+* 참고로 우리가 CGLIB를 직접 사용하는 경우는 거의 없다. 이후에 설명할 스프링의 ProxyFactory 라는
+  것이 이 기술을 편리하게 사용하게 도와주기 때문에, 너무 깊이있게 파기 보다는 CGLIB가 무엇인지 대략
+  개념만 잡으면 된다.
+
+   
+
+
+
+JDK 동적 프록시에서 실행 로직을 위해` InvocationHandler` 를 제공했듯이,   
+CGLIB는 `MethodInterceptor` 를 제공한다.
+
+
+
+```java
+package org.springframework.cglib.proxy;
+
+public interface MethodInterceptor extends Callback {
+	Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable;
+}
+```
+
+
+
+* obj : CGLIB가 적용된 객체
+* method : 호출된 메서드
+* args : 메서드를 호출하면서 전달된 인수
+* proxy : 메서드 호출에 사용
+
+
+
+```java
+@Slf4j
+public class TimeMethodInterceptor implements MethodInterceptor {
+
+    private final Object target;
+
+    public TimeMethodInterceptor(Object target) {
+        this.target = target;
+    }
+
+    @Override
+    public Object intercept(Object obj, Method method, Object[] args, MethodProxy methodProxy)
+        throws Throwable {
+        log.info("Time Proxy 실행");
+
+        long startTime = System.currentTimeMillis();
+
+        Object result = methodProxy.invoke(target, args);
+
+        long endTime = System.currentTimeMillis() - startTime;
+
+        log.info("resultTime = {}", endTime);
+        return result;
+
+    }
+}
+```
+
+
+
+* TimeMethodInterceptor 는 MethodInterceptor 인터페이스를 구현해서 CGLIB 프록시의 실행
+  로직을 정의한다.
+* JDK 동적 프록시를 설명할 때 예제와 거의 같은 코드이다.
+* Object target : 프록시가 호출할 실제 대상
+* proxy.invoke(target, args) : 실제 대상을 동적으로 호출한다.
+  * 참고로 method 를 사용해도 되지만, CGLIB는 성능상 MethodProxy proxy 를 사용하는 것을 권장한다.
+
+
+
+```java
+@Slf4j
+public class CglibTest {
+
+
+    @Test
+    void cglib() {
+        ConcreteService target = new ConcreteService();
+
+        Enhancer enhancer = new Enhancer();
+        enhancer.setSuperclass(target.getClass());
+
+        enhancer.setCallback(new TimeMethodInterceptor(target));
+
+        ConcreteService proxy =  (ConcreteService)enhancer.create();
+
+
+        log.info("targetClass={}", target.getClass());
+        log.info("proxyClass={}", proxy.getClass());
+        
+        proxy.call();
+    }
+}
+
+```
+
+```
+23:38:06.908 [Test worker] INFO hello.proxy.cglib.CglibTest - targetClass=class hello.proxy.common.service.ConcreteService
+
+23:38:06.914 [Test worker] INFO hello.proxy.cglib.CglibTest - proxyClass=class hello.proxy.common.service.ConcreteService$$EnhancerByCGLIB$$25d6b0e3
+```
+
+
+
+* ConcreteService 는 인터페이스가 없는 구체 클래스이다.  
+
+
+
+* Enhancer : CGLIB는 Enhancer 를 사용해서 프록시를 생성한다.
+
+
+
+* enhancer.setSuperclass(ConcreteService.class) : CGLIB는 구체 클래스를 상속 받아서 프록시를
+  생성할 수 있다. 어떤 구체 클래스를 상속 받을지 지정한다.
+
+
+
+* enhancer.setCallback(new TimeMethodInterceptor(target))
+  * 프록시에 적용할 실행 로직을 할당한다.
+
+
+
+* enhancer.create() : 프록시를 생성한다. 
+  * 앞서 설정한 enhancer.setSuperclass(ConcreteService.class) 에서 지정한 클래스를 상속 받아서 프록시가
+    만들어진다.
+
+
+
+JDK 동적 프록시는 인터페이스를 구현(implement)해서 프록시를 만든다. CGLIB는 구체 클래스를 상속
+(extends)해서 프록시를 만든다.
+
+
+
+
+
+#### CGLIB가 생성한 프록시 클래스 이름
+CGLIB가 동적으로 생성하는 클래스 이름은 다음과 같은 규칙으로 생성된다.
+`대상클래스 $$ EnhancerByCGLIB $$ 임의코드`
+
+
+
+### CGLIB 제약
+* 클래스 기반 프록시는 상속을 사용하기 때문에 몇가지 제약이 있다.
+
+
+
+* 부모 클래스의 생성자를 체크해야 한다. 
+  * CGLIB는 자식 클래스를 동적으로 생성하기 때문에 기본
+    생성자가 필요하다.
+
+
+
+* 클래스에 final 키워드가 붙으면 상속이 불가능하다. 
+  * CGLIB에서는 예외가 발생한다.
+
+
+
+* 메서드에 final 키워드가 붙으면 해당 메서드를 오버라이딩 할 수 없다. 
+  * CGLIB에서는 프록시 로직이 동작하지 않는다.
+
+
+
+> ProxyFactory 를 통해서 CGLIB를 적용하면   편리하다
+
+
+
+
+
+### 정리
+남은 문제
+
+* 인터페이스가 있는 경우에는 JDK 동적 프록시를 적용하고, 그렇지 않은 경우에는 CGLIB를 적용하려면
+  어떻게 해야할까?
+
+
+
+* 두 기술을 함께 사용할 때 부가 기능을 제공하기 위해서 JDK 동적 프록시가 제공하는
+  InvocationHandler 와 CGLIB가 제공하는 MethodInterceptor 를 각각 중복으로 만들어서 관리해야할까?
+
+
+
+* 특정 조건에 맞을 때 프록시 로직을 적용하는 기능도 공통으로 제공되었으면?
+
+
+
+# 스프링이 지원하는 프록시
+
+
+
+## 인터페이스가 있는 경우에는 JDK 동적 프록시를 적용하고, 그렇지 않은 경우에는 CGLIB를적용하려면 어떻게 해야할까?
+
+
+
+스프링은 유사한 구체적인 기술들이 있을 때, 그것들을 통합해서 일관성 있게 접근할 수 있고, 더욱 편리하게
+사용할 수 있는 추상화된 기술을 제공한다.
+
+스프링은 동적 프록시를 통합해서 편리하게 만들어주는 `프록시 팩토리( ProxyFactory )`라는 기능을 제공한다.
+
+이전에는 상황에 따라서 JDK 동적 프록시를 사용하거나 CGLIB를 사용해야 했다면,   
+이제는 이 프록시팩토리 하나로 편리하게 동적 프록시를 생성할 수 있다.
+프록시 팩토리는 인터페이스가 있으면 JDK 동적 프록시를 사용하고, 구체 클래스만 있다면 CGLIB를
+사용한다. 그리고 이 설정을 변경할 수도 있다.
+
+
+
+![image-20221112234954474](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221112234954474.png)
+
+![image-20221112235016145](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221112235016145.png)
+
+
+
+## 두 기술을 함께 사용할 때 부가 기능을 적용하기 위해 JDK 동적 프록시가 제공하는 InvocationHandler와 CGLIB가 제공하는 MethodInterceptor를 각각 중복으로 따로 만들어야 할까?
+
+스프링은 이 문제를 해결하기 위해 부가 기능을 적용할 때 `Advice` 라는 새로운 개념을 도입했다.  
+ 개발자는 InvocationHandler 나 MethodInterceptor 를 신경쓰지 않고, Advice 만 만들면 된다.  
+
+결과적으로 InvocationHandler 나 MethodInterceptor 는 Advice 를 호출하게 된다.  
+
+프록시 팩토리를 사용하면 Advice 를 호출하는 전용 InvocationHandler , MethodInterceptor 를
+내부에서 사용한다.
+
+
+
+### Advice
+
+![image-20221112235459799](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221112235459799.png)
+
+
+
+![image-20221112235629004](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221112235629004.png)
+
+
+
+## 특정 조건에 맞을 때 프록시 로직을 적용하는 기능도 공통으로 제공되었으면?
+앞서 특정 메서드 이름의 조건에 맞을 때만 프록시 부가 기능이 적용되는 코드를 직접 만들었다.   
+스프링은 `Pointcut` 이라는 개념을 도입해서 이 문제를 일관성 있게 해결한다.
+
+
+
+## Proxy Factory(프록시 팩토리)
+
+
+
+#### Advice 만들기
+
+
+Advice 는 프록시에 적용하는 부가 기능 로직이다.   
+이것은 JDK 동적 프록시가 제공하는 InvocationHandler 와 CGLIB가 제공하는 MethodInterceptor 의 개념과 유사한다.  
+ 둘을 개념적으로추상화 한 것이다. 프록시 팩토리를 사용하면 둘 대신에 Advice 를 사용하면 된다
+
+
+
+### MethodInterceptor - 스프링이 제공하는 코드
+
+```java
+package org.aopalliance.intercept;
+
+public interface MethodInterceptor extends Interceptor {
+	Object invoke(MethodInvocation invocation) throws Throwable;
+}
+```
+
+
+
+* MethodInvocation invocation
+  * 내부에는 다음 메서드를 호출하는 방법, 현재 프록시 객체 인스턴스, args , 메서드 정보 등이
+    포함되어 있다. 기존에 파라미터로 제공되는 부분들이 이 안으로 모두 들어갔다고 생각하면 된다.
+* CGLIB의 MethodInterceptor 와 이름이 같으므로 패키지 이름에 주의하자
+  * 참고로 여기서 사용하는 org.aopalliance.intercept 패키지는 스프링 AOP 모듈( spring-top )
+    안에 들어있다.
+* MethodInterceptor 는 Interceptor 를 상속하고 Interceptor 는 Advice 인터페이스를 상속한다.
+
+
+
+```java
+@Slf4j
+public class TimeAdvice implements MethodInterceptor {
+
+    @Override
+    public Object invoke(MethodInvocation invocation) throws Throwable {
+        log.info("TimeProxy 실행");
+        long startTime = System.currentTimeMillis();
+        
+        Object result = invocation.proceed();
+        
+        long endTime = System.currentTimeMillis();
+        
+        long resultTime = endTime - startTime;
+        
+        log.info("TimeProxy 종료 resultTime={}ms", resultTime);
+        return result;
+    }
+}
+```
+
+
+
+`프록시 Target을 안넣어줘도 된다! `
+
+-> invocation 안에 들어있다.
+
+
+
+* TimeAdvice 는 앞서 설명한 MethodInterceptor 인터페이스를 구현한다. 패키지 이름에 주의하자.
+* Object result = invocation.proceed()
+  * invocation.proceed() 를 호출하면 target 클래스를 호출하고 그 결과를 받는다.
+  * 그런데 기존에 보았던 코드들과 다르게 target 클래스의 정보가 보이지 않는다. target 클래스의
+    정보는 MethodInvocation invocation 안에 모두 포함되어 있다.
+  * 그 이유는  프록시 팩토리로 프록시를 생성하는 단계에서 이미 target 정보를 파라미터로 전달받기 때문이다.
+
+
+
+```java
+@Slf4j
+public class ProxyFactoryTest {
+
+    @Test
+    @DisplayName("인터페이스가 있으면 JDK 동적 프록시 사용")
+    void interfaceProxy() {
+        ServiceInterface target = new ServiceImpl();
+        ProxyFactory proxyFactory = new ProxyFactory(target);
+        proxyFactory.addAdvice(new TimeAdvice());
+
+        ServiceInterface proxy = (ServiceInterface) proxyFactory.getProxy();
+
+        log.info("targetClass={}", target.getClass());
+        log.info("proxyClass={}", proxy.getClass());
+
+        proxy.save();
+
+        assertThat(AopUtils.isAopProxy(proxy)).isTrue();
+        assertThat(AopUtils.isJdkDynamicProxy(proxy)).isTrue();
+        assertThat(AopUtils.isCglibProxy(proxy)).isFalse();
+    }
+}
+
+```
+
+
+
+* new ProxyFactory(target) : 프록시 팩토리를 생성할 때, 생성자에 프록시의 호출 대상을 함께
+  넘겨준다. 
+  * 프록시 팩토리는 이 인스턴스 정보를 기반으로 프록시를 만들어낸다. 
+  * 만약 이 인스턴스에 인터페이스가 있다면 JDK 동적 프록시를 기본으로 사용하고 인터페이스가 없고 구체 클래스만 있다면
+    CGLIB를 통해서 동적 프록시를 생성한다. 
+  * 여기서는 target 이 new ServiceImpl() 의 인스턴스이기 때문에 ServiceInterface 인터페이스가 있다. 
+  * 따라서 이 인터페이스를 기반으로 JDK 동적 프록시를 생성한다.
+
+
+
+* proxyFactory.addAdvice(new TimeAdvice()) : 프록시 팩토리를 통해서 만든 프록시가 사용할 부가
+  기능 로직을 설정한다. 
+  * JDK 동적 프록시가 제공하는 InvocationHandler 와 CGLIB가 제공하는
+    MethodInterceptor 의 개념과 유사하다. 
+  * 이렇게 프록시가 제공하는 부가 기능 로직을 어드바이스 ( Advice )라 한다. 번역하면 조언을 해준다고 생각하면 된다.
+
+
+
+* proxyFactory.getProxy() : 프록시 객체를 생성하고 그 결과를 받는다.
+
+
+
+### 프록시 팩토리를 통한 프록시 적용 확인
+프록시 팩토리로 프록시가 잘 적용되었는지 확인하려면 다음 기능을 사용하면 된다.
+
+* AopUtils.isAopProxy(proxy) : 프록시 팩토리를 통해서 프록시가 생성되면 JDK 동적 프록시나,
+  CGLIB 모두 참이다.
+  * 프록시 팩토리로 만들었을때만 가능하다. 
+
+
+
+* AopUtils.isJdkDynamicProxy(proxy) : 프록시 팩토리를 통해서 프록시가 생성되고, JDK 동적
+  프록시인 경우 참
+
+
+
+* AopUtils.isCglibProxy(proxy) : 프록시 팩토리를 통해서 프록시가 생성되고, CGLIB 동적 프록시인
+  경우 경우 참
+
+
+
+* 물론 proxy.getClass() 처럼 인스턴스의 클래스 정보를 직접 출력해서 확인할 수 있다.
+
+
+
+### 인터페이스가 있지만, CGLIB를 사용해서 인터페이스가 아닌 클래스 기반으로 동적 프록시를 만드는 방법
+
+
+프록시 팩토리는 proxyTargetClass 라는 옵션을 제공하는데, 이 옵션에 true 값을 넣으면 인터페이스가있어도 강제로 CGLIB를 사용한다. 그리고 인터페이스가 아닌 클래스 기반의 프록시를 만들어준다
+
+
+
+##  프록시 팩토리의 기술 선택 방법
+
+* 대상에 인터페이스가 있으면: JDK 동적 프록시, 인터페이스 기반 프록시
+* 대상에 인터페이스가 없으면: CGLIB, 구체 클래스 기반 프록시
+* proxyTargetClass=true : CGLIB, 구체 클래스 기반 프록시, 인터페이스 여부와 상관없음
+
+
+
+## 정리
+* 프록시 팩토리의 서비스 추상화 덕분에 구체적인 CGLIB, JDK 동적 프록시 기술에 의존하지 않고, 매우
+  편리하게 동적 프록시를 생성할 수 있다.
+
+
+
+* 프록시의 부가 기능 로직도 특정 기술에 종속적이지 않게 Advice 하나로 편리하게 사용할 수 있었다.
+  이것은 프록시 팩토리가 내부에서 JDK 동적 프록시인 경우 InvocationHandler 가 Advice 를
+  호출하도록 개발해두고, CGLIB인 경우 MethodInterceptor 가 Advice 를 호출하도록 기능을
+  개발해두었기 때문이다.
+
+
+
+## 참고
+> 스프링 부트는 AOP를 적용할 때 기본적으로 proxyTargetClass=true 로 설정해서 사용한다.
+> 따라서 인터페이스가 있어도 항상 CGLIB를 사용해서 구체 클래스를 기반으로 프록시를 생성
+
+
+
+# 포인트컷, 어드바이스, 어드바이저 - 소개
+
+
+
+
+
+스프링 AOP를 공부했다면 다음과 같은 단어를 들어보았을 것이다. 항상 잘 정리가 안되는 단어들인데,
+단순하지만 중요하니 이번에 확실히 정리해보자.
+
+* 포인트컷( Pointcut ): 어디에 부가 기능을 적용할지, 어디에 부가 기능을 적용하지 않을지 판단하는
+  필터링 로직이다. 주로 클래스와 메서드 이름으로 필터링 한다. 이름 그대로 어떤 포인트(Point)에 기능을
+  적용할지 하지 않을지 잘라서(cut) 구분하는 것이다.
+
+
+
+* 어드바이스( Advice ): 이전에 본 것 처럼 프록시가 호출하는 부가 기능이다. 단순하게 프록시 로직이라
+  생각하면 된다.
+
+
+
+* 어드바이저( Advisor ): 단순하게 하나의 포인트컷과 하나의 어드바이스를 가지고 있는 것이다. 쉽게
+  이야기해서 포인트컷1 + 어드바이스1이다.
+
+
+
+
+
+정리하면 부가 기능 로직을 적용해야 하는데, 포인트컷으로 어디에? 적용할지 선택하고, 어드바이스로 어떤
+로직을 적용할지 선택하는 것이다. 그리고 어디에? 어떤 로직?을 모두 알고 있는 것이 어드바이저이다.
+
+### 쉽게 기억하기
+
+
+
+* 조언( Advice )을 어디( Pointcut )에 할 것인가?
+* 조언자( Advisor )는 어디( Pointcut )에 조언( Advice )을 해야할지 할지 알고 있다
+
+
+
+> 어디(PointCut)에 부가기능(Advice)를 적용할 것인가 = Advisor
+
+
+
+### 역할과 책임
+
+이렇게 구분한 것은 역할과 책임을 명확하게 분리한 것이다.
+
+* 포인트컷은 대상 여부를 확인하는 필터 역할만 담당한다.
+
+
+
+* 어드바이스는 깔끔하게 부가 기능 로직만 담당한다.
+
+
+
+* 둘을 합치면 어드바이저가 된다. 스프링의 어드바이저는 하나의 포인트컷 + 하나의 어드바이스로 구성된다.
+
+
+
+![image-20221113002009685](/Users/ysk/study/study_repo/inflearn-spring-core/images/image-20221113002009685.png)
+
+
+
+어드바이저는 하나의 포인트컷과 하나의 어드바이스를 가지고 있다.
+프록시 팩토리를 통해 프록시를 생성할 때 어드바이저를 제공하면 어디에 어떤 기능을 제공할 지 알 수
+있다.
+
+
+
+```java
+@Slf4j
+public class AdvisorTest {
+
+    @Test
+    void advisorTest1() {
+        ServiceInterface target = new ServiceImpl();
+        ProxyFactory proxyFactory = new ProxyFactory(target);
+
+        DefaultPointcutAdvisor advisor = new
+            DefaultPointcutAdvisor(Pointcut.TRUE, new TimeAdvice());
+
+        proxyFactory.addAdvisor(advisor);
+
+        ServiceInterface proxy = (ServiceInterface) proxyFactory.getProxy();
+
+        proxy.save();
+        proxy.find();
+    }
+}
+```
+
+
+
+* new DefaultPointcutAdvisor : Advisor 인터페이스의 가장 일반적인 구현체이다. 생성자를 통해
+  하나의 포인트컷과 하나의 어드바이스를 넣어주면 된다. 어드바이저는 하나의 포인트컷과 하나의
+  어드바이스로 구성된다.
+
+
+
+* Pointcut.TRUE : 항상 true 를 반환하는 포인트컷이다. 이후에 직접 포인트컷을 구현해볼 것이다.
+
+
+
+* new TimeAdvice() : 앞서 개발한 TimeAdvice 어드바이스를 제공한다.
+
+
+
+* proxyFactory.addAdvisor(advisor) : 프록시 팩토리에 적용할 어드바이저를 지정한다. 어드바이저는
+  내부에 포인트컷과 어드바이스를 모두 가지고 있다. 따라서 어디에 어떤 부가 기능을 적용해야 할지
+  어드바이스 하나로 알 수 있다. `프록시 팩토리를 사용할 때 어드바이저는 필수이다.`
+
+
+
+* 그런데 생각해보면 이전에 분명히 proxyFactory.addAdvice(new TimeAdvice()) 이렇게
+  어드바이저가 아니라 어드바이스를 바로 적용했다. 이것은 단순히 편의 메서드이고 결과적으로 해당 메서드
+  내부에서 지금 코드와 똑같은 다음 어드바이저가 생성된다.  
+
+  `DefaultPointcutAdvisor(Pointcut.TRUE, new TimeAdvice())`
+
+
+
+> Advisor(어드바이저)는 여러개 추가할 수 있다.
+
+
+
+![image-20221113003801515](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221113003801515.png)
+
+
+
+## 특정 메소드에만 포인트컷을 적용하는법
+
+
+
+### Pointcut 관련 인터페이스 - 스프링 제공
+
+```java
+public interface Pointcut {
+	ClassFilter getClassFilter();
+	MethodMatcher getMethodMatcher();
+}
+
+public interface ClassFilter {
+	boolean matches(Class<?> clazz);
+}
+
+public interface MethodMatcher {
+	boolean matches(Method method, Class<?> targetClass);
+//..
+}
+```
+
+
+
+포인트컷은 크게 ClassFilter 와 MethodMatcher 둘로 이루어진다. 이름 그대로 하나는 클래스가
+맞는지, 하나는 메서드가 맞는지 확인할 때 사용한다. 둘다 true 로 반환해야 어드바이스를 적용할 수 있다
+
+
+
+### 커스텀 Pointcut
+
+
+
+```java
+
+@Slf4j
+public class AdvisorTest {
+
+    @Test
+    @DisplayName("직접 만든 포인트컷")
+    void advisorTest2() {
+        ServiceImpl target = new ServiceImpl();
+        ProxyFactory proxyFactory = new ProxyFactory(target);
+        DefaultPointcutAdvisor advisor = new DefaultPointcutAdvisor(new
+            MyPointcut(), new TimeAdvice());
+        proxyFactory.addAdvisor(advisor);
+        ServiceInterface proxy = (ServiceInterface) proxyFactory.getProxy();
+        proxy.save();
+        proxy.find();
+    }
+
+
+    static class MyPointcut implements Pointcut {
+
+        @Override
+        public ClassFilter getClassFilter() {
+            return ClassFilter.TRUE;
+        }
+
+        @Override
+        public MethodMatcher getMethodMatcher() {
+            return new MyMethodMatcher();
+        }
+    }
+
+    static class MyMethodMatcher implements MethodMatcher {
+
+        private String matchName = "save";
+
+        @Override
+        public boolean matches(Method method, Class<?> targetClass) {
+            boolean result = method.getName().equals(matchName);
+
+            log.info("포인트컷 호출 method={} targetClass={}", method.getName(),
+                targetClass);
+
+            log.info("포인트컷 결과 result={}", result);
+            return result;
+        }
+
+        @Override
+        public boolean isRuntime() {
+            return false;
+        }
+
+        @Override
+        public boolean matches(Method method, Class<?> targetClass, Object... args) {
+            throw new UnsupportedOperationException();
+        }
+    }
+}
+```
+
+
+
+
+
+### MyPointcut
+* 직접 구현한 포인트컷이다. Pointcut 인터페이스를 구현한다.
+* 현재 메서드 기준으로 로직을 적용하면 된다. 
+* 클래스 필터는 항상 true 를 반환하도록 했고, 메서드 비교 기능은 MyMethodMatcher 를 사용한다.
+
+
+
+### MyMethodMatcher
+* 직접 구현한 MethodMatcher 이다. MethodMatcher 인터페이스를 구현한다.
+* matches() : 이 메서드에 method , targetClass 정보가 넘어온다. 이 정보로 어드바이스를 적용할지
+  적용하지 않을지 판단할 수 있다.
+* 여기서는 메서드 이름이 "save" 인 경우에 true 를 반환하도록 판단 로직을 적용했다.
+  isRuntime() , matches(... args) : isRuntime() 이 값이 참이면 matches(... args) 메서드가
+  대신 호출된다. 
+* 동적으로 넘어오는 매개변수를 판단 로직으로 사용할 수 있다.
+* isRuntime() 이 false 인 경우 클래스의 정적 정보만 사용하기 때문에 스프링이 내부에서 캐싱을
+  통해 성능 향상이 가능하지만, isRuntime() 이 true 인 경우 매개변수가 동적으로 변경된다고
+  가정하기 때문에 캐싱을 하지 않는다.
+
+### new DefaultPointcutAdvisor(new MyPointcut(), new TimeAdvice())
+어드바이저에 직접 구현한 포인트컷을 사용한다
+
+
+
+![image-20221113005933326](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221113005933326.png)
+
+1. 클라이언트가 프록시의 save() 를 호출한다.
+2. 포인트컷에 Service 클래스의 save() 메서드에 어드바이스를 적용해도 될지 물어본다.
+3. 포인트컷이 true 를 반환한다. 따라서 어드바이스를 호출해서 부가 기능을 적용한다.
+4. 이후 실제 인스턴스의 save() 를 호출한다.
+
+
+
+![image-20221113005949827](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221113005949827.png)
+
+
+
+1. 클라이언트가 프록시의 find() 를 호출한다.
+2. 포인트컷에 Service 클래스의 find() 메서드에 어드바이스를 적용해도 될지 물어본다.
+3. 포인트컷이 false 를 반환한다. 따라서 어드바이스를 호출하지 않고, 부가 기능도 적용되지 않는다.
+4. 실제 인스턴스를 호출한다.
+
+
+
+
+
+# 스프링이 제공하는 포인트컷( Spring Pointcut)
+
+
+
+스프링이 제공하는 `NameMatchMethodPointcut `를 사용
+
+
+
+```java
+package hello.proxy.advisor;
+
+import hello.proxy.common.advice.TimeAdvice;
+import hello.proxy.common.service.ServiceImpl;
+import hello.proxy.common.service.ServiceInterface;
+import java.lang.reflect.Method;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.aop.ClassFilter;
+import org.springframework.aop.MethodMatcher;
+import org.springframework.aop.Pointcut;
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.aop.support.NameMatchMethodPointcut;
+
+@Slf4j
+public class AdvisorTest {
+
+    @Test
+    @DisplayName("스프링이 제공하는 포인트컷")
+    void advisorTest3() {
+        ServiceImpl target = new ServiceImpl();
+        ProxyFactory proxyFactory = new ProxyFactory(target);
+        
+        //
+        NameMatchMethodPointcut pointcut = new NameMatchMethodPointcut();
+        pointcut.setMappedNames("save");
+        //
+        DefaultPointcutAdvisor advisor = new DefaultPointcutAdvisor(pointcut, new
+            TimeAdvice());
+      
+        proxyFactory.addAdvisor(advisor);
+        ServiceInterface proxy = (ServiceInterface) proxyFactory.getProxy();
+        proxy.save();
+        proxy.find();
+    }
+
+}
+
+```
+
+NameMatchMethodPointcut 을 생성하고 setMappedNames(...) 으로 메서드 이름을 지정하면
+포인트컷이 완성된다
+
+
+
+### 스프링은 무수히 많은 포인트컷을 제공한다
+
+
+
+* NameMatchMethodPointcut : 메서드 이름을 기반으로 매칭한다. 
+  * 내부에서는 PatternMatchUtils 를 사용한다.
+  * 예) *xxx* 허용
+* JdkRegexpMethodPointcut : JDK 정규 표현식을 기반으로 포인트컷을 매칭한다.
+* TruePointcut : 항상 참을 반환한다.
+* AnnotationMatchingPointcut : 애노테이션으로 매칭한다.
+* AspectJExpressionPointcut : aspectJ 표현식으로 매칭한다.
+
+
+
+
+
+## 가장 중요한 것은 aspectJ 표현식
+
+
+
+여기에서 사실 다른 것은 중요하지 않다.   
+실무에서는 사용하기도 편리하고 기능도 가장 많은 aspectJ 표현식을 기반으로 사용하는 AspectJExpressionPointcut 을 사용하게 된다.
+aspectJ 표현식과 사용방법은 중요해서 이후 AOP를 설명할 때 자세히 설명하겠다.
+지금은 Pointcut 의 동작 방식과 전체 구조에 집중하자.
+
+
+
+## 여러 어드바이저 함께 적용
+
+
+
+하나의 프록시, 여러 어드바이저
+스프링은 이 문제를 해결하기 위해 하나의 프록시에 여러 어드바이저를 적용할 수 있게 만들어두었다.
+
+
+
+![image-20221113010318311](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221113010318311.png)
+
+
+
+```java
+
+@Slf4j
+public class AdvisorTest {
+
+
+    @Test
+    @DisplayName("하나의 프록시, 여러 어드바이저")
+    void multiAdvisorTest2() {
+        //proxy -> advisor2 -> advisor1 -> target
+        DefaultPointcutAdvisor advisor2 = new DefaultPointcutAdvisor(Pointcut.TRUE,
+            new Advice2());
+        DefaultPointcutAdvisor advisor1 = new DefaultPointcutAdvisor(Pointcut.TRUE,
+            new Advice1());
+        ServiceInterface target = new ServiceImpl();
+        ProxyFactory proxyFactory1 = new ProxyFactory(target);
+        
+        proxyFactory1.addAdvisor(advisor2);
+        proxyFactory1.addAdvisor(advisor1);ServiceInterface proxy = (ServiceInterface) 	proxyFactory1.getProxy();
+        
+      //실행
+        proxy.save();
+    }
+
+
+    @Slf4j
+    static class Advice1 implements MethodInterceptor {
+        @Override
+        public Object invoke(MethodInvocation invocation) throws Throwable {
+            log.info("advice1 호출");
+            return invocation.proceed();
+        }
+    }
+    @Slf4j
+    static class Advice2 implements MethodInterceptor {
+        @Override
+        public Object invoke(MethodInvocation invocation) throws Throwable {
+            log.info("advice2 호출");
+            return invocation.proceed();
+        }
+    }
+    
+}
+```
+
+
+
+* 프록시 팩토리에 원하는 만큼 addAdvisor() 를 통해서 어드바이저를 등록하면 된다.
+* `등록하는 순서대로 advisor 가 호출된다. 여기서는 advisor2 , advisor1 순서로 등록했다`
+
+
+
+![image-20221113010957302](/Users/ysk/study/study_repo/inflearn-spring-core/images//image-20221113010957302.png)
+
+
+
+### 정리
+결과적으로 여러 프록시를 사용할 때와 비교해서 결과는 같고, 성능은 더 좋다.
+
+
+
+> ### 중요
+>
+> > 스프링의 AOP를 처음 공부하거나 사용하면, AOP 적용수 만큼 프록시가 생성된다고 착각하게 된다. 
+> >
+> > 실제 많은 실무 개발자들도 이렇게 생각하는 것을 보았다.
+> >
+> > 스프링은 AOP를 적용할 때, 최적화를 진행해서 지금처럼 프록시는 하나만 만들고, 하나의 프록시에 여러
+> > 어드바이저를 적용한다.
+> >
+> > `정리하면 하나의 target 에 여러 AOP가 동시에 적용되어도, 스프링의 AOP는 target 마다 하나의
+> > 프록시만 생성한다`. 이부분을 꼭 기억해두자.
+
+
+
+
+
+# 정리
+
+* 프록시 팩토리 덕분에 개발자는 매우 편리하게 프록시를 생성할 수 있게 되었다.
+* 추가로 어드바이저, 어드바이스, 포인트컷 이라는 개념 덕분에 어떤 부가 기능을 어디에 적용할 지 명확하게
+  이해할 수 있었다.
+
+
+
+###  남은 문제
+
+프록시 팩토리와 어드바이저 같은 개념 덕분에 지금까지 고민했던 문제들은 해결되었다. 프록시도 깔끔하게
+적용하고 포인트컷으로 어디에 부가 기능을 적용할지도 명확하게 정의할 수 있다. 원본 코드를 전혀 손대지
+않고 프록시를 통해 부가 기능도 적용할 수 있었다.
+그런데 아직 해결되지 않는 문제가 있다.
+
+
+
+#### 문제1 - 너무 많은 설정
+* 바로 ProxyFactoryConfigV1 , ProxyFactoryConfigV2 와 같은 설정 파일이 지나치게 많다는 점이다.
+* 예를 들어서 애플리케이션에 스프링 빈이 100개가 있다면 여기에 프록시를 통해 부가 기능을 적용하려면 100개의 동적 프록시 생성 코드를 만들어야 한다! 무수히 많은 설정 파일 때문에 설정 지옥을 경험하게 될 것이다.
+* 최근에는 스프링 빈을 등록하기 귀찮아서 컴포넌트 스캔까지 사용하는데, 이렇게 직접 등록하는 것도
+  모자라서, 프록시를 적용하는 코드까지 빈 생성 코드에 넣어야 한다.
+
+#### 문제2 - 컴포넌트 스캔
+* 애플리케이션 V3처럼 컴포넌트 스캔을 사용하는 경우 지금까지 학습한 방법으로는 프록시 적용이 불가능하다.
+* 왜냐하면 실제 객체를 컴포넌트 스캔으로 스프링 컨테이너에 스프링 빈으로 등록을 다 해버린 상태이기 때문이다.
+* 지금까지 학습한 프록시를 적용하려면, 실제 객체를 스프링 컨테이너에 빈으로 등록하는 것이 아니라 ProxyFactoryConfigV1 에서 한 것 처럼, 부가 기능이 있는 프록시를 실제 객체 대신 스프링 컨테이너에 빈으로 등록해야 한다.
+
+
+
+### 두 가지 문제를 한번에 해결하는 방법이 바로 다음에 설명할 빈 후처리기이다
