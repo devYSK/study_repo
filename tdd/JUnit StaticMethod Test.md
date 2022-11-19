@@ -1,4 +1,4 @@
-# JUnit5 Static Method 테스트 방법 - Mocking
+# Mockito Static Method 테스트 방법 - Mocking
 
 
 
