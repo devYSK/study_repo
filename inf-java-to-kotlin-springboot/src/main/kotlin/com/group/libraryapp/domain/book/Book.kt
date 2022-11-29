@@ -40,4 +40,5 @@ class Book(
     fun getEventScore(): Int {
         return this.type.score
     }
+
 }
