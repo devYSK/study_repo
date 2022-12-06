@@ -19,8 +19,6 @@ n
 >src/main/kotlin/com/group/libraryapp/domain/user/UserStatus.kt,0/9/09b0abbea4db7030ef29da2581355e409b7423ed
 l
 <src/main/kotlin/com/group/libraryapp/domain/book/BookType.kt,5/0/504d11e5651b1e7cc49d8ea62e937078123b635f
-v
-Fsrc/main/kotlin/com/group/libraryapp/controller/user/UserController.kt,9/3/931b8ee2dfb32c9eaffe92b45393e31d7f902370
 ‰
 Ysrc/main/kotlin/com/group/libraryapp/domain/user/loanhistory/UserLoanHistoryRepository.kt,a/a/aac120e83d57d866f76ce6d2cde95d58317465c2
 p
@@ -31,3 +29,13 @@ p
 @src/main/kotlin/com/group/libraryapp/service/user/UserService.kt,2/f/2fd96853f2d8348128aacedb747033d926f5a614
 
 Osrc/main/kotlin/com/group/libraryapp/domain/user/loanhistory/UserLoanHistory.kt,f/3/f34ae86c9493a05cb1f09fceeba4b7761e8d5d19
+v
+Fsrc/main/kotlin/com/group/libraryapp/controller/book/BookController.kt,7/8/78b43293aca5ad6698aecb107d1d1d14e090949e
+v
+Fsrc/main/kotlin/com/group/libraryapp/controller/user/UserController.kt,9/3/931b8ee2dfb32c9eaffe92b45393e31d7f902370
+h
+8src/main/kotlin/com/group/libraryapp/domain/user/User.kt,e/5/e556a660b4e563daffc26c6f5e0c84a404263c57
+|
+Lsrc/main/kotlin/com/group/libraryapp/domain/user/UserRepositoryCustomImpl.kt,c/9/c934dc5979b82e0ecb97bd172f25c64da05331f8
+x
+Hsrc/main/kotlin/com/group/libraryapp/dto/book/request/BookLoanRequest.kt,5/1/5105d9cbfc6c025aa599071999ac870088d76685
