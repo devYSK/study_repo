@@ -2,6 +2,10 @@
 
 # JdbcTemplate OneToMany, 1:N 
 
+JdbcTemplate의 사용법은 다음 링크에 자세하게 나와있다.
+
+\* https://blog.outsider.ne.kr/882
+
 
 
 JdbcTemplate을 이용해서 1:N 상황의 엔티티를 Join하는 방법을 알아보자.
