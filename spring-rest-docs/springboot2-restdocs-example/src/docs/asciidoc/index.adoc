@@ -1,0 +1,18 @@
+= Spring REST Docs
+:toc: left
+:toclevels: 2
+:sectlinks:
+
+[[resources-post]]
+== Member
+
+[[resources-post-create]]
+=== getAll
+
+==== HTTP request
+
+include::{snippets}/member-get-all/http-request.adoc[]
+
+==== HTTP response
+
+include::{snippets}/member-get-all/http-response.adoc[]
