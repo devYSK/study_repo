@@ -318,17 +318,20 @@ asciidoctor { // 7
 >   - 우리는 `Documentation`이라는 RestDocs 전용 부모 클래스를 상속받아 사용하기 때문에    `**.documnetation.*`로 지정    
 >   - - [https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/testing/TestFilter.html](https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/testing/TestFilter.html) 
 >
-> ### Rest Docs 실행 방법 
->
-> * 테스트(`testDocument`)를 수행시켜 `snippet`을 생성한다.    
->   *  `build.gradle`에서 설정한 `snippetsDir`에 생성 됨. 
-> * gradle로 `asciidoctor task`를 수행시켜 문서 파일을 생성    
->   * 그 전에 `src/docs/asciidoc/index.adoc` 있어야 함.    
->   * `asciidoctor`가 `testDocument`를 의존하기 때문에 `asciidoctor`를 바로 실행해도 됨. 
-> * `build > asciidoc > html5 > index.html`에 문서가 생성된 것을 오픈하여 잘 만들어졌는지 확인한다. 
-> * `task copyDocument를 실행하여 배포할 디렉토리도 복사하기`
 
   
+
+### Rest Docs 실행 방법 
+
+* 테스트(`testDocument`)를 수행시켜 `snippet`을 생성한다.    
+  *  `build.gradle`에서 설정한 `snippetsDir`에 생성 됨. 
+* gradle로 `asciidoctor task`를 수행시켜 문서 파일을 생성    
+  * 그 전에 `src/docs/asciidoc/index.adoc` 있어야 함.    
+  * `asciidoctor`가 `testDocument`를 의존하기 때문에 `asciidoctor`를 바로 실행해도 됨. 
+* `build > asciidoc > html5 > index.html`에 문서가 생성된 것을 오픈하여 잘 만들어졌는지 확인한다. 
+* `task copyDocument를 실행하여 배포할 디렉토리도 복사하기`
+
+
 
 ### bootjar 설정하기
 
@@ -428,8 +431,6 @@ AsciiDoc 플러그인을 설치하면 인텔리제이 상에서도 REST API 문�
 * @AutoConfigureRestDocs : restdocs를 위해 사용하는 bean이나 어노테이션들을 가져와 준다. 
   * https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/restdocs/AutoConfigureRestDocs.html
   * target/generated-snippets dir 생성하고 테스트 코드를 통해 snippets를 추가해주는 애노테이션이다
-
-
 
 
 
