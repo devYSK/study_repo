@@ -26,7 +26,9 @@ API문서를 만드는 법은 크게 다음과 같이 나뉜다
 
 
 
-> * https://cheese10yun.github.io/spring-rest-docs/ 도 디테일하게 정리되어 있다.
+> * https://cheese10yun.github.io/spring-rest-docs/  - 
+>
+> *  https://backtony.github.io/spring/2021-10-15-spring-test-3/ 에도 디테일하게 정리되어 있다. 
 >
 > * https://docs.spring.io/spring-restdocs/docs/current/reference/htmlsingle/
 >   * 공식문서를 반드시 읽어보길 추천
@@ -302,6 +304,29 @@ asciidoctor { // 7
 8. 스니펫 디렉터리를 입력으로 구성한다.
 9. 확장에 대한 구성 사용을 구성한다 `asciidoctorExt`.
 10. 문서가 생성되기 전에 테스트가 실행되도록 한다.
+
+
+
+> \- `task` : `gradle`을 통해 실행되는 단위 
+>
+> - `ext` : 전역 변수 셋팅 
+> - `asciidoctor` : `testDocument`를 의존하여 테스트를 실행하고, `snippetsDir`에서 `snippets`을 참조하여 문서를 생성한다. 
+> - `bootJar` : `jar` 빌드 시 `asciidoctor`를 참조하여 문서를 생성하고, `snippetsDir`에 있는 `html5`파일을 `static/docs`로 복사한다. 복사하는 이유는 api 요청으로 문서 접근을 위함 
+> - `copyDocument` : `from` 디렉토리에 있는 API 문서 파일을 `into`로 복사한다. 복사하는 이유는 api 요청으로 문서 접근을 위함. 테스트 시에는 이걸 쓰고, 배포 시에는 `bootjar`를 씀. 
+> -  `testDocument` : `restdocs` 전용 테스트 실행 task로 `**.documnetation.*`에 해당하는 테스트만 실행한다.
+> - `includeTestMatching` : 실행할 테스트 패턴 정의    
+>   - 우리는 `Documentation`이라는 RestDocs 전용 부모 클래스를 상속받아 사용하기 때문에    `**.documnetation.*`로 지정    
+>   - - [https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/testing/TestFilter.html](https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/testing/TestFilter.html) 
+>
+> ### Rest Docs 실행 방법 
+>
+> * 테스트(`testDocument`)를 수행시켜 `snippet`을 생성한다.    
+>   *  `build.gradle`에서 설정한 `snippetsDir`에 생성 됨. 
+> * gradle로 `asciidoctor task`를 수행시켜 문서 파일을 생성    
+>   * 그 전에 `src/docs/asciidoc/index.adoc` 있어야 함.    
+>   * `asciidoctor`가 `testDocument`를 의존하기 때문에 `asciidoctor`를 바로 실행해도 됨. 
+> * `build > asciidoc > html5 > index.html`에 문서가 생성된 것을 오픈하여 잘 만들어졌는지 확인한다. 
+> * `task copyDocument를 실행하여 배포할 디렉토리도 복사하기`
 
   
 

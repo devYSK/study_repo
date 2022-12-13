@@ -325,13 +325,268 @@ public class StaticRoutingConfiguration implements WebMvcConfigurer {
 
 기존 Spring REST Docs로 작성한 코드를 활용하려면 Spring의 MockMvcRestDocumentation을 MockMvcRestDocumentationWrapper로 바꿔주면 된다.
 
+  
 
+
+기존 코드의 document 생성 부분에 다음과 같이 MockMvcRestDocumentationWrapper를 추가한다.
+
+document(...)인 부분이 MockMvcRestDocumentationWrapper.document(...)로 바뀐 것 말고 나머지는 모두 그대로다.
+
+```
+resultActions
+  .andDo(
+    MockMvcRestDocumentationWrapper.document(operationName,
+      requestFields(fieldDescriptors().getFieldDescriptors()),
+      responseFields(
+        fieldWithPath("comment").description("the comment"),
+        fieldWithPath("flag").description("the flag"),
+        fieldWithPath("count").description("the count"),
+        fieldWithPath("id").description("id"),
+        fieldWithPath("_links").ignored()
+      ),
+      links(linkWithRel("self").description("some"))
+  )
+);
+```
+
+restassured를 사용한다면 restdocs-api-spec-restassured dependency를 추가하고 동일한 형태로 RestAssuredRestDocumentationWrapper를 추가하면 된다.
+
+webtestclient를 사용한다면 restdocs-api-spec-webtestclient dependency를 추가하고 동일한 형태로 WebTestClientRestDocumentationWrapper를 추가하면 된다. 
+
+
+
+## restdocs-spec-maven-plugin 추가하기
+
+gradle plugin의 경우 restdocs-api-spec에서 기본 제공된다.
+
+관련 설정도 해당 프로젝트에 자세히 안내되어 있다.
+
+https://github.com/ePages-de/restdocs-api-spec#gradle-plugin-configuration
+
+maven plugin의 경우 따로 프로젝트가 있다.
+
+https://github.com/BerkleyTechnologyServices/restdocs-spec
+
+asciidoctor 빌드 시 설정한 기존 plugin인 설정에 이어 restdocs-spec-maven-plugin을 추가하면 된다.
+
+```
+<plugin>
+    <groupId>io.github.berkleytechnologyservices</groupId>
+    <artifactId>restdocs-spec-maven-plugin</artifactId>
+    <version>${restdocs-spec-maven-plugin.version}</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>generate</goal>
+            </goals>
+            <configuration>
+                <specification>OPENAPI_V3</specification>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+좀 더 자세한 설정은 해당 사이트에 안내되어 있다.
+
+별다른 설정 없이 plugin을 추가하면 기본 경로인 ${project.build.directory}/restdocs-spec에 api 문서가 생성된다.
+
+
+
+## Swagger UI 설정하기
+
+Swagger UI의 설정은 swagger-initializer.js에서 한다.
+
+해당 파일을 열어보면 처음에는 다음과 같다.
+
+```
+window.onload = function() {
+  //<editor-fold desc="Changeable Configuration Block">
+
+  // the following lines will be replaced by docker/configurator, when it runs in a docker-container
+  window.ui = SwaggerUIBundle({
+    url: "https://petstore.swagger.io/v2/swagger.json",
+    dom_id: '#swagger-ui',
+    deepLinking: true,
+    presets: [
+      SwaggerUIBundle.presets.apis,
+      SwaggerUIStandalonePreset
+    ],
+    plugins: [
+      SwaggerUIBundle.plugins.DownloadUrl
+    ],
+    layout: "StandaloneLayout"
+  });
+
+  //</editor-fold>
+};
+```
+
+샘플 예제 주소인 [https://petstore.swagger.io/v2/swagger.json를](https://petstore.swagger.io/v2/swagger.json) 호출해서 화면을 보여주는데 이 페이지의 경우 그냥 로컬에 있는 dist 폴더의 index.html을 열어도 확인할 수 있다.
+
+이제 내가 사용하길 원하는 주소를 추가하면 되는데 단순히 url만 바꾸면 swagger ui의 최상단 Explore의 기본 호출 주소가 바뀌고 다른 주소를 가려면 일일이 다시 입력해야 한다.
+
+사용하고자 하는 url만 모아서 보여주는 처리는 기존 url 설정을 지우고 urls 설정을 다음과 같이 추가하면 된다.
+
+```
+window.onload = function() {
+  //<editor-fold desc="Changeable Configuration Block">
+
+  // the following lines will be replaced by docker/configurator, when it runs in a docker-container
+  window.ui = SwaggerUIBundle({
+    urls: [ 
+		{"name" : "테스트1", "url" : "https://petstore.swagger.io/v2/swagger.json"},
+		{"name" : "테스트2", "url" : "https://다른API문서주소"}
+	],
+    dom_id: '#swagger-ui',
+    deepLinking: true,
+    presets: [
+      SwaggerUIBundle.presets.apis,
+      SwaggerUIStandalonePreset
+    ],
+    plugins: [
+      SwaggerUIBundle.plugins.DownloadUrl
+    ],
+    layout: "StandaloneLayout"
+  });
+
+  //</editor-fold>
+};
+```
+
+이렇게 추가하면 상단의 Explore가 다음과 같이 select 메뉴로 변경된다.
+
+
+
+![img](https://blog.kakaocdn.net/dn/ddiNBO/btrE3MCJWyO/Ms31IkfrkL3JvOJh4aM4v1/img.png)
+
+
+
+실제 사용하려면 호출 대상 서버에 Cors 설정을 하는 등의 추가 작업이 필요하겠지만 관련한 설명은 생략한다.
+
+그 밖에도 다양한 설정을 할 수 있는데 이러한 설정에 대해서는 Swagger UI 문서를 참고하면 된다.
+
+https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
+
+[ Swagger DocumentationConfiguration How to configure Swagger UI accepts configuration parameters in four locations. From lowest to highest precedence: The swagger-config.yaml in the project root directory, if it exists, is baked into the application configuration object passedswagger.io](https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/)
+
+Swagger UI에서 호출하는 API 문서에 host관련 설정이 있으면 Swagger UI에서는 해당 주소를 호출하여 API 동작을 직접 테스트할 수 있다.
+
+호출 주소에 대한 설정은 API 문서를 만드는 대상 프로젝트 maven pom.xml의 restdocs-spec-maven-plugin configuration에 설정하면 된다.
+
+```
+<plugin>
+    <groupId>io.github.berkleytechnologyservices</groupId>
+    <artifactId>restdocs-spec-maven-plugin</artifactId>
+    <version>${restdocs-spec-maven-plugin.version}</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>generate</goal>
+            </goals>
+            <configuration>
+                <specification>OPENAPI_V3</specification>
+                <host>해당API주소</host>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+
+
+# 추가 설명
+
+
+
+## OpenApi.Tools 소개
+
+이제까지 OpenAPI 문서를 사용하기 위해 Asciidoctor extension인 Spring Rest Docs와 restdocs-api-spec, restdocs-spec-maven-plugin 및 Swagger UI를 사용하는 것에 대해서 설명했다.
+
+OpenAPI는 공개된 specification이기 때문에 이를 이용한 수많은 오픈 소스가 파생되고 있다.
+
+어떤 게 있는지 궁금하다면 아래 사이트를 가보면 된다.
+
+https://openapi.tools/
+
+[ OpenAPI.ToolsWriting YAML by hand is no fun, and maybe you don't want a GUI, so use a Domain Specific Language to write OpenAPI in your language of choice. Name Language v3.1 v3.0 v2.0 GitHub BOATS - BOATS allows for larger teams to contribute to multi-file OpenAPI defopenapi.tools](https://openapi.tools/)
+
+이 글에서는 Swagger UI를 사용하는 것에 대해 설명했지만 위 사이트의 Tool Types에서 documentation 항목을 가보면 다양한 tool이 존재한다.
+
+OpenAPI를 활용하는 방법은 다양하므로 위 사이트를 살펴보면서 상황에 맞는 tool을 찾아보면 좋을 것 같다.
+
+
+
+## SwaggerHub 소개
+
+Swagger UI에서 사용하는 API 문서를 직접 만들어보거나 테스트하고 싶거나 혹 다른 사람이 만든 걸 참고하고 싶은 경우 Swagger Hub를 구경하면 된다.
+
+https://app.swaggerhub.com/
+
+swagger hub는 docker hub와 비슷한데 API document를 관리하는 곳이다.
+
+3 public 까진 무료이고 팀 단위나 기업 단위로 사용하려면 비용이 든다.
+
+https://swagger.io/tools/swaggerhub/pricing/
+
+굳이 사용하지 않더라도 다른 사람의 설정들을 참고하기 좋기 때문에 소개해본다.
+
+
+
+## 추가 옵션 설정
+
+swagger ui configuration : https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
+
+아래와 같은 값들을 추가로 설정하고 있다.
+
+```
+window.ui = SwaggerUIBundle({
+    urls: [
+	    // … 이하 생략
+    ],
+    operationsSorter : "alpha",
+    withCredentials : true,
+    queryConfigEnabled : true,
+    //... 이하 생략
+}
+```
+
+
+
+추가로 설정한 옵션들의 역할은 다음과 같다.
+
+| Parameter Name     | Description                                                  |
+| ------------------ | ------------------------------------------------------------ |
+| urls               | 기본 설정인 url을 사용하면 검색창에 해당 url이 설정되고 다른 url들을 검색할 수 있게 제공함 하지만 urls로 설정하면 설정된 url들만 사용할 수 있는 select 형태로 변경됨 |
+| operationSorter    | 기본 설정은 서버가 반환한 순서대로 이지만 'alpha' (주소를 알파벳 순 정렬) 또는 'method' (주소를 HTTP method 순으로 정렬) 로 설정할 수 있음 |
+| withCredentials    | true 로 설정 시 요청에 header cookie값을 같이 보냄           |
+| queryConfigEnabled | 위에 선언한 urls의 셀렉트 박스를 통해 url을 설정하면 해당 선택에 대한 주소관련 parameter가 붙는데 이 parameter를 사용하는 옵션 (이 옵션을 활성화 해야 주소 복사로 공유가 가능) |
+
+
+
+
+
+### 이런 이슈도 있다. 
+
+> JWT 적용시에는 어떻게 해야 하는지 궁금합니다.
+> 아래와 같이 JWT(Authroization) 설정하였을 경우 json으로 결과물은 제대로 만들어지고
+> Swagger ui 입력 폼에도 잘 나오지만 실제로 try it out 버튼을 클릭했을 경우
+> Request를 요청할때 Request Header에 Authorization값을 넣지 않고 요청하더라구요.
+>
+> ```
+> .requestHeaders(
+>     headerWithName("Authorization").description("bearer ${access_token}")
+> )
+> ```
+
+* openAPI 설정으로 해결할 수 있을 것 같다.
 
 
 
 ## [참고문헌](https://tech.kakaopay.com/post/openapi-documentation/#참고문헌)
 
 - https://tech.kakaopay.com/post/openapi-documentation/
+- https://luvstudy.tistory.com/186
 - https://shirohoo.github.io/backend/test/2021-07-17-swagger-rest-docs/
 - Documenting Your Existing APIs: API Documentation Made Easy with OpenAPI & Swagger. https://swagger.io/resources/articles/documenting-apis-with-swagger
 - What’s the Difference Between Swagger and OpenAPI?. https://nordicapis.com/whats-the-difference-between-swagger-and-openapi
