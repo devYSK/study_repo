@@ -126,7 +126,10 @@ AnonymousAuthenticationFilter 필터로 인해 시큐리티에서는 SecurityCon
 
 
 
-FilterSecurityInterceptor
+### FilterSecurityInterceptor
+
+- 인가처리를 담당하는 필터.
+- 시큐리티 필터들 중 마지막에 위치하며 인증된 사용자의 특정 요청 승인/거부 최종 결정
 
 - 인증객체 없이 보호자원에 접근 시도하면 AuthenticationException
 - 인증 후 자원 접근 권한이 없을 경우 AccessDeniedException
