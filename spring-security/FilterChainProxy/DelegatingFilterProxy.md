@@ -22,6 +22,16 @@ Spring Security를 사용한다면, DelegatingFilterProxy가 생성된다. Sprin
 
 스프링에서 필터 기술을 지원하는 것처럼 보이기 때문에 필터를 스프링 기술이라고 생각할 수 있다. Filter는 엄밀히 말하면 스프링이 아닌 Servlet 2.3부터 제공되는 서블릿 기술이다. **서블릿 필터는 서블릿 컨테이너에서 생성되고 실행된다. 그리고 스프링 빈은 스프링 컨테이너에서 생성되고 실행된다. 따라서 기본적으로 스프링 빈을 필터에서 주입 받아서 사용할 수 없는 구조다.** 
 
+* DelegatingFilterProxy의 등장으로 스프링 빈을 필터에서 주입받아서 사용할 수 있다.
+* DelegatingFilterProxy가 내부적으로 ApplicationContext를 가지고 있음.
+  * 어디서 호출하는진 모르곘는데.. setApplicationContext()로 ApplicationContext를 받음
+
+* DelegatingFilterProxy.initDelegate(WebApplicationContext)로 getBean(targetBeanName, Filter.class)를 호출하여 빈을 찾아 사용
+
+* [필터(Filter)가 스프링 빈 등록과 주입이 가능한 이유](https://mangkyu.tistory.com/221)
+
+
+
 
 
 필터의 역할은 어떤 요청이 있을 때 이 요청이 실제로 서블릿으로 들어오는데, 서블릿 자원에 들어오기 전에 처리를 하는 곳이 필터이다.
