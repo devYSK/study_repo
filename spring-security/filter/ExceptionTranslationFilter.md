@@ -38,6 +38,24 @@ FilterSecurityInterceptor 바로 위에 위치하며, FilterSecurityInterceptor 
 
 
 
+### AccessDeniedException 예외 발생 순서
+
+- AbstractSecurityInterceptor.beforeInvocation() 호출
+- attemptAuthorization(object, attributes, authenticated); 호출
+- this.accessDecisionManager.decide(authenticated, object, attributes); 호출
+  - decide 메소드는  액세스 제어 결정을 확인
+  - 내부적으로 Voter를 이용한 연산을 하는데, 여기서 권한에 맞지 않으면 throw AccessDeniedException()
+
+
+
+#### Voter
+
+Spring Security는 **투표를 기반**으로 request에 대한 access에 대한 승인 여부를 결정
+
+* https://00hongjun.github.io/spring-security/accessdecisionmanager/
+
+
+
 
 
 
@@ -64,6 +82,11 @@ FilterSecurityInterceptor 바로 위에 위치하며, FilterSecurityInterceptor 
 
 - AuthenticationException 예외는 인증 관련 예외이며, 사용자를 로그인 페이지로 보냄
 - AccessDeniedException 예외는 AccessDecisionManager에 의해 접근 거부가 발생했을 때 접근 거부 페이지를 보여주거나 사용자를 로그인 페이지로 보냄
+
+
+
+* AuthenticationException 예외는 AuthenticationEntryPoint를 호출하여 인증 가능하도록(로그인 등) 리다이렉트 등을 한다.
+* AccessDeniedException 예외는 AccessDeniedHandler를 호출하고 AccessDeniedHandler의 기본 구현체는 AccessDeniedHandlerImpl이고, 내부 handle() 메소드에서 errorPage가 정의되어 있지 않으면 그냥 response.sendError()로 403응답과 에러 메시지를 리턴한다. 
 
 
 
@@ -141,7 +164,30 @@ RequestCacheAwareFilter에서 전달 된 requestCache의 값을 가지고 인증
 
 
 
+## 예외처리 기능 작동할 수 있도록 하는법
 
+```java
+protected void configure(HttpSecurity http) throws Exception {
+	 http.exceptionHandling() 					
+		.authenticationEntryPoint(authenticationEntryPoint())     		// 인증실패 시 처리
+		.accessDeniedHandler(accessDeniedHandler()) 			// 인증실패 시 처리
+}
+```
+
+
+
+업그레이드 된 버전
+
+```java
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+		return 
+      http.exceptionHandling() 					
+      .authenticationEntryPoint(authenticationEntryPoint())     		// 인증실패 시 처리					
+      .accessDeniedHandler(accessDeniedHandler()) 			// 인증실패 시 처리
+      .build();
+}
+```
 
 
 
