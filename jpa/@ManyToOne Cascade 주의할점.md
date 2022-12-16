@@ -10,6 +10,20 @@
 
 
 
+추가 정리
+
+https://www.inflearn.com/questions/31969/cascade-%EC%98%B5%EC%85%98-%EC%A7%88%EB%AC%B8
+
+https://joont92.github.io/jpa/CascadeType-PERSIST%EB%A5%BC-%ED%95%A8%EB%B6%80%EB%A1%9C-%EC%82%AC%EC%9A%A9%ED%95%98%EB%A9%B4-%EC%95%88%EB%90%98%EB%8A%94-%EC%9D%B4%EC%9C%A0/
+
+https://www.inflearn.com/questions/56718/cascade-cascadetype-all%EC%A7%88%EB%AC%B8
+
+https://ocwokocw.tistory.com/145
+
+https://ivvve.github.io/2019/02/12/java/JPA/cascade/
+
+
+
 ### 상황
 
 Member(회원)과 Order(주문) 테이블의 관계가 1:N 이라고 할 때,
