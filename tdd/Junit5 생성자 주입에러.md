@@ -1,6 +1,6 @@
 
 
-# Spring Test Junit5에서 의존성 주입을 @Autowired로 받아야만 하는 이유 - ParameterResolutionException
+# Junit5 의존성 주입 에러@Autowired ParameterResolutionException 과 해결방법
 
 
 
@@ -8,7 +8,22 @@
 
 그래서 JUnit 테스트 에서도 @RequiredArgsConstructor 를 이용한 생성자 주입이 가능할 것 같지만 그렇지 않다.
 
-만약 생성자 주입을 받으려고 하면 다음과 같은 에러를 만난다
+만약 다음과 같이 생성자 주입을 받으려고 하면 다음과 같은 에러를 만난다
+
+```java
+@RequiredArgsConstructor
+@SpringBootTest
+class ConstructorDiTest {
+
+    private final MemberRepository memberRepository;
+		
+ 		private final MemberService memberService;
+  
+    ...
+}
+```
+
+
 
 ```
 org.junit.jupiter.api.extension.ParameterResolutionException: No ParameterResolver registered for parameter [final com.ys.jpa.domain.member.MemberRepository memberRepository] in constructor [public com.ys.jpa.ConstructorDiTest(com.ys.jpa.domain.member.MemberRepository)].
@@ -155,6 +170,14 @@ test 코드는 Jupiter 컨테이너가 SpringExtension을 이용해서 주입하
 
   - 생성자 매개 변수 관리를 **Jupiter**가 하게된다.
   - 생성자 주입을 요구하는경우, 생성자 매개변수를 처리할 **ParameterResolver**을 찾지만, 주입할 빈들은 스프링 컨테이너가 가지고 있기때문에 처리하지 못하게 예외를 던진다.
+
+
+
+@TestConstructor 어노테이션과 properties 설정을 통한 주입이 가능하긴 하다!
+
+* https://0soo.tistory.com/138
+
+
 
 
 

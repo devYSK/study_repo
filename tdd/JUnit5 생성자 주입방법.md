@@ -52,7 +52,19 @@ class ConstructorDiTest {
 
 
 
-기본 정책은, 선언하지 않을 시에는 생성자 주입을 하지 않고, 생성자 주입 시도를 하면 `ParameterResolutionException`  예외를 던진다 
+기본 정책은, `@TestConstructor(autowireMode = AutowireMode.ALL)`을 선언하지 않을 시에는 생성자 주입을 하지 않고, 생성자 주입 시도를 하면 `ParameterResolutionException`  예외를 던진다 .
+
+
+
+autowiredMode는 다음 2가지가 있다.
+
+```java
+enum AutowireMode {
+
+		ALL,
+
+		ANNOTATED;
+```
 
 
 
