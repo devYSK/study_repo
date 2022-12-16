@@ -38,6 +38,14 @@ main 코드의 환경 (스프링 컨테이너)과 test 코드의 환경(Jupiter)
 
 * @Autowired를 통해 스프링 컨테이너에게 빈 주입을 요청해야 한다. 
 
+
+
+그러나 ` @TestConstructor를 통해 @Autowired 없이 주입받을 수 있는 방법이 있다. `
+
+* https://0soo.tistory.com/138
+
+
+
 ---
 
 
