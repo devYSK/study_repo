@@ -41,6 +41,8 @@ Jupiter가 해당 파라미터에 대해 등록된 ParameterResolver가 없다�
 
 
 
+> ## 가장 밑에 실제 예외가 왜 터지는지에 대한 이유, 디버그와 분석이 있다
+
 
 
 ---
@@ -135,6 +137,9 @@ JUnit5에서는 **Vintage 가 아닌 Jupiter 를 사용한다**
 > 그래서 테스트 클래스의 생성자나 메서드나 lifeCycle 메서드가 파라미터를 받고싶다면 ParameterResolver를 통해 런타임에 주입받을 수 있다.
 >
 > 그러나 Spring Bean에 대한 ParameterResolver는 Jupiter에 정의되어 있지 않다. 
+>
+> * 해당 테스트 생성자에 파라미터 주입이 가능지에 대한 여부를 확인하는 메소드 : SpringExtension.supportsParameter()
+> * ApplicationContext에서 Bean을 실제 꺼내서 리턴하는 메소드 : SpringExtension.resolveParameter
 
 
 
@@ -173,7 +178,80 @@ test 코드는 Jupiter 컨테이너가 SpringExtension을 이용해서 주입하
 
 
 
-@TestConstructor 어노테이션과 properties 설정을 통한 주입이 가능하긴 하다!
+
+
+ExecutableInvoker 클래스가 invoke() 메소드를 통해 주입을 시도한다.
+
+invoke() 메소드에서 resolveParameters()를 호출하는데, resolveParameters() 메소드 내에서 parameters 개수 만큼 for문을 돌려서
+
+resolveParameter()를 호출한다. 
+
+이 resolveParameter() 내에서 extensionRegistry로 반복을돌려 stream.filter로 특정 조건에 맞는 resolver를 찾아 supportsParameter 메소드로 파라미터 주입이 지원 가능한지 확인한다. 
+
+```java
+List<ParameterResolver> matchingResolvers = extensionRegistry.stream(ParameterResolver.class)
+					.filter(resolver -> resolver.supportsParameter(parameterContext, extensionContext))
+					.collect(toList());
+```
+
+* parameterContext :  ParameterResolver를 통해 파라미터 주입을 지원하는 데 사용.
+* extensionContext : 현재 테스트 또는 컨테이너가 실행 중인 컨텍스트 
+
+즉 현재 테스트 Context(ExtensionContext)가 parameterContext에게 파라미터 주입이 가능한 ParameterResolver 애들만 골라서, List로 모으는 것이다. 
+
+이 때, 현재 지원할 수 있는 파라미터 Resolver가 0개라면, ParameterResolutionException을 발생시킨다.
+
+
+
+## 실제 예외 터지는 장면 디버그
+
+다음 코드는 @Autowired 없이 생성자 주입이 가능한지 디버그 하는 코드이다. 
+
+```java
+@RequiredArgsConstructor
+@SpringBootTest
+class ConstructorDiTest {
+
+    private final MemberService memberService;
+
+    @Test
+    void test() {
+    }
+}
+```
+
+코드와 디버그 기록은 다음과 같다.
+
+<img src="https://blog.kakaocdn.net/dn/GTjPu/btrTQfcEqqI/c2fTgRaF7qwLKe5RDZWYF0/img.png" width = 1000 height = 580>
+
+글씨가 작아서 잘 안보일 수도 있고 숫자도 못써서 잘 안보일 수도 있지만 열심히 정리해보겠다.
+
+
+
+> **잘 생각해봐야한다. 이 전에 선행 되어야 하는게, 생성자를 통한 주입을 하기 위해 해당 생성자 파라미터에 값을 넣을 Bean을 Spring의 Application Context에서 빈을 먼저 가지고 와야 한다. Application Context는 SpringExtension이 가지고 있는데 이 과정은 SpringExtension에서 해당 Bean을 찾기 전에 지원할 수 있는지 여부를 먼저 검토하는것이다. 애초에 주입이 불가능한 애라면 Application Context에서 Bean을 꺼내올 필요가 없다. **
+>
+> * 해당 테스트 생성자에 파라미터 주입이 가능지에 대한 여부를 확인하는 메소드 : SpringExtension.supportsParameter()
+> * ApplicationContext에서 Bean을 실제 꺼내서 리턴하는 메소드 : SpringExtension.resolveParameter
+
+
+
+1. 현재 ExtensionRegistry에서 (Extension들이 등록되어있는 곳) supportsParameter() 메서드로 지원하는지 filtering 해서 ParameterResolver를 찾는다
+   * 그림의 `a`. 현재 ExtensionRegistry에는 SpringExtension 1개밖에 없다. 
+   * 그림의 `b`. 현재 생성자에 주입하려고 하는 Parameter는 MemberService이다
+
+2. `MemberService` 파라미터를 현재 `Extension(SpringExtension)이 처리할 수 있는지` 확인한다
+   * SpringExtension이 ParameterResolver 인터페이스를 구현하긴 헀다.
+   * 그러나 @Autowired 어노테이션도 없고, @TestConstructor도 없으므로  supportsParameter() 는 false이다 
+   * SpringExtension가 처리할 수 있는 Parameter는 필드에 @Autowired가 선언되어 있거나,
+   * 어떻게 처리할 수 있는 ParameterResovler를 찾는지는 https://0soo.tistory.com/138 를 참고하자. 
+
+3. matchingResolvers(처리할 수 있는 ParameterResolver) 가 isEmpty(하나도 없음)이므로 ParameterResolutionException을 던지고 테스트는 예외를 뿜으며 멈추게 된다.
+
+
+
+
+
+>  **그러나 @TestConstructor 어노테이션과 properties 설정을 통한 주입이 가능하긴 하다!**
 
 * https://0soo.tistory.com/138
 
