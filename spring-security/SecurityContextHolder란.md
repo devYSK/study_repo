@@ -40,31 +40,39 @@ SecurityContext는 SecurityContextPersistenceFilter에 의해 생성, 저장, �
 
 1. 익명 사용자
 
-- 새로운 SecurityContext 객체를 생성하여 SecurityContextHolder에 저장한다.
-- AnonmousAuthenticationFilter에서 AnonymousAuthenticationToken 객체를 SecurityContext에 저장한다.
+   - 새로운 SecurityContext 객체를 생성하여 SecurityContextHolder에 저장한다.
+
+   - AnonmousAuthenticationFilter에서 AnonymousAuthenticationToken 객체를 SecurityContext에 저장한다.
+
 
 
 
 2. 인증 시
 
-- 새로운 SecurityContext 객체를 생성하여 SecurityContextHolder에 저장
-- UsernamePasswordAuthenticationFilter에서 인증 성공 후 UsernamePasswordAuthenticationToken 객체를 SecurityContext에 저장한다.
-- 인증이 최종 완료되면 Session에 SecurityContext를 저장한다.
+   - 새로운 SecurityContext 객체를 생성하여 SecurityContextHolder에 저장
+
+   - UsernamePasswordAuthenticationFilter에서 인증 성공 후 UsernamePasswordAuthenticationToken 객체를 SecurityContext에 저장한다.
+
+   - 인증이 최종 완료되면 Session에 SecurityContext를 저장한다.
+
 
 
 
 3. 인증 후
 
-- Session에서 SecurityContext를 꺼내에 SecurityContextHolder에 저장한다.
-- SecurityContext 안에 Authentication 객체가 존재하면 계속 인증을 유지한다.
+   - Session에서 SecurityContext를 꺼내에 SecurityContextHolder에 저장한다.
+
+   - SecurityContext 안에 Authentication 객체가 존재하면 계속 인증을 유지한다.
+
 
 
 
 4. 최종 응답 시 공통
 
-- SecurityContextHolder.clearContext()
+   - SecurityContextHolder.clearContext()
 
-* FilterChainProxy 구현을 보면 finally 블록에서 SecurityContextHolder.clearContext() 메소드를 호출
+   * FilterChainProxy 구현을 보면 finally 블록에서 SecurityContextHolder.clearContext() 메소드를 호출
+
 
 
 
