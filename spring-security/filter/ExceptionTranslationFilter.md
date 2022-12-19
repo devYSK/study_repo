@@ -10,9 +10,17 @@ FilterSecurityInterceptor 바로 위에 위치하며, FilterSecurityInterceptor 
 
 
 
+> FilterSecurityInterceptor 가 AccessDecisionManager 를 통해 AuthenticationException 혹은, AccessDeniedException 을 발생시킨 경우 해당 Exception을 받아 AuthenticationException의 경우 AuthenticationEntryPoint 로 보내주고, AccessDeniedException 의 경우에는 AccessDeniedHandler 로 보내는 역할을 담당한다.
+
+
+
+
+
+
+
 > 필터 체인(Filter Chain) 상에서 ExceptionTranslationFilter의 위치를 주의해서 볼 필요가 있다.
 >
->  ExceptionTranslationFilter는 필터 체인 실행 stack에서 `자기 아래에 오는 필터들`에서 발생하는 예외들에 대해서만 처리할 수 있다. 커스텀 필터를 추가해야 하는 경우 이 내용을 잘 기억하고, 커스텀 필터를 적당한 위치에 두어야 한다.
+> ExceptionTranslationFilter는 필터 체인 실행 stack에서 `자기 아래에 오는 필터들`에서 발생하는 예외들에 대해서만 처리할 수 있다. 커스텀 필터를 추가해야 하는 경우 이 내용을 잘 기억하고, 커스텀 필터를 적당한 위치에 두어야 한다.
 >
 > * 즉 아무것도 안건드린 default 필터 순서 상에서는, FilterSecurityInterceptor에서 발생하는 에외들만 처리 가능.
 >   * 추가적으로 처리하고 싶다면 ExceptionTranslationFilter 뒤나 앞에 HandlingFilter를 추가하면 된다.  
@@ -22,6 +30,14 @@ FilterSecurityInterceptor 바로 위에 위치하며, FilterSecurityInterceptor 
 >   * 뒤 인자는 기존 필터를 받는데, 이 필터 앞에 설정하겠다는것 
 > * HttpSecurity 객체의 addFilterAfter(new 커스텀 필터(), 커스텀 필터 앞에 둘 필터)
 >   * 뒤 인자는 기존 필터를 받는데, 이 필터 뒤에 설정하겠다는것 
+>
+> ExceptionTranslationFitler와 FilterSecurityInterceptor랑은 밀접한 관계가 있다.
+>
+> - 필터 순서가 ExceptionTranslationFitler가 더 앞에 있어야 한다.
+
+
+
+
 
 
 
@@ -139,7 +155,7 @@ RequestCacheAwareFilter에서 전달 된 requestCache의 값을 가지고 인증
 - AccessDeniedHandler의 기본 구현체는 AccessDeniedHandlerImpl이고, 내부 handle() 메소드에서 errorPage가 정의되어 있지 않으면 그냥 response.sendError()로 403응답과 에러 메시지를 리턴한다. 
   - 에러페이지가 정의되어있다면 에러페이지로 forward 시킨다. 
 
-![image-20221215085009172](/Users/ysk/study/study_repo/spring-security/filter/images//image-20221215085009172.png)
+<img src="https://blog.kakaocdn.net/dn/dtw4G5/btrT2QiMK4P/Leftk6xu9pmgPvmHXHzupk/img.png" width=900 height =400>
 
 
 
@@ -244,6 +260,14 @@ public class WebSecurityConfigure {
 
 
 ## UsernamePasswordAuthenticationFilter에서 발생한 인증 에러는?
+
+AbstractAuthenticationProcessingFilter에서 catch해서 
+
+SimpleUrlAuthenticationFailureHandler.가 처리한다.
+
+
+
+
 
 - public class UsernamePasswordAuthenticationFilter extends AbstractAuthenticationProcessingFilter
 
