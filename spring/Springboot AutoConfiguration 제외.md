@@ -43,3 +43,14 @@ spring:
 
 * spring.autoconfigure.exclude 하고 패키지명과 XXXXAutoConfiguration 클래스명을 입력하면된다.
 
+
+
+
+
+
+
+
+
+### 참조
+
+* https://www.baeldung.com/spring-boot-failed-to-configure-data-source
