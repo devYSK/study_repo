@@ -4,10 +4,6 @@
 
 SpringBoot 2.x대와 SpringBoot 3.x대의 버전 설정 방법이 다르므로 둘에 나눠서 정리 하도록 한다.
 
-
-
-
-
 # SpringBoot 2.x버전대 설정 방법
 
 #### 1. Querydsl 버전을 plugins 위에 추가하고 plugins에 querydsl 플러그인을 추가한다.
@@ -271,9 +267,7 @@ rc/main/generated에 QClass가 Git에 올라가지 않도록 .gitignore에 추�
 
 
 
-라는 에러 발생시에는 
-
-.gradle/wrapper/ 아래에 두 파일이 존재하지 않는것
+라는 에러 발생시에는  .gradle/wrapper/ 아래에 두 파일이 존재하지 않아서 그렇다. 
 
 - gradle-wrapper.jar
 
@@ -285,3 +279,21 @@ gradle build 혹은 gradle wrap을 하지 않았으면 gradle-wrapper.jar이 누
 
  `gradle wrap` 명령이 실행 후에 `./gradlew clean compileQuerydsl` 을 실행한다
 
+
+
+### 테스트코드 에러 - Execution failed for task ':compileQuerydsl'.
+
+>  Task :compileQuerydsl FAILED
+>
+> error: cannot find symbol
+>
+> Execution failed for task ':compileQuerydsl'.
+
+  같은 에러 발생시에는 Preference -> Build.Execution, Deployment -> Build Tools -> gradle
+
+* build and run using : Intellij IDEA
+* Run tests using : Intellij IDEA
+
+로 설정하고 다시 테스트하면 테스트가 통과한다. 
+
+![image-20230118030906461](/Users/ysk/study/study_repo/jpa/querydsl/images//image-20230118030906461.png)
