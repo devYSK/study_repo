@@ -185,6 +185,16 @@ csrf 토큰 방식을 살펴보면 각 사용자에 대한 세션을 이용하�
 
 
 
+# 해결방법 3
+
+직접 구현한 Security Config class (bean)를 Import 한다.
+
+```java
+@Import(SecurityConfig.class)
+```
+
+
+
 
 
 ### 참조
