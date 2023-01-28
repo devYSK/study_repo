@@ -250,7 +250,7 @@ clean {
 
 
 
-rc/main/generated에 QClass가 Git에 올라가지 않도록 .gitignore에 추가해야 한다
+src/main/generated에 QClass가 Git에 올라가지 않도록 .gitignore에 추가해야 한다
 
 ```
 **/generated
