@@ -195,6 +195,51 @@ csrf 토큰 방식을 살펴보면 각 사용자에 대한 세션을 이용하�
 
 
 
+* Security Config Code
+
+```java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+	@Bean
+	public SecurityFilterChain httpSecurity(HttpSecurity http) throws Exception {
+		return http
+			.csrf().disable()
+
+			.authorizeRequests()
+			.antMatchers("/**").permitAll()
+			.anyRequest().permitAll()
+			.and()
+			.build();
+	}
+
+	@Bean
+	public WebSecurityCustomizer webSecurityCustomizer() {
+		return web -> web.ignoring()
+			.antMatchers("/**", "/api/v1/**");
+	}
+
+}
+```
+
+
+
+* Controller Test Code
+
+```java
+@AutoConfigureMockMvc
+@Import(SecurityConfig.class)
+@WebMvcTest
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@RequiredArgsConstructor
+class ItemControllerWebMvcTest {
+
+}
+```
+
+
+
 
 
 ### 참조
