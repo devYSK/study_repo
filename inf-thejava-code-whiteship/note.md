@@ -378,3 +378,273 @@ public class BookService {
 
 * bookRepository 인스턴스는 어떻게 null이 아닌걸까?
 * 스프링은 어떻게 BookService 인스턴스에 BookRepository 인스턴스를 넣어준 것일까?
+
+
+
+## 9.리플렉션 API 1부: 클래스 정보 조회
+리플렉션의 시작은 Class<T>
+
+ https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html
+
+
+
+> ## Reflection이란?
+>
+> 리플렉션은 힙 영역에 로드된 Class 타입의 객체를 통해, 원하는 클래스의 인스턴스를 생성할 수 있도록 지원하고, 인스턴스의 필드와 메소드를 접근 제어자와 상관 없이 사용할 수 있도록 지원하는 API이다.
+>
+> 여기서 로드된 클래스라고 함은, JVM의 클래스 로더에서 클래스 파일에 대한 로딩을 완료한 후, 해당 클래스의 정보를 담은 **Class 타입의 객체**를 생성하여 메모리의 힙 영역에 저장해 둔 것을 의미한다. new 키워드를 통해 만드는 객체와는 다른 것임을 유의하자. 만약 해당 Class 타입의 객체에 이해가 부족하다면 `java.lang.class` 객체의 JDK 문서를 확인하면 좋다.
+
+
+
+Class<T>에 접근하는 방법
+
+* 모든 클래스를 로딩 한 다음 Class<T>의 인스턴스가 생긴다. “타입.class”로 접근할 수 있다.
+* 모든 인스턴스는 getClass() 메소드를 가지고 있다. “인스턴스.getClass()”로 접근할 수 있다.
+* 클래스를 문자열로 읽어오는 방법
+  *  Class.forName(“FQCN”)
+  *  클래스패스에 해당 클래스가 없다면 ClassNotFoundException이 발생한다.
+
+Class<T>를 통해 할 수 있는 것
+
+* 필드 (목록) 가져오기
+* 메소드 (목록) 가져오기
+*  상위 클래스 가져오기
+*  인터페이스 (목록) 가져오기
+*  애노테이션 가져오기
+*  생성자 가져오기
+* ...
+
+
+
+### 리플렉션이란?
+
+리플렉션은 힙 영역에 로드된 Class 타입의 객체를 통해, 원하는 클래스의 인스턴스를 생성할 수 있도록 지원하고, 인스턴스의 필드와 메소드를 접근 제어자와 상관 없이 사용할 수 있도록 지원하는 API이다.
+
+ 
+
+### 리플렉션의 장단점
+
+- 장점
+  - 런타임 시점에서 클래스의 인스턴스를 생성하고, 접근 제어자와 관계 없이 필드와 메소드에 접근하여 필요한 작업을 수행할 수 있는 유연성을 가지고 있다.
+- 단점
+  - 캡슐화를 저해한다.
+  - 런타임 시점에서 인스턴스를 생성하므로 컴파일 시점에서 해당 타입을 체크할 수 없다.
+  - 런타임 시점에서 인스턴스를 생성하므로 구체적인 동작 흐름을 파악하기 어렵다.
+  - 단순히 필드 및 메소드를 접근할 때보다 리플렉션을 사용하여 접근할 때 성능이 느리다. (모든 상황에서 성능이 느리지는 않음.)
+
+
+
+### 리플렉션은 언제 사용하는가?
+
+규모가 작은 콘솔 단계에서는 개발자가 충분히 컴파일 시점에 프로그램에서 사용될 객체와 의존 관계를 모두 파악할 수 있다. 하지만 프레임워크와 같이 큰 규모의 개발 단계에서는 수많은 객체와 의존 관계를 파악하기 어렵다. 이때 리플렉션을 사용하면 동적으로 클래스를 만들어서 의존 관계를 맺어줄 수 있다.
+
+가령, Spring의 Bean Factory를 보면, @Controller, @Service, @Repository 등의 어노테이션만 붙이면 Bean Factory에서 알아서 해당 어노테이션이 붙은 클래스를 생성하고 관리해 주는 것을 알 수 있다. 개발자는 Bean Factory에 해당 클래스를 알려준 적이 없는데, 이것이 가능한 이유는 바로 리플렉션 덕분이다. 런타임에 해당 어노테이션이 붙은 클래스를 탐색하고 발견한다면, 리플렉션을 통해 해당 클래스의 인스턴스를 생성하고 필요한 필드를 주입하여 Bean Factory에 저장하는 식으로 사용이 된다.
+
+
+
+
+
+## 10. 애노테이션과 리플렉션
+중요 애노테이션
+
+* @Retention: 해당 애노테이션을 언제까지 유지할 것인가? 소스, 클래스, 런타임
+*  @Inherit: 해당 애노테이션을 하위 클래스까지 전달할 것인가?
+*  @Target: 어디에 사용할 수 있는가?
+
+리플렉션
+
+* getAnnotations(): 상속받은 (@Inherit) 애노테이션까지 조회
+* getDeclaredAnnotations(): 자기 자신에만 붙어있는 애노테이션 조회
+
+
+
+## 11. 리플렉션 API 1부: 클래스 정보 수정 또는 실행
+Class 인스턴스 만들기
+
+* Class.newInstance()는 deprecated 됐으며 이제부터는 생성자를 통해서 만들어야 한다.
+
+생성자로 인스턴스 만들기
+
+* Constructor.newInstance(params)
+
+필드 값 접근하기/설정하기
+
+* 특정 인스턴스가 가지고 있는 값을 가져오는 것이기 때문에 인스턴스가 필요하다.
+* Field.get(object)
+* Filed.set(object, value)
+* Static 필드를 가져올 때는 object가 없어도 되니까 null을 넘기면 된다.
+
+메소드 실행하기
+
+* Object Method.invoke(object, params)
+
+나만의 DI 프레임워크 만들기
+
+* @Inject 라는 애노테이션 만들어서 필드 주입 해주는 컨테이너 서비스 만들기
+
+
+
+```java
+public class BookService {
+	@Inject
+	BookRepository bookRepository;
+}
+```
+
+Co ntainerService.java
+
+```java
+public static <T> T getObject(T classType)
+```
+
+ classType에 해당하는 타입의 객체를 만들어 준다.
+
+ 단, 해당 객체의 필드 중에 @Inject가 있다면 해당 필드도 같이 만들어 제공한다.
+
+
+
+inject
+
+```java
+// 필드 주입 예제
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Inject { }
+```
+
+
+
+repository, service
+
+```java
+public class BookRepository {
+}
+//
+
+public class BookService {
+	@Inject
+	private BookRepository bookRepository;
+
+}
+```
+
+
+
+testcode
+
+```java
+
+import com.ys.demo.framework.ContainerService;
+
+class ContainerServiceTest {
+
+	@Test
+	void getObject_BookService() {
+
+		BookService bookService = ContainerService.getObject(BookService.class);
+
+		assertNotNull(bookService.getBookRepository());
+		assertNotNull(bookService);
+
+	}
+}
+```
+
+
+
+container service
+
+```java
+
+public class ContainerService {
+
+	public static <T> T getObject(Class<T> classType) {
+
+		T instance = createInstance(classType);
+
+		Arrays.stream(classType.getDeclaredFields())
+			.forEach(f -> {
+				if (f.getAnnotation(Inject.class) != null) {
+					Object fieldInstance = createInstance(f.getType());
+					f.setAccessible(true);
+
+					try {
+						f.set(instance, fieldInstance);
+					} catch (IllegalAccessException e) {
+						throw new RuntimeException(e);
+					}
+				}
+			});
+		return instance;
+	}
+
+	private static <T> T createInstance(Class<T> classType) {
+		try {
+			return classType.getConstructor(null)
+				.newInstance();
+		} catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+				 NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+}
+
+```
+
+
+
+## 13. 리플렉션 정리
+리플렉션 사용시 주의할 것
+
+* 지나친 사용은 성능 이슈를 야기할 수 있다. 반드시 필요한 경우에만 사용할 것
+* 컴파일 타임에 확인되지 않고 런타임 시에만 발생하는 문제를 만들 가능성이 있다.
+* 접근 지시자를 무시할 수 있다.
+
+스프링
+
+* 의존성 주입
+
+* MVC 뷰에서 넘어온 데이터를 객체에 바인딩 할 때
+
+하이버네이트
+
+* @Entity 클래스에 Setter가 없다면 리플렉션을 사용한다.
+
+JUnit
+
+* https://junit.org/junit5/docs/5.0.3/api/org/junit/platform/commons/util/ReflectionUtils.html
+
+참고
+
+* https://docs.oracle.com/javase/tutorial/reflect/index.html
+
+
+
+# 4부. 다이나믹 프록시
+
+스프링 데이터 JPA는 어떻게 동작하나?
+스프링 데이터 JPA에서 `인터페이스 타입`의 `인스턴스`는 누가 만들어 주는것인가?
+
+* Spring AOP를 기반으로 동작하며 RepositoryFactorySupport에서 프록시를 생성한다. 
+
+
+
+핵심 클래스 : java.lang.reflect.Proxy 클래스
+
+
+
+JpaRepository 인터페이스를 상속받은 인터페이스는 인터페이스의 구현체도 구현해주고, 구현체도 빈으로 등록해준다.
+
+* 스프링 AOP를 사용중이다.
+
+**org.springframework.aop.framework.`ProxyFactory` 클래스**
+
+* 자바에서 제공하는 Proxy를 추상화해놓은클래스
+* RepositoryFactorySupport에서 이 클래스를 이용한다 
+
+이 클래스에서 만들어진 구현체가 Repository 인터페이스에 주입해준다.
+
+
+
+
+
