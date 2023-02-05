@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="56fcba53-df62-47e0-a943-6c78277e3b34" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../inf-concurrency-issues/src/main/java/com/ys/stock/facade/OptimisticLockStockFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/../inf-concurrency-issues/src/main/java/com/ys/stock/facade/OptimisticLockStockFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../inf-thejava-code-whiteship/demo/src/test/java/com/ys/demo/BookRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/../inf-thejava-code-whiteship/demo/src/test/java/com/ys/demo/container/BookRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../inf-thejava-code-whiteship/demo/src/test/java/com/ys/demo/BookService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../inf-thejava-code-whiteship/demo/src/test/java/com/ys/demo/container/BookService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../inf-thejava-code-whiteship/demo/src/test/java/com/ys/demo/ContainerServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../inf-thejava-code-whiteship/demo/src/test/java/com/ys/demo/container/ContainerServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../inf-thejava-code-whiteship/note.md" beforeDir="false" afterPath="$PROJECT_DIR$/../inf-thejava-code-whiteship/note.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mysql/MySQL Spatial Type.md" beforeDir="false" afterPath="$PROJECT_DIR$/../mysql/MySQL Spatial Type.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../postgresql/SQL 레벨업.md" beforeDir="false" afterPath="$PROJECT_DIR$/../postgresql/SQL 레벨업.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../tdd/test container/테스트컨테이너 .md" beforeDir="false" afterPath="$PROJECT_DIR$/../tdd/test container/테스트컨테이너 .md" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectId" id="2LJ8PWW7ly3iLKEDkBOCQUFuyGp" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="56fcba53-df62-47e0-a943-6c78277e3b34" name="Changes" comment="" />
+      <created>1675577801176</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1675577801176</updated>
+      <workItem from="1675577802345" duration="3000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
