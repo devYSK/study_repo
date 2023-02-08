@@ -1,4 +1,4 @@
-package com.ys.demo;
+package com.ys.demo.container;
 
 public class BookRepository {
 }

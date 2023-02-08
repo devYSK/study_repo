@@ -42,4 +42,6 @@ public class OptimisticLockStockFacade {
             }
         }
     }
+
+    이제 해당 row는 베타 락이 걸린다.
 }
