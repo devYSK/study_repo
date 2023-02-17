@@ -209,6 +209,34 @@ MySQL8.0 에서 지원되는 공간 함수들이 모두 SRID를 지원하는 것
 
   
 
+1
+
+
+
+EPSG:4326의 형식은 우리가 다른 시스템에서 일반적으로 보는 형식인 Lon/Lat와 달리 Lat/Lon입니다.
+
+위도 값이 가능한 최대값보다 큰 경우 오류가 발생합니다.
+
+위도 범위는 -90도에서 90도 사이이며 적도는 0도, 북극은 90도, 남극은 -90도에 위치합니다.
+
+경도의 범위는 -180에서 180도까지이며 여기서 자오선은 0도에 위치하며 경도는 동쪽으로 이동하면서 0에서 180도까지 증가하고 서쪽으로 이동하면서 0에서 -180도까지 감소합니다.
+
+이런 의미에서 귀하의 예는 다음과 같아야 합니다.
+
+```
+DECLARE @Lat float = [0]; -- [-90 to 90]         
+DECLARE @Lon float = [118]; -- [-180 to 180]         
+SELECT ST_GeomFromText('POINT(Lat Lon)', 4326);
+```
+
+* https://gis.stackexchange.com/questions/293897/is-srid-4326-lon-lat-or-lat-lon
+
+8.0에서 MySQL은 SRID 4326에 대해 알게 되었습니다. MySQL은 -180과 180이 같은 경도라는 것을 알고 있습니다. 위도를 'X', 경도를 'Y'라고 합니다.
+
+5.7 테이블에 SRID 4326이라고 주장하는 포인트를 POINT(경도 위도)로 채운 경우 다음을 사용하여 수정할 수 있습니다.`UPDATE table SET pointColumn = ST_SwapXY(pointColumn);`
+
+https://www.cockroachlabs.com/docs/stable/srid-4326.html
+
 
 
 **WKT 와 WKB**
@@ -371,7 +399,19 @@ class User {
 
 
 
-Point 데이터 DB에 저장하는 방법
+
+
+## Point 데이터 DB에 저장하는 방법
+
+
+
+> SRID에 따라 다르다.
+>
+> SRID가 4326 인 경우 Point (latitude longitude),
+>
+> SRID 가 0 또는 지정하지 않은 경우 POINT(longtitude latitude)
+
+
 
 ```java
 import com.vividsolutions.jts.io.WKTReader;
@@ -575,7 +615,73 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 
 
+### 하버 사인 기반 거리 구하기
 
+- 하버 사인 공식
+
+* https://kayuse88.github.io/haversine/
+* https://happybono.wordpress.com/2022/10/10/c-algorithm-%EC%A7%80%EA%B5%AC%EC%97%90%EC%84%9C-%EB%91%90-%EA%B3%B3%EC%9D%98-%EC%9C%84%EC%B9%98-%EC%82%AC%EC%9D%B4%EC%9D%98-%EA%B1%B0%EB%A6%AC-%EA%B5%AC%ED%95%98%EA%B8%B0/
+
+* https://velog.io/@kimju0913/mysql-%EC%9C%84%EB%8F%84-%EA%B2%BD%EB%8F%84%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%9C-%EC%A7%81%EC%84%A0%EA%B1%B0%EB%A6%AC-%EA%B5%AC%ED%95%98%EA%B8%B0
+
+* https://spiralmoon.tistory.com/entry/Alogrithm-%EC%A7%80%EA%B5%AC%EC%97%90%EC%84%9C-%EB%91%90-%EC%A0%90-%EC%82%AC%EC%9D%B4%EC%9D%98-%EA%B1%B0%EB%A6%AC-%EA%B5%AC%ED%95%98%EA%B8%B0
+
+
+
+# 추가 정리 요망
+
+
+
+- 현재 위치에서 반경 N km 안의 좌표 가까운 순서대로 찾기
+
+  ```sql
+  SELECT
+      station , (
+         6371 * acos ( cos ( radians(나의경도) )
+            * cos( radians( latitude ) )
+            * cos( radians( longitude) - radians(나의위도) )
+            + sin ( radians(나의경도) ) * sin( radians( latitude ) )
+         )
+     ) AS distance
+  FROM tb_subway
+  HAVING distance < 2
+  ORDER BY distance
+  LIMIT 0 , 20;
+  ```
+
+### 결론
+
+위 2가지 방식을 통해서 거리 계산 로직을 해결할 수 있을 것 같다. 하지만, JPQL에서 MySQL의 `st_distance_sphere` 메서드를 인식하지 못한다는 이슈가 있어서 native Query를 사용하거나  2번째 방법을 통해 구하는 것이 어떨까 싶다.
+
+사용한 쿼리
+
+```jsx
+SELECT
+town_id, name , (
+6371 * acos ( cos ( radians(@latitude) )
+* cos( radians( latitude ) )
+* cos( radians( longitude) - radians(@longitude) )
++ sin ( radians(@latitude) ) * sin( radians( latitude ) )
+)
+) AS distance
+FROM town
+HAVING distance < 4.2
+ORDER BY name;
+```
+
+
+
+
+
+# SRID 0 VS SRID 4326
+
+https://dev.mysql.com/blog-archive/upgrading-spatial-indexes-to-mysql-8-0/
+
+https://dev.mysql.com/blog-archive/spatial-reference-systems-in-mysql-8-0/
+
+https://stackoverflow.com/questions/25188020/what-is-srid-0-for-geometry-columns
+
+https://gis.stackexchange.com/questions/293897/is-srid-4326-lon-lat-or-lat-lon
 
 ### 참조
 
