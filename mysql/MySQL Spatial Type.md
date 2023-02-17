@@ -153,8 +153,23 @@ PCS 는 구체 형태의 지구를 종이 지도와 같은 평면으로 투영(�
 >
 > 동일한 지점이라도 어떤 SRS(공간 좌표계)를 사용하느냐에 따라 표시 방법이 달라진다.
 
+**SRID 와 SRS-ID**
 
-***\*SRID 와 SRS-ID\****
+> ### Spatial Reference IDentifier (SRID)
+>
+> 공간 데이터를 어떤 좌표계로 표현할지를 나타내는 **번호**입니다. SRID는 공간 데이터의 위치와 방향을 결정하는 데 사용됩니다. 서로 다른 SRID를 가진 데이터는 같은 좌표를 나타내더라도 서로 다른 위치로 인식될 수 있습니다
+>
+> 대표적인 srid에는 0, 3857, 4326이 있습니다.
+>
+> - srid 0 : 평면 좌표계
+> - srid 3857 : 웹 기반 지도 좌표계
+> - srid 4326 : WGS84 지리 좌표계
+>
+> ### SRID 4326
+>
+> 일반적으로 GPS 좌표는 WGS84 좌표계를 사용합니다. World Geodetic System의 약자로 1984년에 만들어진 버전이 여러 분야에서 표준으로 사용됩니다. 구글 맵과 안드로이드 GPS도 해당 좌표계를 사용하고 있습니다.
+
+
 
 SRID 는 `Spatial Reference ID 의 줄임말`로 `특정 SRS 를 지칭하는 고유 번호`를 의미하며, SRS-ID 와 SRID 는 같은의미이다.
 MySQL 서버에서는 SRS 고유 번호를 저장하는 컬럼의 이름으로 SRS_ID 로 사용하고 있으며, 함수의 인자나 식별자로 사용될 경우 SRID 로 사용된다.
@@ -670,6 +685,24 @@ ORDER BY name;
 ```
 
 
+
+### mysql spatial index
+
+spatial index는 1차원 데이터를 다루는 일반적인 B-tree 같은 인덱스와는 다르게 R-tree라는 특수한 인덱스를 사용합니다. R-tree 인덱스는 2차원의 공간 데이터의 범위 쿼리를 빠르게 처리할 수 있습니다. R-tree는 MBR*Minimum Bounding Rectangle*의 포함 관계를 이용해 만들어집니다.
+
+### R-tree의 구성
+
+상위 레벨의 MBR이 하위 레벨의 MBR을 포함하는 형태로 트리를 구성합니다.
+
+![https://cglab.ca/~cdillaba/comp5409_project/images/rtree.png](https://cglab.ca/~cdillaba/comp5409_project/images/rtree.png)
+
+mysql에서는 SPATIAL 키워드를 붙여 공간 데이터 타입에 대해 공간인덱스를 생성할 수 있습니다.
+
+```sql
+ALTER TABLE stores ADD SPATIAL INDEX(position);
+```
+
+### mysql에서 두 지점 사이의 거리를 계산하는 함수
 
 
 
