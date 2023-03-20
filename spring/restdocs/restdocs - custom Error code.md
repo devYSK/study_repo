@@ -18,7 +18,7 @@
 
 프론트엔드와의 협업간에 API 문서로 Spring RestDocs를 사용하고 있었고, 
 
-API 사용 시 에러 응답에 대해 httpStatus 코드만으로는 클라이언트에 에러에 대해 디테일하게 설명할 수가 없어서 클라이언트가 개발과정 중 생긴 오류들에 대해 정확하게 알 수 있게 우리는 ErrorCode를 Enum으로 정의해서 내려주기로 하였습니다.
+API 사용 시 에러 응답에 대해 `httpStatus` 코드만으로는 클라이언트에 에러에 대해 디테일하게 설명할 수가 없어서 클라이언트가 개발과정 중 생긴 오류들에 대해 정확하게 알 수 있게 우리는 `ErrorCode`를 `Enum`으로 정의해서 내려주기로 하였습니다.
 
 ```java
 public enum ErrorCode {
@@ -31,7 +31,8 @@ public enum ErrorCode {
 
   UNAUTHORIZED_USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "A1", "유저가 존재하지 않습니다."),
 	INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "A2", "잘못된 접근입니다. 유효한 토큰이 아닙니다."),
-	EXPIRED_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "A4", "액세스 토큰이 만료되었습니다. 리프레시 하거나 다시 로그인 해야 합니다."),
+	EXPIRED_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "A4", "액세스 토큰이 만료되었습니다. 리프레시 하거나 다시 로그인 해야
+ 합니다."),
   // ... 생략 
  
   private final HttpStatus status;
@@ -42,7 +43,7 @@ public enum ErrorCode {
 }
 ```
 
-* field에 보이는 code (C1, C2, C3) 등이 우리가 클라이언트와 약속한 커스텀 에러 코드 입니다.
+* `field`에 보이는 `code (C1, C2, C3)` 등이 우리가 클라이언트와 약속한 커스텀 에러 코드 입니다.
 
 만약 특정 API에 잘못된 요청이 오면 다음과 같이 응답을 정의하였습니다. 
 
@@ -58,7 +59,7 @@ public enum ErrorCode {
 			"inputValue": "null",
 			"reason": "title 입력되지 않았습니다.
     }
-  ],
+    ],
 	"path": " /api/books
 }
 ```
@@ -101,12 +102,12 @@ mockMvc.perform(get("/api/users/me")
 );
 ```
 
-* RestDocumentationResultHandler.document(String identifier, Snippet... snippets)
+* RestDocumentationResultHandler. `document(String identifier, Snippet... snippets)`
 
-  * identfier : 문서화 할 snippet 파일 이름
-  * Snippet : 문서화 할 문서 조각. Snippet 인터페이스를 구현하고 TemplatedSnippet 추상 클래스를 상속받은 여러 클래스들
-  * RequestFieldSnippet.class : 요청 필드 문서화시 사용. 보통 static method인 **requestFields()** 메소드 사용하여 문서화.
-  * ResponseFieldsSnippet.class : 응답 필드 문서화시 사용. 보통 static method인 **responseFields()** 메소드 사용하여 문서화. 
+  * `identfier` : 문서화 할 snippet 파일 이름
+  * `Snippet` : 문서화 할 문서 조각. Snippet 인터페이스를 구현하고 TemplatedSnippet 추상 클래스를 상속받은 여러 클래스들
+  * `RequestFieldSnippet.class` : 요청 필드 문서화시 사용. 보통 static method인 **requestFields()** 메소드 사용하여 문서화.
+  * `ResponseFieldsSnippet.class` : 응답 필드 문서화시 사용. 보통 static method인 **responseFields()** 메소드 사용하여 문서화. 
 
   * <img src="https://blog.kakaocdn.net/dn/pzwJz/btr4WFSgFA4/aKgHPQoNWIRrJ8IcJfWI4K/img.png" with = 400 height = 400>
 
@@ -124,9 +125,9 @@ mockMvc.perform(get("/api/users/me")
 
 고려해야 할것은 다음 3가지 입니다.
 
-1. Custom .Snippet file
-2. 응답값 형식과, 형식에 맞는 Descriptor 구현
-3. Custom .Snippet file과 Descriptor들을 지정할 Custom Response Snippet Class
+1. Custom `.Snippet file`
+2. 응답값 형식과, 형식에 맞는 `Descriptor` 구현
+3. Custom `.Snippet file`과 Descriptor들을 지정할 `Custom Response Snippet Class`
 
 ## 1. 테스트 전용 ErrorCode Controller와 응답값 반환
 
@@ -148,7 +149,6 @@ public class ErrorCodeController {
 		return map;
 	}
 
-
 	@Getter
 	@NoArgsConstructor
 	protected static class ErrorCodeResponse {
@@ -169,7 +169,7 @@ public class ErrorCodeController {
 }
 ```
 
-*  String, ErrorCodeResponse 형식으로 정의하였다, 이렇게하게되면 응답값은 다음처럼 나오게 됩니다.
+*  String, ErrorCode Response 형식으로 정의하였다, 이렇게되면 응답값은 다음처럼 나오게 됩니다.
 
 ```json
 {
@@ -202,7 +202,7 @@ public class ErrorCodeController {
 }
 ```
 
-* 우리가 원하는것은, ErrorCode Enum 값이 아닌, code, message, status의 문서화를 원하므로 field로 출력되도록 합니다. 
+* 우리가 원하는것은 ErrorCode Enum 값이 아닌, `code`, `message` , `status`의 문서화를 원하므로 field로 출력되도록 합니다. 
   * EMPTY_REFRESH_TOKEN 등은 Enum 값.
 
 
@@ -211,11 +211,21 @@ public class ErrorCodeController {
 
 * [0soo 블로그 - RestDocs Custom](https://0soo.tistory.com/201)
 
-http-request.adoc, http-response.adoc, request-body.adoc, request.fields.adoc, response-body.adoc, response-fields.adoc 등 마음대로 스니펫을 커스텀할 수 있습니다.
+* http-request.adoc, 
+
+* http-response.adoc, 
+
+* request-body.adoc,
+
+* request.fields.adoc, 
+
+* response-body.adoc, 
+
+* response-fields.adoc 등 마음대로 스니펫을 커스텀할 수 있습니다.
 
 
 
-우리가 문서화할 형식은 response-fields입니다. 그러므로 response-fields.snippet을 커스텀 해야 합니다.
+우리가 문서화할 형식은 `response-fields`입니다. 그러므로 `response-fields.snippet` 을 커스텀 해야 합니다.
 
 * src/test/resources/org/springframework/restdocs/templates 경로에 원하는 형식을 추가
 
@@ -241,16 +251,16 @@ Type : 'code'
 ```
 
 * key는 code, message, statusCode, status 가 됩니다. <- 잘 기억해 두셔야 안헷갈립니다.
-* 커스텀 시에는 .attributes(key("키 값").value("value 값"), key("키 값").value("value 값"))으로 계속 문서에 추가할 수 있으므로 이것을 이용할 것입니다. 
+* 커스텀 시에는 .attributes( `key("키 값").value("value 값")` ,  `key("키 값").value("value 값")` )으로 계속 문서에 추가할 수 있으므로 이것을 이용할 것입니다. 
 * 문법을 잘 지켜야 오류가 발생하지 않습니다. 
 
 <img src="https://blog.kakaocdn.net/dn/qlhWC/btr41wtG9po/KL1NssXmkr7vQ7SuaO2b0k/img.png" width = 800 height = 300>
 
 
 
-Custom Response Snippet 파일 이름은 errorcode-response-fields.snippet 입니다.
+Custom Response Snippet 파일 이름은 `errorcode-response-fields.snippet` 입니다.
 
-* 반드시 response-fields.snippet 과 같은 네이밍을 지켜주셔야 내부적으로 snippet 파일을 읽고 문서화 시켜줍니다! 
+* 반드시 `response-fields.snippet` 과 같은 네이밍을 지켜주셔야 내부적으로 snippet 파일을 읽고 문서화 시켜줍니다! 
   * AbstractFieldsSnippet 의 protected 생성자를 보면, 이 규칙으로 문서화를 진행합니다. 
 
 
@@ -280,7 +290,7 @@ public class CustomResponseFieldsSnippet extends AbstractFieldsSnippet {
 
 * `type` :  snippet file prefix 입니다.
 * `List<fieldDescriptors>` : 우리가 커스텀할 response의 fields를 문서화 하기 위한 Descriptors 입니다. 
-  * 앞서 말한  code, message, statusCode, status key 생성자인 descriptor로 받아서 문서화 하기 위함 입니다. 
+  * 앞서 말한  `code`, `message`, `statusCode`,` status` 를 key 생성자인 descriptor로 받아서 문서화 하기 위함 입니다. 
 
 
 
@@ -345,8 +355,8 @@ public static CustomResponseFieldsSnippet customResponseFields(
 }
 ```
 
-* snippet 파일의 prefix 이름과 여러 description을 만들어 위에서 정의한 CustomResponseFieldsSnippet 클래스를 반환합니다.
-  * 일반적으로 사용하는 responseFields()를 커스텀해서 사용하기 위함입니다.
+* snippet 파일의 prefix 이름과 여러 description을 만들어, 위에서 정의한 `CustomResponseFieldsSnippet 클래스`를 반환합니다.
+  * 일반적으로 사용하는 `responseFields()`를 커스텀해서 사용하기 위함입니다.
 
 
 
@@ -371,9 +381,9 @@ private List<FieldDescriptor> fieldDescriptors() {
 }
 ```
 
-* fieldWithPath static 메소드는 한 경로에 존재하는 값들을 매핑하기 위한 메소드 입니다. 
+* `fieldWithPath()` static 메소드는 한 경로에 존재하는 값들을 매핑하기 위한 메소드 입니다. 
 
-* attributes() 메소드는 .snippet 파일의 key에 존재하는 필드에 value의 값을 매핑할 수 있습니다. 
+* `attributes()` 메소드는` .snippet` 파일의 `key`에 존재하는 필드에 `value`의 값을 매핑할 수 있습니다. 
 
 * ```json
   "NOT_MATCHED_COMMENT_AUTHOR": {
@@ -383,9 +393,9 @@ private List<FieldDescriptor> fieldDescriptors() {
   }
   ```
 
-* 응답이 위와 같은 형태로 존재하므로, key() 메소드와 value() 메소드로 errorcode-response-fields.snippet 파일에 맞게 문서화 시켜줄 수 있습니다.
+* 응답이 위와 같은 형태로 존재하므로, `key()` 메소드와 `value()` 메소드로 `errorcode-response-fields.snippet` 파일에 맞게 문서화 시켜줄 수 있습니다.
 
-  * errorcode-response-fields.snippet 파일에는 4개의 key 값인 code, message, statusCode, status 가 존재합니다. 
+  * `errorcode-response-fields.snippet` 파일에는 4개의 key 값인 `code`, `message`, `statusCode`, `status` 가 존재합니다. 
 
 
 
@@ -410,23 +420,25 @@ class ErrorCodeControllerTest extends ControllerSliceTest {
 }
 ```
 
-* customResponseFields(ERROR_SNIPPET_FILE,fieldDescriptors())
-  * ERROR_SNIPPET_FILE은 우리가 커스텀한 snippet 파일 입니다. 
-  * 위에서 설명한 fieldDescriptors()를 이용하여 설명을 매핑할 수 있습니다.
+* `customResponseFields(ERROR_SNIPPET_FILE, fieldDescriptors())`
+  * `ERROR_SNIPPET_FILE` 은 우리가 커스텀한 snippet 파일 입니다. 
+  * 위에서 설명한 `fieldDescriptors()`를 이용하여 설명을 매핑할 수 있습니다.
 
 
 
 
 
-이렇게 자동화를 하여서 , ErrorCode에 대한 Enum이 계속 생겨나도, 클라이언트 개발자들은 RestDocs로 만들어진 API 문서를 보고 응답 코드를 편하게 볼 수 있게 되었습니다. 
+이렇게 **자동화를** 하여서 , ErrorCode에 대한 Enum이 계속 생겨나도, 
 
-이제  노션 등과 같은 문서로 공유할떄 업데이트를 해야하는 귀찮음 등을 해결할 수 있었습니다. 
+클라이언트 개발자들은 RestDocs로 만들어진 **API 문서를 보고 코드**를 편하게 볼 수 있게 되었습니다. 
 
-* 실제로 프로젝트를 같이 하신 프론트엔드, 백엔드 팀원들이 매우 편리해 하였고 협업과정과 작업속도에 좋은 효과를 보였습니다.
+이제  노션 등과 같은 **문서로 공유할떄 업데이트를 해야하는 귀찮음** 등을 해결할 수 있었습니다. 
+
+* 실제로 프로젝트를 같이 하신 프론트엔드, 백엔드 팀원들이 매우 편리해 하였고 협업과정과 작업속도에 능률을 올리는 좋은 효과를 보였습니다.
 
 
 
->  라이브러리를 분석하여 원하는 기능과 결과를 만들어낸것에 대해 너무나 만족스러웠고, 
+> 라이브러리를 분석하여 원하는 기능과 결과를 만들어낸것에 대해 너무나 만족스러웠고, 
 >
 > 저랑 같은 고민을 하는 다른 개발자들에게 도움이 되었으면 좋겠습니다. 
 
@@ -438,8 +450,6 @@ class ErrorCodeControllerTest extends ControllerSliceTest {
 > * https://0soo.tistory.com/198
 
   
-
-
 
 ### Ref
 
