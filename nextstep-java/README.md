@@ -23,6 +23,11 @@
     </tr> 
 </table>
 
+# 깃허브 레포지토리 링크
+
+2~5장 - https://github.com/slipp/web-application-server
+6장 ~ - https://github.com/slipp/jwp-basic
+
 # 오타 및 정정할 내용
 * [1판 1쇄 - 오타 및 정정할 내용](revisions/revision1-1.md)
 
