@@ -7,6 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ys.jwtbasic.next.controller.*;
+import com.ys.jwtbasic.next.controller.qna.AddAnswerController;
+import com.ys.jwtbasic.next.controller.qna.DeleteAnswerController;
+import com.ys.jwtbasic.next.controller.qna.ShowController;
 
 public class RequestMapping {
 	private static final Logger logger = LoggerFactory.getLogger(RequestMapping.class);
@@ -23,8 +26,12 @@ public class RequestMapping {
 		mappings.put("/users/create", new CreateUserController());
 		mappings.put("/users/updateForm", new UpdateFormUserController());
 		mappings.put("/users/update", new UpdateUserController());
+		mappings.put("/qna/form", new ForwardController("/qna/form.jsp"));
+		mappings.put("/qna/show", new ShowController());
+		mappings.put("/api/qna/addAnswer", new AddAnswerController());
+		mappings.put("/api/qna/deleteAnswer", new DeleteAnswerController());
 
-		logger.debug("Initialized Request Mapping!");
+		logger.info("Initialized Request Mapping!");
 	}
 
 	public Controller findController(String url) {

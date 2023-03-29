@@ -1,20 +1,29 @@
 package com.ys.jwtbasic.next.controller.qna;
 
+import com.ys.jwtbasic.core.mvc.AbstractController;
 import com.ys.jwtbasic.core.mvc.Controller;
+import com.ys.jwtbasic.core.mvc.ModelAndView;
 import com.ys.jwtbasic.next.dao.AnswerDao;
 import com.ys.jwtbasic.next.dao.QuestionDao;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-public class ShowController implements Controller {
+public class ShowController extends AbstractController {
+
+	private QuestionDao questionDao = new QuestionDao();
+
+	private AnswerDao answerDao = new AnswerDao();
+
 	@Override
-	public String execute(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+	public ModelAndView execute(HttpServletRequest req, HttpServletResponse resp) throws Exception {
 		Long questionId = Long.parseLong(req.getParameter("questionId"));
-		QuestionDao questionDao = new QuestionDao();
-		AnswerDao answerDao = new AnswerDao();
-		req.setAttribute("question", questionDao.findById(questionId));
-		req.setAttribute("answers", answerDao.findAllByQuestionId(questionId));
-		return "/qna/show.jsp";
+
+		ModelAndView modelAndView = jspView("/qna/show.jsp");
+
+		modelAndView.addObject("question", questionDao.findById(questionId));
+		modelAndView.addObject("answers", answerDao.findAllByQuestionId(questionId));
+		return modelAndView;
 	}
+
 }
