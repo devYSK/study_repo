@@ -113,3 +113,17 @@ g
 7src/test/java/core/di/factory/example/MyQnaService.java,3/3/335029f28ac2f0ffe985ddf0ee1f9ea3330354d2
 ]
 -src/main/java/core/di/factory/InjectType.java,0/9/0918edf2528d4cae7797af9b76ae5fcdb063b19d
+^
+.src/test/java/next/service/QnaServiceTest.java,c/e/ce6eacd2d8e96c3a432b2d91a1b78a58ff990e52
+W
+'src/test/java/next/dao/UserDaoTest.java,5/8/5867258933b853b62772be0795679aa13403b1ec
+p
+@src/test/java/core/di/beans/factory/support/BeanFactoryTest.java,a/5/a527b54f320ddf9a2a2b45797ec73702b918744f
+Y
+)src/test/java/next/dao/MockAnswerDao.java,d/3/d349aaa747078891e16dc03f94e36c05748cada6
+Y
+)src/test/java/next/dao/AnswerDaoTest.java,4/a/4a6b438b940354c83a0c17cd5d20ae51baef02ac
+\
+,src/test/java/di/examples/QnaController.java,e/d/ed2cd2c112397ac4ca172a43370b01ede7c8c2fa
+l
+<src/test/java/core/web/mvc/AnnotationHandlerMappingTest.java,f/8/f8329ebd1491cbf8dacfb8877de490db96b605b2
