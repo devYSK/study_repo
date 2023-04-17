@@ -350,7 +350,7 @@ $ docker exec -it sr-postgres /bin/bash
 
 
 
-![image-20221018233907163](/Users/ysk/study/study_repo/postgresql/images//image-20221018233907163.png)
+![image-20221018233907163](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221018233907163.png)
 
 
 
@@ -553,7 +553,7 @@ LIMIT 6
 OFFSET 1;
 ```
 
-![image-20221019000214657](/Users/ysk/study/study_repo/postgresql/images//image-20221019000214657.png)
+![image-20221019000214657](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221019000214657.png)
 
 * OFFSET 명령어로 1번째에 존재하는 로우부터 개수를 카운트한다. 
 * PostgreSQL은 로우의 개수를 제일 위인 0부터 시작한다. 
@@ -946,19 +946,19 @@ $ psql -U postgres -d function_example -f <경로>/function_example.dump
 * 논리, 비교 연산자와 조건문 함수
 * 배열 연산자와 함수\
 
-![image-20221028111913383](/Users/ysk/study/study_repo/postgresql/images//image-20221028111913383.png)
+![image-20221028111913383](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028111913383.png)
 
 * JSON 연산자와 함수
 
-![image-20221028111925363](/Users/ysk/study/study_repo/postgresql/images//image-20221028111925363.png)
+![image-20221028111925363](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028111925363.png)
 
 * 날짜 및 시간 연산자와 함수
 
-![image-20221028111956948](/Users/ysk/study/study_repo/postgresql/images//image-20221028111956948.png)
+![image-20221028111956948](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028111956948.png)
 
 
 
-![image-20221028112012795](/Users/ysk/study/study_repo/postgresql/images//image-20221028112012795.png)
+![image-20221028112012795](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028112012795.png)
 
 
 
@@ -1055,19 +1055,19 @@ SELECT ARRAY[5.1, 1.6, 3]::INTEGER[] = ARRAY[5,2,3] AS RESULT
 
 * 배열 연산자 포함관계
 
-![image-20221028115856061](/Users/ysk/study/study_repo/postgresql/images//image-20221028115856061.png)
+![image-20221028115856061](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028115856061.png)
 
 
 
 * 배열 연산자 병합
 
-![image-20221028120136221](/Users/ysk/study/study_repo/postgresql/images//image-20221028120136221.png)
+![image-20221028120136221](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028120136221.png)
 
 
 
 * 배열 함수
 
-![image-20221028120904921](/Users/ysk/study/study_repo/postgresql/images//image-20221028120904921.png)
+![image-20221028120904921](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028120904921.png)
 
 
 
@@ -1075,19 +1075,19 @@ SELECT ARRAY[5.1, 1.6, 3]::INTEGER[] = ARRAY[5,2,3] AS RESULT
 
 ##  JSON 연산자와 함수
 
-![image-20221028121000198](/Users/ysk/study/study_repo/postgresql/images//image-20221028121000198.png)
+![image-20221028121000198](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028121000198.png)
 
 
 
 * ? 연산자를 사용하여 문자열의 키 값이 존재하는지 알 수 있따.
 
-![image-20221028123706004](/Users/ysk/study/study_repo/postgresql/images//image-20221028123706004.png)
+![image-20221028123706004](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028123706004.png)
 
 
 
 * ?| 연산자로 키 값으로 1개 이상 존재하는지 알 수 있다.
 
-![image-20221028123820365](/Users/ysk/study/study_repo/postgresql/images//image-20221028123820365.png)
+![image-20221028123820365](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028123820365.png)
 
 
 
@@ -1099,7 +1099,7 @@ SELECT ARRAY[5.1, 1.6, 3]::INTEGER[] = ARRAY[5,2,3] AS RESULT
 
 * JSON 병합 -> ||
 
-![image-20221028123948792](/Users/ysk/study/study_repo/postgresql/images//image-20221028123948792.png)
+![image-20221028123948792](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028123948792.png)
 
 
 
@@ -1107,23 +1107,23 @@ SELECT ARRAY[5.1, 1.6, 3]::INTEGER[] = ARRAY[5,2,3] AS RESULT
 
 * JSON 원소 삭제 `-`
 
-![image-20221028124009347](/Users/ysk/study/study_repo/postgresql/images//image-20221028124009347.png)
+![image-20221028124009347](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028124009347.png)
 
 
 
 * JSON 복수의 원소 삭제 - text[]
 
-![image-20221028124059049](/Users/ysk/study/study_repo/postgresql/images//image-20221028124059049.png)
+![image-20221028124059049](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028124059049.png)
 
 
 
 * JSON 인덱스 삭제 - 인덱스번호
 
-![image-20221028124131233](/Users/ysk/study/study_repo/postgresql/images//image-20221028124131233.png)
+![image-20221028124131233](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028124131233.png)
 
 
 
-![image-20221028124138565](/Users/ysk/study/study_repo/postgresql/images//image-20221028124138565.png)
+![image-20221028124138565](/Users/ysk/study/study_repo/SQL, Database/postgresql/images//image-20221028124138565.png)
 
 
 
