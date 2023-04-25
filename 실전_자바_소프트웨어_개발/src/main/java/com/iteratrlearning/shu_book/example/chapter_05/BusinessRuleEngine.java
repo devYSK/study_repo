@@ -5,19 +5,35 @@ import java.util.List;
 
 public class BusinessRuleEngine {
 
-    private final List<Rule> rules;
-    private final Facts facts;
+	// private final List<Rule> rules;
+	private final List<Action> actions;
 
-    public BusinessRuleEngine(Facts facts) {
-        this.facts = facts;
-        this.rules = new ArrayList<>();
-    }
+	public BusinessRuleEngine() {
+		this.actions = new ArrayList<>();
+	}
 
-    public void addRule(Rule rule) {
-        this.rules.add(rule);
-    }
+	// private final Facts facts;
 
-    public void run() {
-        this.rules.forEach(rule -> rule.perform(facts));
-    }
+	// public BusinessRuleEngine(Facts facts) {
+	//     this.rules = new ArrayList<>();
+	// }
+	//
+	// public void addRule(Rule rule) {
+	//     this.rules.add(rule);
+	// }
+	//
+	// public void run() {
+	//     this.rules.forEach(rule -> rule.perform(facts));
+	// }
+	public void addAction(final Action action) {
+		this.actions.add(action);
+	}
+
+	public int count() {
+		return this.actions.size();
+	}
+
+	public void run() {
+		throw new UnsupportedOperationException();
+	}
 }

@@ -1,6 +1,5 @@
 package com.iteratrlearning.shu_book.example.chapter_06.database;
 
-import com.iteratrlearning.shu_book.chapter_06.*;
 import com.iteratrlearning.shu_book.example.chapter_06.FollowStatus;
 import com.iteratrlearning.shu_book.example.chapter_06.Position;
 import com.iteratrlearning.shu_book.example.chapter_06.User;
