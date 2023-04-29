@@ -6,7 +6,7 @@ JDK 15부터 추가된 키워드로, 자바 17에 정식으로 확정되었습�
 
 
 
-**Sealed Class를 지원하는 목표** 
+**Sealed Class의 목표**
 
 - 개발자가 어떤 class 또는 interface가 해당 클래스를 상속받는지를 쉽게 알 수 있고 제한할 수 있다.
 - class 또는 interface 작성자가 구현을 담당하는 코드를 제어할 수 있게 한다.
