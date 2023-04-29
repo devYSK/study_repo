@@ -14,10 +14,6 @@
 * Bitfields
 * HyperLogLog
 
-
-
-
-
 ## Keys
 
 Redis의 키는 이진 안전(binary safe)하며, 이는 "foo"와 같은 문자열부터 JPEG 파일의 내용까지 모든 이진 시퀀스를 키로 사용할 수 있다는 것을 의미합니다. 빈 문자열도 유효한 키입니다.
@@ -87,7 +83,6 @@ SET key value [EX seconds] [PX milliseconds] [NX|XX]
 예를 들어, `SET` 명령어를 사용하여 `hello`라는 key에 `world`라는 값을 저장하면 다음과 같습니다.
 
 ```
-markdownCopy code
 > SET hello world
 OK
 ```

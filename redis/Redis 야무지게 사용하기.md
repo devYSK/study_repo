@@ -12,14 +12,6 @@
 4. Redis 아키텍처 선택 노하우 (Replication VS Sentinel Vs Cluster)
 5. Redis 운영 꿀팁 + 장애 포인트
 
-
-
-
-
-
-
-
-
 # Redis 캐시로 사용하기
 
 
@@ -31,7 +23,7 @@
 * 캐시 접근이 원본 접근보다 쉽고 빨라야 한다
 * 동일한 데이터에 반복 액세스할 시 캐시가 유용하다 
 
-
+<img src="https://blog.kakaocdn.net/dn/3O2V3/btsdeIeVnKR/zzvloHntzBBRhkkqCRel40/img.png" width = 600 height = 400>
 
 ## Redis s a cache
 
@@ -49,7 +41,7 @@ Most poplar software caching solution
 
 ### 1. 읽기 전략
 
-![image-20230321105921998](/Users/ysk/study/study_repo/redis/images//image-20230321105921998.png)
+<img src="https://blog.kakaocdn.net/dn/bHwhNy/btsdemwmsQ6/DwYTUEu20X23AEoXELsvh0/img.png" width = 650 height = 350>
 
 * Look-Aside (Lazy Loading) - 가장 일반적
 
@@ -65,7 +57,7 @@ Most poplar software caching solution
 
 ### 2. 쓰기 전략
 
-![image-20230321110636487](/Users/ysk/study/study_repo/redis/images//image-20230321110636487.png)
+<img src="https://blog.kakaocdn.net/dn/1uaXB/btsdemwmsOa/P03nSeWh9PPfXrPbJTzzKk/img.png" width = 650 height = 300>
 
 * Write-Around : DB에만 데이터를 저장. 캐시 미스가 발생한 경우 캐시에 데이터를 적재.
   * 캐시의 데이터와 DB의 데이터가 다를 수 있다는 단점
@@ -76,7 +68,7 @@ Most poplar software caching solution
 
 레디스는 많은 자료구조를 제공한다.
 
-![image-20230321110848827](/Users/ysk/study/study_repo/redis/images//image-20230321110848827.png)
+<img src="https://blog.kakaocdn.net/dn/kye7U/btsdeHtwMTs/nLEsgukxSwpgLoIOTlgiaK/img.png" width = 800 height = 480>
 
 
 
@@ -109,7 +101,7 @@ Redis는 In-memory 데이터 스토어
 * 복제 기능을 사용해도 사람의 실수 발생 시 데이터 복원 불가
 * Redis를 캐시 이외의 용도로 사용한다면 적절한 데이터 백업이 필요
 
-![image-20230321113050955](/Users/ysk/study/study_repo/redis/images//image-20230321113050955.png)
+<img src="https://blog.kakaocdn.net/dn/dcq7by/btsdhyJQm1i/qtVduGzG9FKCjGZIqxkRQ1/img.png" width = 400 height = 300>
 
 레디스에서 데이터를 영구저장하는 방법 2가지
 
@@ -145,7 +137,7 @@ Redis는 In-memory 데이터 스토어
 
 # Redis 아키텍처 선택 노하우 (Replication VS Sentinel Vs Cluster)
 
-![image-20230321115548201](/Users/ysk/study/study_repo/redis/images//image-20230321115548201.png)
+<img src="https://blog.kakaocdn.net/dn/cc5kVN/btsdhx5dMBP/NcwH36gOcHYTMl3Y2D6L5K/img.png" width = 800 height= 500>
 
 ### Replication
 
@@ -175,7 +167,7 @@ Redis는 In-memory 데이터 스토어
 * 모든 노드가 서로를 감시하며 마스터 비정상 상태일 때 자동 페일오버
 * 최소 3대의 마스터 노드가 필요 
 
-![image-20230321120318590](/Users/ysk/study/study_repo/redis/images//image-20230321120318590.png)
+<img src="https://blog.kakaocdn.net/dn/bqnzQr/btsdeZVgG7z/0KYkjM6f8xHkitSwGl7DP1/img.png" width = 800 height = 500>
 
 # Redis 운영 꿀팁 + 장애 포인트
 
@@ -220,13 +212,13 @@ MAXMEMORY-POLICY = ALLKEYS-LRU
 
 주로 TTL 값이 너무 작게 설정한 경우 발생한다.
 
-![image-20230321122114174](/Users/ysk/study/study_repo/redis/images//image-20230321122114174.png)
+<img src="https://blog.kakaocdn.net/dn/y6YZ6/btsdd0f22vO/KJ6GET0xWuPqOAOzKNhkd1/img.png" width = 800 height = 550>
 
 
 
 ## MaxMemory 값 설정
 
-![image-20230321123145648](/Users/ysk/study/study_repo/redis/images//image-20230321123145648.png)
+<img src="https://blog.kakaocdn.net/dn/IuQGL/btsdefKP1KH/pNCf96snjiumiDO3yVkEf0/img.png" width = 800 height = 500>
 
 Persistence / 복제 사용시 MaxMemory 설정 주의
 
@@ -240,14 +232,30 @@ Persistence / 복제 사용시 MaxMemory 설정 주의
 
 ## Memory 관리
 
-![image-20230321130047232](/Users/ysk/study/study_repo/redis/images//image-20230321130047232.png)
+<img src="https://blog.kakaocdn.net/dn/NX6V3/btsdeH1orzx/SIFVsaEIlZZndvWVCCiHFK/img.png">
 
 물리적으로 사용되고 있는 메모리를 모니터링
 
 - ﻿﻿used_memory: 논리적으로 Redis가 사용하는 메모리
 - ﻿﻿used_memory_rss: 0S가 Redis에 할당하기 위해 사용한 물리적 메모리 양
+- ﻿﻿**used_memort_rss를 주의깊게 봐야한다.**
 - ﻿﻿삭제되는 키가 많으면 fragmentation 증가
-  - 특정 시점에 피크를 찍고 다시 삭제되는 경우
+  - ﻿﻿fragmentation : 실제 사용하는 메모리는 적은데 RSS가 크게 설정될 경우 -> fragmentation이 크다.
+      -> 단편화가 많이 발생시 activedefrag 옵션을 활용하자.
+  - ﻿﻿특정 시점에 피크를 찍고 다시 삭제되는 경우
   - ﻿﻿TTL로 인한 eviction이 많이 발생하는 경우
+  
+- ﻿﻿이때 activefrag 기능을 잠시 켜두면 도움이 된다.
+  - ﻿﻿`CONFIG SET activedefrag yes`
+  - ﻿﻿공식 문서에서도 fragmentation(단편화)가 많이 발생했을 때 켜두는 것을 권장하고 있다.
 
-CONFIG SET activedefrag yes
+
+
+
+
+
+
+
+### 참조
+
+* [nhn forward - Redis 야무지게 사용하기](https://www.youtube.com/watch?v=92NizoBL4uA)
