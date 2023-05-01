@@ -12,14 +12,6 @@ Spring Bean 스코프란, 스프링 Bean이 앱이 구동되는 동안의 존재
 
 스프링에서는 다음과 같은 다섯 가지 스코프를 제공합니다.
 
-1. singleton : 스프링 컨테이너 내에서 해당 빈 객체는 하나만 생성되고, 모든 요청에 대해 동일한 인스턴스가 반환됩니다. 이는 스프링의 기본 스코프이며, 따로 스코프를 지정하지 않으면 자동으로 singleton 스코프가 적용됩니다.
-2. prototype : 스프링 컨테이너 내에서 해당 빈 객체는 요청할 때마다 새로운 인스턴스가 생성되고 반환됩니다.
-3. request : 웹 애플리케이션에서 HTTP 요청이 발생할 때마다 해당 요청에 대해 새로운 인스턴스가 생성되고, 요청이 끝나면 해당 인스턴스가 제거됩니다.
-4. session : 웹 애플리케이션에서 HTTP 세션이 시작될 때마다 해당 세션에 대해 새로운 인스턴스가 생성되고, 세션이 종료될 때 해당 인스턴스가 제거됩니다.
-5. global-session : 포틀릿(Portlet) 환경에서 사용되며, 포틀릿 전체에서 공유되는 세션에 대해 새로운 인스턴스가 생성되고, 세션이 종료될 때 해당 인스턴스가 제거됩니다.
-
-스코프를 설정하는 방법은 @Scope 어노테이션을 사용하거나 XML 설정 파일에서 <bean> 요소의 scope 속성을 사용하는 방법이 있습니다.
-
 [스프링 공식 문서](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans-factory-scopes)
 
 | Scope       | Description                                                  |
@@ -30,6 +22,12 @@ Spring Bean 스코프란, 스프링 Bean이 앱이 구동되는 동안의 존재
 | session     | HTTP 세션마다 하나의 빈을 사용, web-aware 컨택스트에서만 사용가능 - ex. Applicaiton context |
 | application | ServeltContext 라이프사이클 동안 한개의 빈만 사용, web-aware 컨택스트에서만 사용가능 - ex. Applicaiton context |
 | websocket   | websocket 라이프사이클 안에서 한개의 빈만 사용, web-aware 컨택스트에서만 사용가능 - ex. Applicaiton context |
+
+스코프를 설정하는 방법은 @Scope 어노테이션을 사용하거나 XML 설정 파일에서 <bean> 요소의 scope 속성을 사용하는 방법이 있습니다.
+
+> request, session, application 세 개를 묶어서 웹 스코프 라고도 합니다.
+
+
 
 ## 싱글톤 (Singleton) 스코프
 
@@ -91,7 +89,7 @@ public class ProtoTypeBean {
 
 프로토타입 범위의 bean은 특정 bean에 대한 요청이 있을 때마다 새로운 bean 인스턴스를 생성합니다.
 
-<img src="images//image-20230426223849999.png" width = 700 height = 700>
+<img src="https://blog.kakaocdn.net/dn/bPk95v/btscRqMBUZL/icoFiKIJgKK3LXbvModLvk/img.png" width = 700 height = 700>
 
 **프로토타입 빈 스코프**는 컨테이너가 **생성 , 의존성 주입 , 초기화**까지만 처리해줍니다.
 
@@ -118,7 +116,9 @@ public class ProtoTypeBean {
 }
 ```
 
-프로토타입으로 쓸 빈에 **@Scope** 어노태이션에 **proxyMode = ScopedProxyMode.TARGET_CLASS**를 넣어주면 된다. 만약에 해당 오브잭트가 클래스가 아니라 인터페이스라면 **proxyMode = ScopedProxyMode.INTERFACES**도 쓸 수가 있다.
+프로토타입으로 쓸 빈에 **@Scope** 어노태이션에 **proxyMode = ScopedProxyMode.TARGET_CLASS**를 넣어주면 됩니다. 
+
+만약에 인터페이스라면 **proxyMode = ScopedProxyMode.INTERFACES**도 쓸 수가 있습니다.
 
 
 
@@ -217,9 +217,11 @@ javax.inject 패키지에 가보면 Dependency Lookup(DL)을 언제 사용하는
 - application : 서블릿 컨텍스트(ServletContext)와 동일한 생명주기를 가지는 스코프
 - websocket : 웹 소켓과 동일한 생명주기를 가지는 스코프
 
-웹 스코프는 웹 환경에서만 동작합니다. 웹 스코프는 프로토타입과 다르게 스프링이 해당 스코프의 종료 시점까지 관리 하므로 종료 메서드가 호출됩니다.
+웹 스코프는 웹 환경에서만 동작합니다. 
 
-![image-20230426225836722](/Users/ysk/study/study_repo/spring/bean/images//image-20230426225836722.png)
+웹 스코프는 프로토타입과 다르게 스프링이 해당 스코프의 종료 시점까지 관리 하므로 종료 메서드가 호출됩니다.
+
+<img src="https://blog.kakaocdn.net/dn/chfldL/btscNSXV545/4I0n3TGCV4JTWKDpzJbskK/img.png" width = 900 height = 400>
 
 #### 1. build.gradle에 web 환경 추가
 
