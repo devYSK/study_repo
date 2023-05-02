@@ -1380,9 +1380,95 @@ mysql -uroot -p < SOL 파일
 
 ## 3.2.3 좋고 나쁨을 판단하는 기준 
 
+SQL 튜닝 대상을 검토할 때 select_type, type, extra 를 검토할 수 있따.
+
+![image-20230502205322682](/Users/ysk/study/study_repo/mysql/업무에 바로쓰는 SQL튜닝/images//image-20230502205322682.png)
+
+## 3.2.4 확장된 실행 계획 수행
+
+실행계획을 확인하는 키워드로 EXPLAIN과 추가 정보를 사용할 수 있다.
+
+**TRADITONAL**
+
+```sql
+EXPLIAN FORMAT = TRADITONAL
+SELECT * FROM 사원
+```
+
+**TREE**
+
+```sql
+EXPLIAN FORMAT = TREE
+SELECT * FROM 사원
+```
+
+**JSON**
+
+```sql
+EXPLIAN FORMAT = JSON
+SELECT * FROM 사원
+```
 
 
 
+예측된 실행 계획이 아닌, 실제 측정한 실행 계획 정보를 출력하고 싶다면?
 
+**EXPLIAN ANALYZE**
 
+```sql
+EXPLIAN ANALYZE
+SELECT * FROM 사원
+```
+
+# 3.3 프로파일링(profiling)
+
+MySQL의 프로파일링 설정값 확인
+
+```sql
+show variables like 'profiling%';
+```
+
+ON으로 바꿔준다
+
+```sql
+set profiling = 'ON'
+```
+
+프로파일링을 활성화(ON) 한 뒤 프로파일링된 쿼리목록을 확인한다.
+
+QUERY_ID 값이 2인 쿼리가 프로파일링으로 확인할 대상이다
+
+```sql
+show profiles;
+```
+
+특정 쿼리 ID에 대해서만 프로파일링 된 내용을 확인하고자 한다면?
+
+```sql
+show profile for query 1;
+```
+
+* 쿼리 ID 값을 입력하자. 
+* 실제 특정 Status에 해당되는 Duration 값이 높게 나타난다면, 문제가 될 소지가 높다 
+
+**프로파일링 항목**
+
+| 항목                           | 설명                       |
+| ------------------------------ | -------------------------- |
+| starting                       | SQL 문 시작                |
+| checking permissions           | 필요 권한 확인             |
+| Opening tables                 | 테이블을 열기              |
+| After opening tables           | 테이블을 연 이후           |
+| System lock                    | 시스템 잠금                |
+| Table lock                     | 테이블 잠금                |
+| init                           | 초기화                     |
+| optimizing statistics          | 최적화 통계                |
+| preparing executing            | 준비 실행                  |
+| Sending data end               | 데이터 보내기 끝           |
+| query end closing tables       | 질의 끝 테이블 닫기        |
+| Unlocking tables freeing items | 잠금 해제 테이블 항목 해방 |
+| updating status                | 상태 업데이트              |
+| cleaning up                    | 청소                       |
+
+# 4장. 악성 SQL 튜닝으로 초보자 탈출하기
 
