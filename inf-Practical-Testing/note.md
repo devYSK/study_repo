@@ -423,4 +423,89 @@ https://martinfowler.com/articles/mocksArentStubs.html
 
 
 
-## Classicist vs Mockist
+# 더 나은 테스트를 작성하기 위한 구체적 조언
+
+
+
+##  한 문단에 한 주제!
+
+테스트 코드의 복잡도를 올리지 말자.
+
+## 완벽하게 제어하기
+
+제어할 수 없는 관측할 때마다 다른 값에 의존하는 코드들을 제어하려고 노력해보자. 
+
+*  현재 날짜/시간, 랜덤 값, 전역 변수/함수, 사용자 입력 등 외부 세계에 영향을 주는 코드
+
+*  표준 출력, 메시지 발송, 데이러베이스에 기록하기 등
+
+##  테스트 환경의 독립성을 보장하자
+
+
+
+##  테스트 간 독립성을 보장하자
+ 
+
+## 한 눈에 들어오는 Test Fixture 구성하기
+
+
+
+##  Test Fixture 클렌징
+
+
+
+## @ParameterizedTest
+
+## @DynamicTest
+
+https://junit.org/junit5/docs/current/user-guide/#writing-tests-dynamic-tests
+
+시나리오 기반 테스트가 가능하다.
+
+
+
+## ﻿﻿테스트 수행도 비용이다. 환경 통합하기
+
+상위 클래스를 만들어서 상속받도록 해보자.
+
+```java
+@ActiveProfiles("test")
+@SpringBootTest
+public abstract class IntegrationTestSupport {
+
+	@MockBean
+	protected MailSendClient mailSendClient;
+
+}
+
+```
+
+* @MockBean을 주의하자. @MockBean이 있는 하위 클래스가 있으면, 해당 클래스의 SpringBoot Context가 다시 뜨게된다.
+
+만약 MockBean처리가 필요 없는 테스트라면, MockBean이 없는 새로운 Context인 상위 클래스를 만들어야 한다.  
+
+
+
+# Spring REst Docs
+
+https://asciidoctor.org/
+
+```java
+@ExtendWith(RestDocumentationExtension.class)
+public abstract class RestDocsSupport {
+
+    protected MockMvc mockMvc;
+    protected ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeEach
+    void setUp(RestDocumentationContextProvider provider) {
+        this.mockMvc = MockMvcBuilders.standaloneSetup(initController())
+            .apply(documentationConfiguration(provider))
+            .build();
+    }
+
+    protected abstract Object initController();
+
+}
+```
+
