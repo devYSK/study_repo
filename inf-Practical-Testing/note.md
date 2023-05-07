@@ -323,5 +323,62 @@ given / when / then
 *  상품의 판매 상태 : 판매중, 판매보류, 판매중지 - 판매중, 판매보류인 상태의 상품을 화면에 보여준다.
 *  id, 상품 번호, 상품 라입, 판매 상태, 상품 이름, 가격
 
+```java
+//when
+		List<Product> products = productRepository.findAllBySellingStatusIn(List.of(SELLING, HOLD));
+		//then
+		assertThat(products).hasSize(2)
+			.extracting("productNumber", "name", "sellingStatus")
+			.containsExactlyInAnyOrder(
+				tuple("001", "아메리카노", SELLING),
+				tuple("002", "카페라떼", HOLD)
+			);
+```
+
+* extracting과 tuple을 잘 활용해보자 
 
 
+
+Persistence Layer는 DataAccess의 역할이다.
+
+비즈니스 가공 로직이 포함 되어서는 안된다. CRUD에만 집중하자. 
+
+
+
+## Business Layer 테스트
+
+*  비즈니스 로직을 구현하는 역할
+
+* Persistence Layer와의 상호작용(Data를 읽고 쓰는 행위)을 통해 비즈니스 로직을 전개시킨다.
+
+*  트랜잭션을 보장해야 한다.
+
+![image-20230506224823557](./images//image-20230506224823557.png)
+
+요구사항
+
+*  상품 번호 리스트를 받아 주문 생성하기
+
+*  주문은 주문 상태, 주문 등록 시간을 가진다.
+
+* 주문의 총 금액을 계산할 수 있어야 한다.
+
+
+
+추가 요구사항
+
+* 주문 생성 시 재고 확인 및 개수 차감 후 생성하기
+* 재고는 상품번호를 가진다.
+* 재고와 관련 있는 상품 타입은 병 음료, 베이커리이다.
+
+
+
+테스트 시 @Transactional을 사용할땐 주의해야 한다. 
+
+
+
+## Presentation Layer 테스트
+
+*  외부 세계의 요청을 가장 먼저 받는 계층
+
+* 파라미터에 대한 최소한의 검증을 수행한다.
