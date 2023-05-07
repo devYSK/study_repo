@@ -379,6 +379,48 @@ Persistence Layer는 DataAccess의 역할이다.
 
 ## Presentation Layer 테스트
 
-*  외부 세계의 요청을 가장 먼저 받는 계층
+* 외부 세계의 요청을 가장 먼저 받는 계층
 
 * 파라미터에 대한 최소한의 검증을 수행한다.
+
+
+
+## 키워드 정리
+
+* Layered Architecture
+
+- ﻿﻿Hexagonal Architecture
+- ﻿﻿단위 테스트 VS. 통합 테스트
+
+* IoC, DI, AOP
+
+* ORM, 패러다임의 불일치, Hibernate
+
+* Spring Data JPA
+
+
+
+# Mock을 마주하는 자세
+
+
+
+요구사항
+
+* 일일 매출 통계를 메일로 보내야함.
+
+
+
+## 테스트 더블 (Test Double)
+
+* Dummy - 아무 것도 하지 않는 깡통 객체
+
+* Fake - 단순한 형태로 동일한 기능은 수행하나, 프로덕션에서 쓰기에는 부족한 객체 (ex. FakeRepository)
+* Stub(상태 검증) - 테스트에서 요청한 것에 대해 미리 준비한 결과를 제공하는 객체. 그 외에는 응답하지 않는다.
+* Spy - Stub이면서 호출된 내용을 기록하여 보여줄 수 있는 객체. 일부는 실제 객체처럼 동작시키고 일부만 Stubbing할 수 있다.
+* Mock (행위 검증) - 행위에 대한 기대를 명세하고, 그에 따라 동작하도록 만들어진 객체
+
+https://martinfowler.com/articles/mocksArentStubs.html
+
+
+
+## Classicist vs Mockist
