@@ -16,6 +16,7 @@
     <file type="web" url="file://$PROJECT_DIR$/Chapter13/JavaThread" />
     <file type="web" url="file://$PROJECT_DIR$/Chapter13/Suspend" />
     <file type="web" url="file://$PROJECT_DIR$/Chapter14/KoTest" />
+    <file type="web" url="file://$PROJECT_DIR$/Chapter15/ComposeCalculator" />
     <file type="web" url="file://$PROJECT_DIR$/Chapter15/HelloWorld" />
     <file type="web" url="file://$PROJECT_DIR$/Chapter16/ktor-client" />
     <file type="web" url="file://$PROJECT_DIR$/Chapter16/ktor-example" />
@@ -24,6 +25,7 @@
     <file type="web" url="file://$PROJECT_DIR$/Chapter17/passwordGen" />
     <file type="web" url="file://$PROJECT_DIR$/Chapter17/passwordGenKtor" />
     <file type="web" url="file://$PROJECT_DIR$/Chapter17/randomGen" />
+    <file type="web" url="file://$PROJECT_DIR$/Chapter17/spring" />
   </component>
   <component name="ProjectType">
     <option name="id" value="jpab" />
