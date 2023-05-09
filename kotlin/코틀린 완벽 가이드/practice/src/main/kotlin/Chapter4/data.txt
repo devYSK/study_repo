@@ -1,3 +1,0 @@
-This is data.txt
-This is second line.
-한글은 되나요?

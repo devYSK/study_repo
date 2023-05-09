@@ -1,1 +1,0 @@
-class Person2(@set:JvmName("changeName") var name: String, val age: Int)

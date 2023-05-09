@@ -1,1 +1,0 @@
-class Person(var name: String, val age: Int, var isEmployed: Boolean)
