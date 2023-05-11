@@ -1,0 +1,3 @@
+JMH S 13 sample.Sample S 49 sample.jmh_generated.Sample_calculateTest_jmhTest S 13 calculateTest S 11 AverageTime E A 1 1 1 E E E E E E E E E E E E E E U 12 MILLISECONDS E E 
+JMH S 13 sample.Sample S 45 sample.jmh_generated.Sample_loopToAdd_jmhTest S 9 loopToAdd S 11 AverageTime E A 1 1 1 E E E E E E E E E E E E E E U 12 MILLISECONDS E E 
+JMH S 13 sample.Sample S 45 sample.jmh_generated.Sample_loopToSum_jmhTest S 9 loopToSum S 11 AverageTime E A 1 1 1 E E E E E E E E E E E E E E U 12 MILLISECONDS E E 

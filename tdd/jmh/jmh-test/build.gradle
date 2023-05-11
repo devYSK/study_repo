@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+    id "me.champeau.jmh" version "0.7.1"
+}
+
+group 'org.ys'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+jmh {
+    fork = 1
+    iterations = 1
+    warmupIterations = 1
+}
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
+    // https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core
+    jmh 'org.openjdk.jmh:jmh-core:1.36'
+    // https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-generator-annprocess
+    jmh 'org.openjdk.jmh:jmh-generator-annprocess:1.36'
+
+}
+
+test {
+    useJUnitPlatform()
+}

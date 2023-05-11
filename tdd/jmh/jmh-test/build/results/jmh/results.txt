@@ -1,0 +1,4 @@
+Benchmark             Mode  Cnt      Score   Error  Units
+Sample.calculateTest  avgt       15558.388          ms/op
+Sample.loopToAdd      avgt           0.035          ms/op
+Sample.loopToSum      avgt          36.600          ms/op
