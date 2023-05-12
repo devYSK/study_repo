@@ -44,3 +44,9 @@ hs_err_pid*
 .pdf
 *.pdf
 **/*.pdf
+
+# idea
+.idea
+*.idea
+**/.idea
+**/**/.idea
