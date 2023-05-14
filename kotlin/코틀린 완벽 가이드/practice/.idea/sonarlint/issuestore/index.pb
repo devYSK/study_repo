@@ -69,3 +69,17 @@ c
 3Chapter13/Suspend/src/main/kotlin/CoroutineScope.kt,9/6/96f7d05a65c69d41e2f0b09049c26dbeeec4adb7
 [
 +src/main/kotlin/coroutine/CoroutineScope.kt,d/3/d3189529f7495742952f5f62cb124d6c79f8ca2f
+G
+src/main/kotlin/Main.kt,d/8/d83ae3847b7d408136086cc5e9e95f5f7c126ed5
+_
+/Chapter13/Suspend/src/main/kotlin/JobTimeout.kt,0/d/0d7e9ab535276b240f5fc4c55c49d99e63550b80
+[
++Chapter13/Suspend/src/main/kotlin/Launch.kt,3/a/3ace7d73f08b84127fd0d70e8197aff856d05acc
+^
+.Chapter13/Suspend/src/main/kotlin/JobCancel.kt,4/3/4309af331fb9497d5315dcdd198e36e9d27ba625
+e
+5Chapter13/Suspend/src/main/kotlin/GlobalDispatcher.kt,3/4/34dcee24dd624087bf7caa9eb79e00504086c411
+`
+0Chapter13/Suspend/src/main/kotlin/RunBlocking.kt,e/0/e016903744451e55c55bbf5616739cf79f22a8f7
+[
++Chapter13/Channel/src/main/kotlin/Ticker.kt,9/e/9ea55d25e9e15966e711a4470bdd6512ddc9de0a
