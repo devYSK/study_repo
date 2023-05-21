@@ -583,3 +583,298 @@ public @interface Configuration {
 
 # 인프라 빈 구성 정보의 분리
 
+Spring Boot는 인프라스트럭쳐 빈을 자동 구성(auto configuration)이라는 원리에 의해 자동으로 처리하는것이다.
+
+* 빈의 종류를 잘 구분하자
+
+
+
+**@Import** 를 이용하면 스캔 대상이 아닌 클래스를 빈으로 등록하도록 추가할 수 있다
+
+애플리케이션 인프라스트럭처 빈 구성 정보 클래스는 스프링 부트의 자동 구성 메카니즘에 의해서 등록이 되도록 분리하는 작업이 우선 필요하다. 분리된 클래스는 @Import로 포함시킨다
+
+
+
+
+
+Spring이 Tomcat과 같이 시작되려면 DispatcherServlet과 ServletWebServerFactory가 필요하다.
+
+다음과 같이 어노테이션을 선언하여 구성 정보(Config)를 추가할 수는 있다.
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Configuration
+@ComponentScan
+@Import({Config.class, DispatcherServletConfig.class, TomcatWebServerConfig.class})
+public @interface MySpringBootApplication {
+}
+// Main Application 
+
+@MySpringBootApplication
+public class MySpringApplication {
+	
+	public static void main(String[] args) {
+		SpringApplication.run(TobyspringApplication.class, args);
+	}
+
+}
+```
+
+아래처럼 깔끔하게 바꿔서 메인 어노테이션의 메타 애노테이션으로 만들고, 어노테이션이 노출되지 않도록 감춰 쓸 수도 있겠다.
+
+* EnableMyAutoConfiguration 라는 어노테이션한테 자동 구성이라는 책임을 준다. 
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Import({DispatcherServletConfig.class, TomcatWebServerConfig.class})
+public @interface EnableMyAutoConfiguration {
+}
+
+// 
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Configuration
+@ComponentScan
+@EnableMyAutoConfiguration
+public @interface MySpringBootApplication {
+}
+```
+
+그런데, 외부에서 의존성이 늘어나고 인프라 빈이 많아질수록 하나하나 Import에 추가할것인가? 
+
+* 외부 설정파일인 MyBatis? JPA? WebFlux?(인프라 빈들) 등은 하드코딩 할것인가? 
+
+![image-20230521225429150](./images//image-20230521225429150.png)
+
+동적으로 자동화하여 추가 할수는 없을까?
+
+# 동적인 자동 구성 정보 등록 (동적으로 Auto Configuration)
+
+ImportSelector를 이용할 수 있다.
+
+```java
+public interface ImportSelector {
+	String[] selectImports(AnnotationMetadata importingClassMetadata);
+	...
+}
+```
+
+String으로 data를 리턴하면, String 이름에 해당하는 구성 정보를 스프링 컨테이너가 사용한다.
+
+ImportSelector의 구현 클래스를 @Import하면 selectImports가 리턴하는 클래스 이름으로@Configuration 클래스를 찾아서 구성 정보로 사용한다. 
+
+코드에 의해서 @import 대상을 외부에서 가져오고 선택할 수 있는 동적인 방법을 제공한다.
+
+가져올 클래스 정보는 문자열 배열로 리턴한다
+
+![image-20230521225854608](./images//image-20230521225854608.png)
+
+이 인터페이스의 서브 인터페이스인 DeferredImportSelector를 구현한다
+
+```java
+public class MyAutoConfigImportSelector implements DeferredImportSelector {
+	
+	@Override
+	public String[] selectImports(AnnotationMetadata importingClassMetadata) {
+		return new String[] {
+			"tobyspring.config.autoconfig.DispatcherServletConfig",
+			"tobyspring.config.autoconfig.TomcatWebServConfig",
+		};
+	}
+	
+}
+```
+
+이 클래스를 Import 하게되면 정의되어있는 구성 정보를 자동으로 등록해준다
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Import(MyAutoConfigImportSelector.class)
+public @interface EnableMyAutoConfiguration {
+}
+```
+
+하지만 아직도 불편한 감이 있다. 어떻게 더 유연하게 할 수 있을까? 
+
+외부 설정파일로 빼고 파일을 읽어서 등록해볼까?
+
+# 자동 구성 정보 파일 분리
+@MyAutoConfiguration 애노테이션을 만들고 이 클래스 이름 뒤에 .imports가 붙은 파일을
+META-INF/spring 폴더 아래 만들어 selectImports()에서 가져와 컨테이너에 등록시킬
+@Configuration 클래스 목록을 저장해둔다
+
+
+
+커스텀 @Configuration 어노테이션은 다음과 같이 커스텀해서 이용했다.
+
+* @Configuration을 메타 애노테이션으로 가진다.
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Configuration
+public @interface MyAutoConfiguration {
+}
+
+```
+
+그리고 ImposertSelector에서 이렇게 쓰면 된다. 
+
+```java
+public class MyAutoConfigImportSelector implements DeferredImportSelector{
+
+	private final ClassLoader classLoader;
+
+	public MyAutoConfigImportSelector(ClassLoader classLoader) {
+		this.classLoader = classLoader;
+	}
+
+	@Override
+	public String[] selectImports(AnnotationMetadata importingClassMetadata) {
+		List<String> autoConfigs = new ArrayList<>();
+		ImportCandidates.load(MyAutoConfiguration.class, classLoader)
+			.forEach(autoConfigs::add);
+
+		return autoConfigs.toArray(new String[0]);
+	}
+
+}
+```
+
+* MyAutoConfiguration는 예제를 위한 커스텀 어노테이션. 
+
+load() static 메소드는 META-INF/spring/full-qualified-annotation-name(패키지 네임까지 포함한).imports 에서 파일을 읽어온다. 
+
+* 확장자가 .imports 이다.
+
+그러므로 resources/META-INF/spring 밑에 실제로 파일을 만들어준다.
+
+* 예제에서는 tobyspring.config.MyAutoConfiguration.imports 이다.
+
+![image-20230521231703082](./images//image-20230521231703082.png)
+
+다음 파일 내용에 import할 Config 클래스를 full-qualified-annotation-name(패키지 네임까지 포함한) 포함해 작성한다.
+
+```java
+tobyspring.config.autoconfig.TomcatWebServerConfig
+tobyspring.config.autoconfig.DispatcherServletConfig
+```
+
+ImportSelector는 설정한 어노테이션과 일치하는 imports 파일에서 목록을 읽어온 후 String Array로 리턴한다.
+
+* 위에서  설정한 어노테이션은 **MyAutoConfiguration** 이고, 일치하는 파일은 어노테이션의 패키지 네임까지 포함한
+  **tobyspring.config.MyAutoConfiguration.imports** 이다. 
+
+
+
+## 자동 구성 애노테이션 적용
+
+정의했던 @Configuration을 메타 애노테이션으로 가지는 @MyAutoConfiguration 애노테이션을
+
+인프라 빈 클래스에 @Configuration을 대체해서 부여한다
+
+```java
+@MyAutoConfiguration
+public class TomcatWebServerConfig {
+...
+}
+///
+@MyAutoConfiguration
+public class DispatcherServletConfig {
+	...
+}
+```
+
+지금까지 적용한 자동 구성 정보를 다루는 구조는 다음과 같다
+
+![image-20230521233047396](./images//image-20230521233047396.png)
+
+# @Configuration 클래스의 동작 방식
+
+MyAutoConfiguration 애노테이션은 @Configuration을 메타 애노테이션으로 가지면서
+proxyBeanMethods 엘리먼트를 false로 지정한다
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Configuration(proxyBeanMethods = false) // here
+public @interface MyAutoConfiguration {
+}
+```
+
+proxyBeanMethods는 디폴트로 true 값을 가진다. 
+
+이 경우 @Configuration이 붙은 클래스는**CGLib**을 이용해서 프록시 클래스로 확장을 해서 @Bean이 붙은 메소드의 동작 방식을 변경한
+다. 
+
+@Bean 메소드를 직접 호출해서 다른 빈의 의존 관계를 설정할 때 여러번 호출되더라도 싱글톤 빈처럼 참조할 수 있도록 매번 같은 오브젝트를 리턴하게 한다.
+
+* Configuration(proxyBeanMethods = true) 가 디폴트인데, proxyBeanMethods가 true이면 **Config 클래스가 직접 빈으로 등록 되지 않고 프록시 오브젝트가 등록이 된다.**
+* false이면 프록시 오브젝트가 아닌 진짜 오브젝트가 등록이 된다. 
+
+proxyBeanMethods = true이면 다음과 같이 동작한다.
+
+먼저 @Configuration 클래스가 있다면
+
+```java
+@Configuration
+class MyConfig {
+  	@Bean
+		Common common() {
+			return new Common();
+		}
+
+		@Bean
+		Bean1 bean1() {
+			return new Bean1(common());
+		}
+
+		@Bean
+		Bean2 bean2() {
+			return new Bean2(common()); // false라면 호출할 수 없다 
+		}
+}
+```
+
+빈을 정의하는 @Bean 메소드 (ex: common()) 를 직접 호출하여 빈에 등록할 수 있다.
+
+* 반면 proxyBeanMethods를 false로 지정되면 직접 @Bean 메소드를 호출할 수 없다. (위험하다고 경고를 준다.)
+
+이 클래스를 상속받아 확장한 프록시가 빈으로 등록이 된다. 
+
+```java
+class MyConfigProxy extends MyConfig {
+	private Common common;
+
+  @Override
+  public Common common() {
+    if (this.common == null) this. common = super. common () ;
+    return this.common;
+	}
+}
+  
+```
+
+* 일종의 캐싱이 되어 같은 빈을 반환한다. 
+
+proxyBeanMethods를 false로 지정되면, 다른 Bean Object를 
+
+
+
+<u>만약 @Bean 메소드 직접 호출로 빈 의존관계 주입을 하지 않는다면 굳이 복잡한 프록시 생성을 할 필요가 없다.</u>
+
+이 경우 proxyBeanMethods를 false로 지정해도 된다. 
+
+@Bean 메소드는평범한 팩토리 메소드처럼 동작한다.
+proxyBeanMethods는 스프링 5.2 버전부터 지원되기 시작했고 지금은 스프링과 스프링 부트의 상당히 많은 @Configuration 클래스 설정에 적용되고 있다.
+
+* ex) SchedulingConfiguration 클래스. proxyBeanMethods = false이고, Bean 등록 메소드에서 다른 Bean 등록 메소드를 호출하지 않는다.
+* 즉 쓸데없이 프록시를 만들지 않는다. 
+
+이를 @Bean 라이트 모드(litemode)라고 부른다
+
+
+
