@@ -878,3 +878,605 @@ proxyBeanMethods는 스프링 5.2 버전부터 지원되기 시작했고 지금�
 
 
 
+# 조건부 자동 구성 (conditional auto configuration)
+org.springframework.boot:spring-boot-autoconfiguration 의존성(라이브러리)을 보면 **@AutoConfiguration** 어노테이션이 있다.
+
+* External Libaraies -> Gradle: org.springframework.boot:spring-boot-autoconfiguration
+
+스프링 부트에 내장된 AutoConfiguration 클래스들은 이 어노테이션을 달고 있다. (proxyBeanMethods 다 false)
+
+해당 라이브러리의 META-INF를 보면 .imports 파일이 존재한다.
+
+* spring-boot-autoconfigure-x.x.x.jar / META-INF / spring / 아래의
+  *  **org.springframework.boot:spring-boot-autoconfiguration.improts**
+
+해당 파일 안에 스프링 부트가기본적으로 제공하는 Configuration 클래스 목록들이 존재한다.
+
+* jdbc, jpa, mongo, r2dbc, redis, 등등 총 144개의 AutoConfiguration이 존재한다.
+
+* spring-cloud 계열들은 다 빠져있다.
+* 이 Bean들은 인프라스트럭쳐 빈들이다. 
+
+
+
+하지만 이 모든 Configuration 클래스들이 갖고 있는 @Bean 팩토리 메소드 (Bean 등록 메소드)들이  애플리케이션이 실행될 때마다 Bean들을 등록한다면 엄청 느리고 무거울 것이다.
+
+때문에 사용 안하는 라이브러리들 (jpa 사용 안해서 의존 안하는데 jpa 관련 클래스를 빈으로 등록하면 느리다. ) 은 등록하지 않는 메커니즘이 존재한다.
+
+
+
+## 스타터와 Jetty 서버 구성 추가
+
+Tomcat을 주로 웹 서버로 사용하지만, 톰캣도 결국 서블릿 인터페이스를 구현하는 구현체중 하나일뿐이다.
+
+웹 서버로 서블릿의 구현체로는 Tomcat, Jetty, Undertow 등이 있다.
+
+이 구현체를 바꾸고 싶다면?
+
+* 톰캣 웹서버는 클래스이며 (Tomcat Class) 해당 클래스는 org.apache.tomcat.embed:tomcat-embod-core:x.x.x 에 존재한다.
+
+스프링 부트의 Starter는 애플리케이션에 포함시킬 의존 라이브러리 정보를 담고 있다.
+
+* org.springframework.boot:spring-boot-stater:x.x.x
+
+Maven 또는 Gradle의 의존 라이브러리 목록에 추가해서 스프링 부트가 선정한 기술의 종류와 버전에 해당하는 라이브러리
+모듈을 프로젝트에 포함시킨다.
+
+**프로젝트 의존성 트리를 보는방법**
+
+명령어 : 
+
+```shell
+./gradlew dependencies --configuration compileClasspath
+```
+
+### spring-boot-starter
+
+* https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#using.build-systems.starters
+
+가장 기본이 되는 스타터이다. 
+
+스프링 코어, 스프링 부트 코어를 포함해서 자동 구성, 애노테이션, 로깅 등에 필요한 의존 라이브러리가 포함되어있다.
+
+```shell
++--- org.springframework.boot:spring-boot-starter:2.7.12
+     |    +--- org.springframework.boot:spring-boot:2.7.12
+     |    |    +--- org.springframework:spring-core:5.3.27
+     |    |    |    \--- org.springframework:spring-jcl:5.3.27
+     |    |    \--- org.springframework:spring-context:5.3.27
+     |    |         +--- org.springframework:spring-aop:5.3.27
+     |    |         +--- org.springframework:spring-beans:5.3.27 (*)
+     |    |         +--- org.springframework:spring-core:5.3.27 (*)
+     |    |         \--- org.springframework:spring-expression:5.3.27
+     |    +--- org.springframework.boot:spring-boot-autoconfigure:2.7.12
+     |    |    \--- org.springframework.boot:spring-boot:2.7.12 (*)
+     |    +--- org.springframework.boot:spring-boot-starter-logging:2.7.12
+     |    |    +--- ch.qos.logback:logback-classic:1.2.12
+     |    |    +--- org.apache.logging.log4j:log4j-to-slf4j:2.17.2
+     |    +--- jakarta.annotation:jakarta.annotation-api:1.3.5
+     |    +--- org.springframework:spring-core:5.3.27 (*)
+     |    \--- org.yaml:snakeyaml:1.30
+     +--- org.springframework.boot:spring-boot-starter-json:2.7.12
+     |    +--- org.springframework.boot:spring-boot-starter:2.7.12 (*)
+     |    +--- org.springframework:spring-web:5.3.27
+     |    |    +--- org.springframework:spring-beans:5.3.27 (*)
+     |    |    \--- org.springframework:spring-core:5.3.27 (*)
+     |    +--- com.fasterxml.jackson.core:jackson-databind:2.13.5
+     |    |    +--- com.fasterxml.jackson.core:jackson-core:2.13.5
+     +--- org.springframework.boot:spring-boot-starter-tomcat:2.7.12
+     +--- org.springframework:spring-web:5.3.27 (*)
+     \--- org.springframework:spring-webmvc:5.3.27
+```
+
+* 너무 길어서 일부 생략함
+
+### spring-boot-start-web
+
+Spring Initializr에서 web 모듈을 선택하면 이 스타터가 추가된다. spring-boot-starter를 포함한다. SpringWeb,
+SpringMVC와 Json, Tomcat 라이브러리가 추가된다
+
+```
+\--- org.springframework.boot:spring-boot-starter-web -> 2.7.12
+     +--- org.springframework.boot:spring-boot-starter:2.7.12
+     +--- org.springframework.boot:spring-boot-starter-tomcat:2.7.12
+     +--- org.springframework:spring-web:5.3.27 (*)
+     \--- org.springframework:spring-webmvc:5.3.27
+     +--- org.springframework.boot:spring-boot-starter-json:2.7.12
+```
+
+### spring-boot-starter-jetty
+
+Jetty 서블릿 컨테이너를 이용하는데 필요한 라이브러리로 구성된다
+
+## Jetty 사용
+
+의존성 추가
+
+```groovy
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-jetty'
+    ...
+}
+```
+
+## @Conditional과 Condition
+
+@Conditional은 스프링 4.0에 추가된 애노테이션으로 모든 조건을 만족하는 경우에만 컨테이너에 빈으로 등록되도록 한다
+
+```java
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Conditional {
+	/**
+	* All {@link Condition} classes that must {@linkplain Condition#matches match}
+	* in order for the component to be registered.
+	*/
+	Class<? extends Condition>[] value();
+}
+```
+
+Condition은 @Conditional에 지정되어서 구체적인 매칭 조건을 가진 클래스가 구현해야할 인터페이스이다
+
+```java
+@FunctionalInterface
+public interface Condition {
+/**
+* Determine if the condition matches.
+*/
+boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
+}
+```
+
+* Condition 인터페이스를 구현하여 matches에서 true false를 리턴해야 한다 
+
+@Conditional은 @Configuration 클래스와 @Bean 메소드에 적용 가능하다. 
+
+클래스 조건을 만족하지 못하는 경우 메소드는 무시된다.
+
+예를 들어, Tomcat과 Jetty의 구성 정보를 구성하는 클래스에 다음과 같이 사용 가능하다
+
+```java
+// tomcat
+
+@MyAutoConfiguration // 안에 @Configuration 선언되어있음
+@Conditional(TomcatCondition.class)
+public class TomcatWebServerConfig {
+
+	@Bean("tomcatWebServerFactory")
+	public ServletWebServerFactory servetWebServerFactory() {
+		return new TomcatServletWebServerFactory();
+	}
+	
+}
+
+class TomcatCondition implements Condition {
+		@Override
+		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			return false;
+		}
+	}
+
+// jetty
+@MyAutoConfiguration // 안에 @Configuration 선언되어있음
+@Conditional(JettyCondition.class)
+public class JettyWebServerConfig {
+
+	@Bean("jettyWebServerFactory")
+	public ServletWebServerFactory servetWebServerFactory() {
+		return new JettyServletWebServerFactory();
+	}
+
+}
+class JettyCondition implements Condition {
+
+		@Override
+		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			return true;
+		}
+}
+```
+
+* 위처럼 TomcatCondiation의 matches가 false이고  JettyCondition의 matcher가 true이면  JettyServer가 등록된다 
+
+![image-20230522163530854](./images//image-20230522163530854.png)
+
+### 테스트로 확인
+
+스프링 부트가 제공하는 **ApplicationContextRunner**를 사용하면 스프링 컨테이너에 빈이 등록됐는지를 테스트 할 때 편리하다. 
+
+```java
+ApplicationContextRunner contextRunner = new ApplicationContextRunner();
+	contextRunner.withUserConfiguration(Config1.class)
+		.run(context -> {
+					assertThat(context).hasSingleBean(MyBean.class);
+					assertThat(context).hasSingleBean(Config1.class);
+});
+```
+
+
+
+@Conditional이 적용된 자동 구성 클래스의 적용 여부를 테스트 할 때 사용한다
+
+```java
+class ConditionalTest {
+
+	@DisplayName("")
+	@Test
+	void conditional() {
+		//true
+		ApplicationContextRunner contextRunner = new ApplicationContextRunner();
+
+		contextRunner.withUserConfiguration(Config1.class)
+			.run(context -> {
+				assertThat(context).hasSingleBean(MyBean.class);
+				assertThat(context).hasSingleBean(Config1.class);
+
+			});
+
+		// false
+		new ApplicationContextRunner().withUserConfiguration(Config2.class)
+			.run(context -> {
+				assertThat(context).doesNotHaveBean(MyBean.class);
+				assertThat(context).doesNotHaveBean(Config2.class);
+			});
+	}
+
+	@Configuration
+	@Conditional(TrueCondition.class)
+	static class Config1 {
+		@Bean
+		MyBean myBean() {
+			return new MyBean();
+		}
+	}
+
+	@Configuration
+	@Conditional(FalseCondition.class)
+	static class Config2 {
+		@Bean
+		MyBean myBean() {
+			return new MyBean();
+		}
+	}
+
+	static class TrueCondition implements Condition {
+		@Override
+		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			return true;
+		}
+	}
+
+	static class FalseCondition implements Condition {
+		@Override
+		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			return false;
+		}
+	}
+  
+	static class MyBean { }
+}
+
+```
+
+메타 어노테이션을 이용해서도 할 수 있다.
+
+```java
+class ConditionalTest {
+
+	@DisplayName("")
+	@Test
+	void conditional() {
+		//true
+		ApplicationContextRunner contextRunner = new ApplicationContextRunner();
+
+		contextRunner.withUserConfiguration(Config1.class)
+			.run(context -> {
+				assertThat(context).hasSingleBean(MyBean.class);
+				assertThat(context).hasSingleBean(Config1.class);
+
+			});
+
+		// false
+		new ApplicationContextRunner().withUserConfiguration(Config2.class)
+			.run(context -> {
+				assertThat(context).doesNotHaveBean(MyBean.class);
+				assertThat(context).doesNotHaveBean(Config2.class);
+			});
+	}
+
+	@Configuration
+	@TrueConditional
+	static class Config1 {
+		@Bean
+		MyBean myBean() {
+			return new MyBean();
+		}
+	}
+
+	@Configuration
+	@FalseConditional
+	static class Config2 {
+		@Bean
+		MyBean myBean() {
+			return new MyBean();
+		}
+	}
+  
+  @Target(ElementType.TYPE)
+	@Retention(RetentionPolicy.RUNTIME)
+	@Conditional(TrueCondition.class)
+	@interface TrueConditional {}
+
+	@Target(ElementType.TYPE)
+	@Retention(RetentionPolicy.RUNTIME)
+	@Conditional(FalseCondition.class)
+	@interface FalseConditional {}
+
+	static class TrueCondition implements Condition {
+		@Override
+		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			return true;
+		}
+	}
+
+	static class FalseCondition implements Condition {
+		@Override
+		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			return false;
+		}
+	}
+  
+  
+	static class MyBean { }
+}
+```
+
+
+
+더 간단하게 다음과 같이 커스텀 할 수도 있다.
+
+### 커스텀 컨디셔널 (custom conditional)
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Conditional(BooleanCondition.class)
+@interface BooleanConditional {
+	boolean value();
+}
+
+static class BooleanCondition implements Condition {
+	@Override
+	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		Map<String, Object> metadataAnnotationAttributes = metadata.getAnnotationAttributes(
+			BooleanConditional.class.getName());
+		Object value = metadataAnnotationAttributes.get("value");
+		return (Boolean)value;
+	}
+}
+```
+
+사용
+
+```java
+@Configuration
+@BooleanConditional(true)
+class Config1 {
+	@Bean
+	MyBean myBean() {
+		return new MyBean();
+	}
+}
+```
+
+커스텀 @Conditional을 사용할 때의 동작 방식은 아래와 같다
+
+![image-20230522170458640](./images//image-20230522170458640.png)
+
+
+
+
+
+
+
+## 자동 구성 정보 대체하기
+
+자동 구성 정보는 다음의 과정으로 구성 정보가 등록된다
+
+* imports 파일에서 자동 구성 정보 클래스 후보가 로딩된다
+* @Conditional 조건 체크를 통해서 선택된 클래스가 빈으로 등록된다
+
+@Conditional의 조건은 개발자가 프로젝트를 어떻게 구성하는지, 어떤 라이브러리가 포함되도록 하는지에 따라서 대부분 결정된다.
+
+
+
+개발자가 자동 구성으로 등록되는 빈과 **동일한 타입의 빈**을 @Configuration/@Bean을 이용해서 직접 정의하는 경우 이 빈
+구성이 자동 구성을 <u>대체</u>할 수 있다.
+
+자동 구성 클래스의 @Bean 메소드에 @ConditionalOnMissingBean이 있는 경우엔 유저 구성에 지정한 타입의 빈이 정
+의되어있으면 자동 구성 빈의 조건이 충족되지 않아 등록되지 않는다
+
+```java
+@Bean("tomcatWebServerFactory")
+@ConditionalOnMissingBean
+public ServletWebServerFactory servletWebServerFactory() {
+	return new TomcatServletWebServerFactory();
+}
+```
+
+때문에 애플리케이션 코드에 다음과 같은 빈이 등록되어있으면 이게 우선이 된다.
+
+```java
+@Configuration(proxyBeanMethods = false)
+public class WebServerConfiguration {
+	@Bean ServletWebServerFactory customerWebServerFactory() {
+		TomcatServletWebServerFactory serverFactory = new TomcatServletWebServerFactory();
+		serverFactory.setPort(9090);
+		return serverFactory;
+	}
+}
+```
+
+
+
+#### Gradle에서 특정 모듈을 제외하는법
+
+```groovy
+dependencies {
+	implementation ('org.springframework.boot:spring-boot-starter-web') {
+		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+	}
+	implementation 'org.springframework.boot:spring-boot-starter-jetty' 
+ }
+```
+
+* 이렇게 되면 tomcat이 제외된다. 
+
+
+
+### 해당 클래스가 존재하면 Conditional 체크 하는 어노테이션
+
+```java
+// 이런 클래스가 있으면 이 조건을 사용해라
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD, ElementType.TYPE})
+@Conditional(MyOnClassCondition.class)
+public @interface ConditionalMyOnClass {
+
+	String value(); // 클래스의 이름을 전달
+}
+
+// 
+public class MyOnClassCondition implements Condition {
+	@Override
+	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		Map<String, Object> annotationAttributes = metadata.getAnnotationAttributes(
+			ConditionalMyOnClass.class.getName());
+
+		String value = (String)annotationAttributes.get("value");
+		return ClassUtils.isPresent(value, context.getClassLoader());
+	}
+
+}
+// 사용 
+@MyAutoConfiguration
+@ConditionalMyOnClass("org.apache.catalina.startup.Tomcat")
+public class TomcatWebServerConfig {
+
+	@Bean("tomcatWebServerFactory")
+	public ServletWebServerFactory servetWebServerFactory() {
+		return new TomcatServletWebServerFactory();
+	}
+
+}
+
+```
+
+* 해당 클래스가 존재하면 Tomcat Bean이 등록된다. 
+
+
+
+지금까지 구성한 정보는 아래와 같다
+
+![image-20230522172120978](./images//image-20230522172120978.png)
+
+
+
+## 스프링 부트의 @Conditional 과 @Profile
+스프링 프레임워크의 @Profile도 @Conditional 애노테이션이다
+
+```java
+@Conditional(ProfileCondition.class)
+public @interface Profile { }
+```
+
+스프링 부트는 다음과 같은 종류의 @Conditional 애노테이션과 Condition을 제공한다. 
+
+스프링 부트의 자동 구성은 이 @Conditional을 이용한다
+
+
+
+**Condition의 종류**
+
+* Class Conditions
+* Bean Conditions
+* Property Conditions
+* Resource Conditions
+* Web Application Conditions
+* SpEL Expression Conditions
+
+
+
+### Class Conditions - 지정한 클래스의 프로젝트내 존재를 확인해서 포함 여부를 결정한다
+
+* @ConditionalOnClass
+* @ConditionalOnMissingClass
+
+주로 @Configuration 클래스 레벨에서 사용하지만 @Bean 메소드에도 적용 가능하다. 
+
+단, 클래스 레벨의 검증 없이 @Bean 메소드에만 적용하면 불필요하게 @Configuration 클래스가 빈으로 등록되기 때문에, 클래스 레벨 사용을 우선해야 한다.
+
+### Bean Conditions - 빈의 존재 여부를 기준으로 포함여부를 결정한다. 
+
+* @ConditionalOnBean
+* @ConditionalOnMissingBean
+
+빈의 타입 또는 이름을 지정할 수 있다. 지정된 빈 정보가 없으면 메소드의
+리턴 타입을 기준으로 빈의 존재여부를 체크한다.
+컨테이너에 등록된 빈 정보를 기준으로 체크하기 때문에 자동 구성 사이에 적용하려면 @Configuration 클래스의 적용 순서
+가 중요하다. 개발자가 직접 정의한 커스톰 빈 구성 정보가 자동 구성 정보 처리보다 우선하기 때문에 이 관계에 적용하는 것
+은 안전하다. 반대로 커스톰 빈 구성 정보에 적용하는 건 피해야 한다.
+
+
+
+> @Configuration 클래스 레벨의 @ConditionalOnClass와 @Bean 메소드 레벨의 @ConditionalOnMissingBean 조합은 가장 대표적으로 사용되는 방식이다.
+>
+> 클래스의 존재로 해당 기술의 사용 여부를 확인하고, 직접 추가한 **커스텀 빈** 구성의 존재를 확인해서 자동 구성의
+> 빈 오브젝트를 이용할지 최종 결정한다.
+>
+> - 개발자가 선언한 @Bean 메소드가 항상 우선적이기 때문이다. 
+
+### Property Conditions -  스프링의 환경 프로퍼티 정보를 이용
+@ConditionalOnProperty는 스프링의 환경 프로퍼티 정보를 이용한다. 지정된 프로퍼티가 존재하고 값이 false가 아니면
+포함 대상이 된다. 특정 값을 가진 경우를 확인하거나 프로퍼티가 존재하지 않을 때 조건을 만족하게 할 수도 있다.
+프로퍼티의 존재를 확인해서 빈 오브젝트를 추가하고, 해당 빈 오브젝트에서 프로퍼티 값을 이용해서 세밀하게 빈 구성을 할
+수도 있다.
+
+### Resource Conditions - 지정된 리소스(파일)의 존재를 확인하는 조건
+@ConditionalOnResource는 지정된 리소스(파일)의 존재를 확인하는 조건이다.
+
+### Web Application Conditions - 웹 애플리케이션 여부를 확인
+* @ConditionalOnWebApplication
+* @ConditionalOnNotWebApplication
+
+웹 애플리케이션 여부를 확인한다. 모든 스프링 부트 프로젝트가 웹 기술을 사용해야 하는 것은 아니다.
+
+### SpEL Expression Conditions - 스프링 SpEL(스프링 표현식)의 처리 결과를 기준으로 판단
+@ConditionalOnExpression은 스프링 SpEL(스프링 표현식)의 처리 결과를 기준으로 판단한다. 매우 상세한 조건 설정
+이 가능하다
+
+
+
+# 외부 설정을 활용하는 자동 구성
+
+
+
+
+
+
+
+## 스프링의 Environment 추상화
+
+![image-20230522025038763](./images//image-20230522025038763.png)
+
+스프링의 Environment 추상화는 애플리케이션의 두 가지 환경 정보 모델인 profile과 properties 를 제공한다.
+
+자동 구성 정보의 일부 내용을 변경하거나 설정해야할 때 Environment를 통해서 프로퍼티 값을 가져와 활용할 수 있다. 
+
+커스텀 빈 등록을하는 방법에 비해서 간단하게 자동 구성의 디폴트 설정을 변경하는 게 가능하다.
+
+프로퍼티 정보는 시스템 프로퍼티, 환경 변수, 서블릿 파라미터, JNDI 등에서 우선순위에 따라서 가져온다. 
+
+애플리케이션 코드에서@PropertySource로 프로퍼티 값을 가져올 대상을 지정할 수 있다.
+스프링 부트는 기본적으로 application.properties, application.xml, application.yml 등의 파일에서 프로퍼티를 읽어오는 기능을 추가했다
