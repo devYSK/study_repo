@@ -2,3 +2,4 @@ tobyspring.config.autoconfig.TomcatWebServerConfig
 tobyspring.config.autoconfig.JettyWebServerConfig
 tobyspring.config.autoconfig.DispatcherServletConfig
 tobyspring.config.autoconfig.PropertyPostProcessorConfig
+tobyspring.config.autoconfig.DataSourceConfig

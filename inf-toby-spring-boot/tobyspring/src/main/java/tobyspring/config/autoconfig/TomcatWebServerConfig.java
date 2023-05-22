@@ -16,10 +16,10 @@ public class TomcatWebServerConfig {
 
 	@Bean("tomcatWebServerFactory")
 	@ConditionalOnMissingBean
-	public ServletWebServerFactory servetWebServerFactory(Environment environment) {
+	public ServletWebServerFactory servetWebServerFactory(ServerProperties serverProperties) {
 		TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
 
-		factory.setContextPath(environment.getProperty("contextPath"));
+		// factory.setContextPath("/");
 		return factory;
 	}
 

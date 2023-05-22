@@ -1713,3 +1713,431 @@ public class MyConfigurationPropertiesImportSelector implements DeferredImportSe
 }
 ```
 
+
+
+# 스프링 JDBC 자동 구성 개발
+
+## 자동 구성 클래스와 빈 설계
+
+새로운 기술의 자동 구성 클래스를 작성할 때는 자동 구성 클래스에 적용할 조건과 만들어지는 빈 오브젝트의 종류 등을 먼저 설계한다
+
+예제에서 Jdbc Opertations(Jdbc 핵심 인터페이스)를 이용해서 한다.
+
+![image-20230522192156961](./images//image-20230522192156961.png)
+
+두 개의 DataSource 구현 클래스를 조건에 따라 등록되도록 한다. 
+
+이 두 개의 빈은 DataSourceProperties라는 프로퍼티 클래스를 이용한다.
+
+## DataSource 자동 구성 클래스
+
+DataSourceConfig은 JdbcOperations 클래스의 존재를 확인해서 등록되도록 한다.
+
+DataSource 빈 메소드에서 프로퍼티로 사용할 프로퍼티를 정의한다.
+
+사전 작업.
+
+1. jdbc 의존성 추가
+
+```groovy
+dependencies {
+    implementation 'org.springframework:spring-jdbc'
+    runtimeOnly 'com.h2database:h2:2.1.214'
+    implementation 'hikari-cp:hikari-cp:3.0.1'
+}
+```
+
+2. DataSourceConfig 클래스를 만들고 imports 파일에 추가
+
+```imports
+...
+tobyspring.config.autoconfig.DataSourceConfig <<<< 추가 
+```
+
+3. Properties 생성
+
+```java
+@MyConfigurationProperties(prefix = "data")
+public class MyDataSourceProperties {
+
+	private String driverClassName;
+
+	private String url;
+
+	private String username;
+
+	private String password;
+	// ... and getter & setter
+}
+```
+
+4. application.properties
+
+```properties
+data.driver-class-name=org.h2.Driver
+data.url=jdbc:h2:mem:
+data.username=sa
+data.password=
+```
+
+
+
+Config 클래스 생성
+
+```java
+@MyAutoConfiguration
+@ConditionalMyOnClass("org.springframework.jdbc.core.JdbcOperations")
+@EnableMyConfigurationProperties(MyDataSourceProperties.class)
+@EnableTransactionManagement
+public class DataSourceConfig {
+
+  @Bean
+	@ConditionalMyOnClass("com.zaxxer.hikari.HikariDataSource")
+  @ConditionalOnMissingBean
+	DataSource hikariDataSource(MyDataSourceProperties properties) {
+		HikariDataSource dataSource = new HikariDataSource();
+		dataSource.setDriverClassName(properties.getDriverClassName());
+		dataSource.setJdbcUrl(properties.getUrl());
+		dataSource.setUsername(properties.getUsername());
+		dataSource.setPassword(properties.getPassword());
+		return dataSource;
+	}
+	
+	@Bean
+	@ConditionalOnMissingBean
+	DataSource dataSource(MyDataSourceProperties properties) throws ClassNotFoundException {
+		SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
+		dataSource.setDriverClass((Class<? extends Driver>) Class.forName(properties.getDriverClassName()));
+		dataSource.setUrl(properties.getUrl());
+		dataSource.setUsername(properties.getUsername());
+		dataSource.setPassword(properties.getPassword());
+		return dataSource;
+	}
+	
+}
+
+```
+
+* com.zaxxer.hikari.HikariDataSource가 있으면 hikariDataSource Bean을 만들고, 없으면 아래의 SimpleDriverDataSource를 사용한다. 
+  * SimpleDriverDataSource는 간단한 테스트에서만 사용해야 한다. 운영 환경에서 사용하면 안 된다.
+* @EnableTransactionManagement는 애노테이션을 활용한 트랜잭션 기능을 가능하게 해주는 구성용 애노테이션이다
+
+* @ConditionalOnMissingBean을 이용해서 앞에서 DataSource가 등록되면 빈을 만들지 않도록 한다.
+
+## JdbcTemplate과 트랜잭션 매니저 구성
+
+먼저 JdbcTemplate 빈을 생성한다. 
+
+또한 스프링의 트랜잭션 추상화 기능을 활용하기 위해서 트랜잭션 매니저 빈도 만들어준다
+
+```java
+@MyAutoConfiguration
+@ConditionalMyOnClass("org.springframework.jdbc.core.JdbcOperations")
+@EnableMyConfigurationProperties(MyDataSourceProperties.class)
+@EnableTransactionManagement
+public class DataSourceConfig {
+
+	//... 위와 같으므로 생략
+  
+	@Bean
+	@ConditionalOnSingleCandidate(DataSource.class)
+	@ConditionalOnMissingBean
+	JdbcTemplate jdbcTemplate(DataSource dataSource) { // JdbcTemplate 빈
+		return new JdbcTemplate(dataSource);
+	}
+  
+  @Bean
+	@ConditionalOnSingleCandidate(DataSource.class)
+	@ConditionalOnMissingBean
+	JdbcTransactionManager jdbcTransactionManager(DataSource dataSource) { // 트랜잭션 매니저
+		return new JdbcTransactionManager(dataSource);
+	}
+
+}
+
+```
+
+* 애노테이션을 이용하는 트랜잭션 기능을 이용하기 위해 @EnableTransactionManagement을 클래스 레벨에 넣어야 한다.
+* @ConditionalOnSingleCandidate는 빈 구성정보에 해당 타입의 빈이 한 개만 등록되어있는 경우에 조건이 매칭된다.
+
+* JdbcTemplate은 DataSource를 주입 받아서 생성한다
+
+
+
+# 스프링 부트 자세히 살펴보기
+![image-20230522234408108](./images//image-20230522234408108.png)
+
+스프링 부트의 동작 방식을 이해하고, 자신이 사용하는 기술과 관련된 자동 구성과 프로퍼티 등을 분석하고, 어떻게 활용할
+수 있는지 파악하는 것이 필요하다.
+
+## 자동 구성 분석 방법
+
+![image-20230522234722175](./images//image-20230522234722175.png)
+
+자동 구성 후보 목록과 조건 판단 결과를 조회하려면 -Ddebug이나 --debug 인자 값을 이용해서 스프링 부트 애플리케이션
+을 시작하면 된다.
+
+
+
+코드를 이용하는 방법도 제공된다. ConditionEvaluationReport 타입의 빈을 주입 받아서 필요한 정보만 선택해서 자동 구
+성 결과를 보는 것도 가능하다.
+
+
+
+최종적으로 등록된 빈 목록을 보고 싶으면 ListableBeanFactory 타입의 빈을 주입 받아서 빈 이름을 모두 가져오고, 필요하
+면 빈 오브젝트도 가져와서 살펴볼 수 있다.
+
+
+
+자동 구성 선정 결과를 기준으로 스프링 부트 레퍼런스 문서, 
+
+그리고 자동 구성 클래스의 소스 코드, 프로퍼티 클래스, 커스토마이저 등을 차근차근 따라서 살펴보면서 어떻게 어떤 조건으로 동작할지 분석한다
+
+## 자동 구성 조건 결과 확인 (Auto Configuration 된 결과 확인)
+
+ConditionEvaluationReport를 이용해서 조건이 매칭된 자동 구성 클래스와 메소드를 출력하는 코드를 작성할 수 있다.
+
+그 중에서 Jmx 관련 구성 정보는 제외하고 싶으면 아래와 같이 코드를 작성하면 된다
+
+![image-20230523000501000](./images//image-20230523000501000.png)
+
+* -Ddbug, --debug VM Option을 주고 애플리케이션을 실행하면 컨디션 리포트를 볼 수 있다.
+
+```
+
+============================
+CONDITIONS EVALUATION REPORT
+============================
+
+
+Positive matches: // 긍정적 매칭 
+-----------------
+
+   AopAutoConfiguration matched:
+      - @ConditionalOnProperty (spring.aop.auto=true) matched (OnPropertyCondition)
+
+... 
+
+Negative matches: // 부정적 매칭 
+-----------------
+
+   ActiveMQAutoConfiguration:
+      Did not match:
+         - @ConditionalOnClass did not find required class 'javax.jms.ConnectionFactory' (OnClassCondition)
+...
+
+
+Exclusions:
+-----------
+
+    None
+
+
+Unconditional classes:
+----------------------
+
+    org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration
+
+```
+
+또한 ConditionEvaluationReport를 이용해서 조건이 매칭된 자동 구성 클래스와 메소드를 출력하는 코드를 작성할 수 있다. 
+
+그중에서 Jmx 관련 구성 정보는 제외하고 싶으면 아래와 같이 코드를 작성하면 된다
+
+```java
+import org.springframework.boot.autoconfigure.condition.ConditionEvaluationReport;
+import org.springframework.context.annotation.Bean;
+
+@SpringBootApplication
+public class Auto2Application {
+
+	public static void main(String[] args) {
+		SpringApplication.run(Auto2Application.class, args);
+	}
+	@Bean
+	ApplicationRunner run(ConditionEvaluationReport report) {
+		return args -> {
+			System.out.println(report.getConditionAndOutcomesBySource().entrySet().stream()
+				.filter(co -> co.getValue().isFullMatch())
+				.filter(co -> co.getKey().indexOf("Jmx") < 0)
+				.map(co -> {
+					System.out.println(co.getKey());
+					co.getValue().forEach(c -> {
+						System.out.println("\t" + c.getOutcome());
+					});
+					System.out.println();
+					return co;
+				}).count());
+		};
+	}
+}
+
+```
+
+출력
+
+```
+2023-05-23 00:08:44.206 DEBUG 69043 --- [           main] o.s.b.a.ApplicationAvailabilityBean      : Application availability state LivenessState changed to CORRECT
+org.springframework.boot.autoconfigure.aop.AopAutoConfiguration
+	@ConditionalOnProperty (spring.aop.auto=true) matched
+
+org.springframework.boot.autoconfigure.aop.AopAutoConfiguration$ClassProxyingConfiguration
+	@ConditionalOnMissingClass did not find unwanted class 'org.aspectj.weaver.Advice'
+	@ConditionalOnProperty (spring.aop.proxy-target-class=true) matched
+
+org.springframework.boot.autoconfigure.availability.ApplicationAvailabilityAutoConfiguration#applicationAvailability
+	@ConditionalOnMissingBean (types: org.springframework.boot.availability.ApplicationAvailability; SearchStrategy: all) did not find any beans
+
+org.springframework.boot.autoconfigure.cache.GenericCacheConfiguration
+	Cache org.springframework.boot.autoconfigure.cache.GenericCacheConfiguration automatic cache type
+	
+... 생략
+```
+
+## Core 자동 구성 살펴보기
+
+**@ConditionalOnProperty** 조건인 경우 matchIfMissing = true라면 프로퍼티가 존재하지 않아도 조건이 매칭된다.
+
+즉 무조건 빈으로 등록이 된다. 
+
+```java
+@AutoConfiguration
+@ConditionalOnProperty(prefix = "spring.aop", name = "auto", havingValue = "true", matchIfMissing = true)
+public class AopAutoConfiguration {
+```
+
+## Web 자동 구성 살펴보기
+
+웹 스타터를 추가하기만 해도 50개 가까운 자동 구성 클래스와 빈 메소드 조건이 추가된다.
+@ConditionalOnClass 등이 붙은 클래스에 @Import가 붙어있는 경우엔 클래스 레벨의 조건이 모두 만족하는 경우
+
+@Import가 동작해서 자동 구성을 추가시기도 한다
+
+```java
+@AutoConfiguration(
+	after = { GsonAutoConfiguration.class, JacksonAutoConfiguration.class, JsonbAutoConfiguration.class })
+@ConditionalOnClass(HttpMessageConverter.class)
+@Conditional(NotReactiveWebApplicationCondition.class)
+@Import({ JacksonHttpMessageConvertersConfiguration.class, 	
+         GsonHttpMessageConvertersConfiguration.class,
+         JsonbHttpMessageConvertersConfiguration.class })
+public class HttpMessageConvertersAutoConfiguration {
+```
+
+Customizer 빈을 이용하는 자동 구성은 프로퍼티 빈을 Customizer가 주입을 받고, 이를 빈 오브젝트를 만드는 메소드에서
+Customizer를 주입 받아서 프로퍼티 설정 로직을 적용하는 방식으로 동작하기도 한다.
+
+최종 빈 오브젝트를 만드는 Builder를 빈으로 등록하는 경우도 있다. 
+
+이 빌더 빈을 애플리케이션에서 가져다 사용해서 빈 오브젝트를 직접 구성하는 것도 가능하다.
+RestTemplateBuilder 처럼 빌더만 자동 구성으로 제공하는 경우도 있다
+
+```java
+@Bean
+@Lazy
+@ConditionalOnMissingBean
+public RestTemplateBuilder restTemplateBuilder(RestTemplateBuilderConfigurer restTemplateBuilderConfigurer) {
+	RestTemplateBuilder builder = new RestTemplateBuilder();
+	return restTemplateBuilderConfigurer.configure(builder);
+}
+```
+
+## Jdbc 자동 구성 살펴보기
+
+ataSource 자동 구성에서 driver class name을 프로퍼티에 넣지 않으면 url을 이용해서 드라이버와 클래스 이름을 넣어준다. 
+
+내장형 DB를 사용하는 경우에 DataSource 프로퍼티가 없으면 스프링 부트가 자동으로 연결 정보를 설정해준다.
+
+
+
+JdbcTransactionManager는 기존 DataSourceTransactionManager에 예외 추상화 작업의 변경이 반영되어있다. 
+
+기존 버전과 호환을 위해서 프로퍼티를 지정한 경우에만 선택된다.
+
+
+
+@AutoConfiguration은 자동 구성을 진행할 전후 순서를 지정할 수 있다
+
+```java
+@AutoConfiguration(after = DataSourceAutoConfiguration.class)
+```
+
+TransactionProperties는 PlatformTransactionManagerCustomizer를 구현한다. 
+
+프로퍼티 클래스가 자신이 가진 값을 이용하는 간단한 Customizer 기능을 구현해서 사용하되기도 한다
+
+```java
+@ConfigurationProperties(prefix = "spring.transaction")
+public class TransactionProperties implements PlatformTransactionManagerCustomizer<AbstractPlatformTransactionManager> {
+```
+
+# 정리
+
+**스프링 부트는**
+
+- ﻿﻿스프링 프레임워크를 잘 쓰게 도와주는 도구의 모음
+- ﻿﻿서블릿 컨테이너와 관련된 모든 번거로운 작업을 감춰줌
+- ﻿﻿스프링과 각종 기술의 주요 인프라스트럭처 빈을 자동 구성
+- 을 이용해서 자동으로 등록해줌
+- ﻿﻿외부 설정, 커스톰 빈 등록을 통해서 유연하게 확장 가능
+
+**스프링 프레임워크**
+
+- ﻿﻿빈 오브젝트의 생명주기를 관리하는 컨테이너
+- ﻿﻿빈 오브젝트의 의존 관계를 동적으로 주입해주는 어셈블러
+- ﻿﻿구성 정보(configuration metadata)와 애플리케이션 기능을 담은 오브젝트가 결합되어 동작하는 애플리케이션이 된다
+- ﻿@Configuration, @Bean, @Import를 이용한 구성 정보
+- ﻿﻿메타 애노테이션, 합성 애노테이션 활용
+
+**스프링 부트 더 알아가기**
+
+- ﻿﻿스프링 부트의 코어 (Profile, Logging, Testing..)
+- ﻿﻿핵심 기술 영역 (Web, Data, Messaging, 10..)
+- ﻿﻿운영환경의 모니터링, 관리 방법
+- ﻿﻿컨테이너, 배포, 빌드 툴
+- ﻿﻿스프링 부트 3.X
+- ﻿﻿스프링 프레임워크와 자바 표준, 오픈소스 기술
+
+
+
+# Springboot 2.x -> 3.x 마이그레이션
+
+2.7 예제 3.0으로 업그레이드
+
+- ﻿﻿build.gradle의 스프링 부트 버전 수정
+- ﻿﻿Jakarta EE의 패키지명으로 변경
+- ﻿﻿SpringMVC의 바뀐 동작 방식 적용 - 타입 레벨 단독
+   @RequestMapping 문제
+
+
+
+## build.gradle의 스프링 부트 버전 수정
+
+```groovy
+plugins {
+	id 'lava'
+	id 'org .springframework.boot' version '3.0.1'
+	id 'io.spring dependency-management' version '1.1.0'
+}
+group = 'tobyspring'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+```
+
+## Jakarta EE 패키지명으로 변경
+
+```java
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet. ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet. http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+```
+
+![image-20230523001425662](./images//image-20230523001425662.png)
+
+## 타입 레벨 @RequestMapping 문제
+
+* Spring 6는 타입 레벨에 단독으로 존재하는@RequestMapping을 DispatcherServlet이 인식하지
+  못함. @Controller까지 지정해줘야 한다.
+* 섹션 4의 [애노테이션 매핑 정보 사용]의 HelloController에 @Controller까지 추가

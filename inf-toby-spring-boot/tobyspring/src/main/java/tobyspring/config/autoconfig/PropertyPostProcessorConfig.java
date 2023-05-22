@@ -1,5 +1,7 @@
 package tobyspring.config.autoconfig;
 
+import static org.springframework.core.annotation.AnnotationUtils.*;
+
 import java.util.Map;
 
 import org.springframework.beans.BeansException;
@@ -13,22 +15,15 @@ import tobyspring.config.MyAutoConfiguration;
 
 @MyAutoConfiguration
 public class PropertyPostProcessorConfig {
-
-	@Bean
-	BeanPostProcessor propertyPostProcessor(Environment environment) {
+	@Bean BeanPostProcessor propertyPostProcessor(Environment env) {
 		return new BeanPostProcessor() {
 			@Override
 			public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-				MyConfigurationProperties annotation = AnnotationUtils.findAnnotation(bean.getClass(),
-					MyConfigurationProperties.class);
-
-				Map<String, Object> attrs = AnnotationUtils.getAnnotationAttributes(annotation);
-
-				String prefix = (String)attrs.get("prefix");
-
+				MyConfigurationProperties annotation = findAnnotation(bean.getClass(), MyConfigurationProperties.class);
 				if (annotation == null) return bean;
-
-				return Binder.get(environment).bindOrCreate(prefix, bean.getClass());
+				Map<String, Object> attrs = getAnnotationAttributes(annotation);
+				String prefix = (String) attrs.get("prefix");
+				return Binder.get(env).bindOrCreate(prefix, bean.getClass());
 			}
 		};
 	}
