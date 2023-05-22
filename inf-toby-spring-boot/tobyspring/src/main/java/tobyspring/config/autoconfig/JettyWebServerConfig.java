@@ -1,5 +1,6 @@
 package tobyspring.config.autoconfig;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.web.embedded.jetty.JettyServletWebServerFactory;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
@@ -19,17 +20,9 @@ import tobyspring.config.MyAutoConfiguration;
 public class JettyWebServerConfig {
 
 	@Bean("jettyWebServerFactory")
+	@ConditionalOnMissingBean
 	public ServletWebServerFactory servetWebServerFactory() {
 		return new JettyServletWebServerFactory();
-	}
-
-	static class JettyCondition implements Condition {
-
-		@Override
-		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-			return ClassUtils.isPresent("org.eclipse.jetty.server.Server",
-				context.getClassLoader());
-		}
 	}
 
 }

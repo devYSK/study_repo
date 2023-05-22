@@ -1456,21 +1456,51 @@ public @interface Profile { }
 @ConditionalOnExpression은 스프링 SpEL(스프링 표현식)의 처리 결과를 기준으로 판단한다. 매우 상세한 조건 설정
 이 가능하다
 
+### 자동 구성이 진행되는 순서 
 
+1. .imports 파일에서 자동으로 구성할 클래스 정보들로 후보를 선별한다. 
+
+2. @Configuration 클래스에서 Conditonal 어노테이션으로. 조건을 검사한다.  클래스가 존재하는가? (Configuration class 레벨에서 ) 클래스가 존재하면 이런 구성정보를 사용하겠다. 조건을 통과하면 Configuration 클래스를 빈으로 적용한다. 
+
+3. Configuration 클래스가 빈으로 적용이 되면 Conditional @Bean 어노테이션이 붙은 메소드에서 Bean을 생성할 것인가,  개발자가 직접 정의한 커스텀 Configuration 클래스의  동일한 타입의 빈을 사용할 것인가를 결정한다.  개발자가 커스텀한 Bean이 자동 구성 정보에 등록된 Bean보다 우선순위가 높으며, 개발자가 커스텀한  Bean이 없다면, 자동 구성정보에 등록되어있는 Bean을 등록한다. 
+4. 만약 자동 구성정보에 등록되어 있는 Bean을 등록하게 된다면, 외부 프로퍼티(Environment Properties)에 있는 값들을 불러와 프로퍼티를 적용하여 Bean으로 등록한다. 
 
 # 외부 설정을 활용하는 자동 구성
 
+![image-20230522182808675](./images//image-20230522182808675.png)
+
+스프링 부트가 어떻게 자동 구성( Auto Configuration)을 하는지에 대한 도표.
 
 
 
+스프링 자동 구성이 왜 필요할까?
+
+스프링부트가 우리를 대신해서 어떤 기술의 인프라 빈의 Configuration 클래스를 미리 만들어 놓고 그 기술을 사용하는데 필요한 빈 인스턴스들을 미리 생성해놓음으로써 우리가 빈등록을 일일이 하지 않아도 가져다 쓰기만 하면 되는것이다.
+
+* config 클래스만 해도 150개만 넘는다 (.imports 파일)
+
+먼저 후보로 로딩 된 후 Conditonal에 의해 검증을 거치고 최종적으로 사용할 빈들만 등록하게 되는것이다.
 
 
 
-## 스프링의 Environment 추상화
+자동 구성이 진행되는 순서 
+
+1. .imports 파일에서 자동으로 구성할 클래스 정보들로 후보를 선별한다. 
+
+2. @Configuration 클래스에서 Conditonal 어노테이션으로. 조건을 검사한다.  클래스가 존재하는가? (Configuration class 레벨에서 ) 클래스가 존재하면 이런 구성정보를 사용하겠다. 조건을 통과하면 Configuration 클래스를 빈으로 적용한다. 
+
+3. Configuration 클래스가 빈으로 적용이 되면 Conditional @Bean 어노테이션이 붙은 메소드에서 Bean을 생성할 것인가,  개발자가 직접 정의한 커스텀 Configuration 클래스의  동일한 타입의 빈을 사용할 것인가를 결정한다.  개발자가 커스텀한 Bean이 자동 구성 정보에 등록된 Bean보다 우선순위가 높으며, 개발자가 커스텀한  Bean이 없다면, 자동 구성정보에 등록되어있는 Bean을 등록한다. 
+4. 만약 자동 구성정보에 등록되어 있는 Bean을 등록하게 된다면, 외부 프로퍼티(Environment Properties)에 있는 값들을 불러와 프로퍼티를 적용하여 Bean으로 등록한다. 대부분 다 default 값이 들어있으며 개발자가 프로퍼티 값을 바꿀 수 있다.. 
+
+
+
+스프링은 Environment 추상화를 통해 다양한  Property를 읽어올 수 있는 방법을 제공한다. 
+
+## 스프링의 Environment 추상화 (Environment Abstraction)
 
 ![image-20230522025038763](./images//image-20230522025038763.png)
 
-스프링의 Environment 추상화는 애플리케이션의 두 가지 환경 정보 모델인 profile과 properties 를 제공한다.
+스프링의 Environment 추상화는 애플리케이션의 두 가지 환경 정보 모델인 **profile**과 **properties** 를 제공한다.
 
 자동 구성 정보의 일부 내용을 변경하거나 설정해야할 때 Environment를 통해서 프로퍼티 값을 가져와 활용할 수 있다. 
 
@@ -1478,5 +1508,208 @@ public @interface Profile { }
 
 프로퍼티 정보는 시스템 프로퍼티, 환경 변수, 서블릿 파라미터, JNDI 등에서 우선순위에 따라서 가져온다. 
 
-애플리케이션 코드에서@PropertySource로 프로퍼티 값을 가져올 대상을 지정할 수 있다.
+애플리케이션 코드에서 **@PropertySource**로 프로퍼티 값을 가져올 대상을 지정할 수 있다.
+
 스프링 부트는 기본적으로 application.properties, application.xml, application.yml 등의 파일에서 프로퍼티를 읽어오는 기능을 추가했다
+
+
+
+### 자동 구성에 Environment 프로퍼티 적용
+
+스프링 부트의 모든 애플리케이션 초기화 작업이 끝나고 나면 실행되는 코드를 만들 때 ApplicationRunner 인터페이스를 구현한 오브젝
+트 또는 람다식을 빈으로 등록하면 된다.
+
+```java
+@Bean
+ApplicationRunner applicationRunner(Environment environment) { // Environment를 주입 받아서 빈 속성으로 지정할 프로퍼티 값을 가져올 수 있다
+	return args -> {
+		String name = environment.getProperty("my.name");
+		System.out.println("my.name: " + name);
+	};
+}
+```
+
+* Environment를 주입 받아서 빈 속성으로 지정할 프로퍼티 값을 가져올 수 있다
+
+또한 Auto Configuration Class(자동 구성 클래스)의 메소드에도 Environment를 주입 받아서 빈 속성으로 지정할 프로퍼티 값을 가져올 수 있다
+
+```java
+@MyAutoConfiguration
+@ConditionalMyOnClass("org.apache.catalina.startup.Tomcat")
+public class TomcatWebServerConfig {
+
+	@Bean("tomcatWebServerFactory")
+	@ConditionalOnMissingBean
+	public ServletWebServerFactory servetWebServerFactory(Environment environment) { // 주입
+		TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
+		
+		factory.setContextPath(environment.getProperty("contextPath"));
+		return factory;
+	}
+
+}
+```
+
+
+
+### @Value와 PropertySourcesPlaceholderConfigurer
+@Value 애노테이션은 엘리먼트로 치환자(placeholder)를 지정하고 컨테이너 초기화시 프로퍼티 값으로 이를 대체할 수 있다.
+
+@Value의 치환자를 프로퍼티 값으로 교체하려면 PropertySourcesPlaceholderConfigurer 타입의 빈을 등록해줘야 한다.
+
+PropertySourcesPlaceholderConfigurer는 빈 팩토리의 후처리기로 동작해서 초기 구성 정보에서 치환자를 찾아서 교체하는 기능을 담
+당한다.
+
+PropertySourcesPlaceholderConfigurer도 자동 구성 빈으로 등록되게 한다
+
+```java
+@MyAutoConfiguration
+public class PropertyPlaceholderConfig {
+	@Bean 
+  PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+    return new PropertySourcesPlaceholderConfigurer();
+	}
+}
+```
+
+### 프로퍼티 클래스의 분리
+자동 구성에 적용할 프로퍼티의 갯수가 많아지고 프로퍼티를 처리할 로직이 추가되야 한다면, 프로퍼티를 다루는 기능을 별도의 클래스로
+분리하는 것이 좋다.
+기본적인 프로퍼티 클래스는 프로퍼티 값을 가지고 있는 단순한 클래스로 작성할 수 있다
+
+ex)
+
+```java
+public class ServerProperties {
+
+  private String contextPath;
+  private int port;
+
+  public String getContextPath() {
+    return contextPath;
+  } 
+  
+  public void setContextPath(String contextPath) {
+    this.contextPath = contextPath;
+  } 
+ 
+  public int getPort() {
+    return port;
+  } 
+  
+  public void setPort(int port) {
+    this.port = port;
+  }
+}
+```
+
+이 클래스를 빈으로 등록하는 자동 구성 클래스를 추가한다. 
+
+Environment에서 프로퍼티 값을 가져와 오브젝트에 주입하는 것은 스프링부트의 Binder 클래스를 이용하면 편리하다
+
+```java
+import org.springframework.boot.context.properties.bind.Binder;
+
+@MyAutoConfiguration
+public class ServerPropertiesConfig {
+  @Bean
+  public ServerProperties serverProperties(Environment environment) {
+    return Binder.get(environment).bind("", ServerProperties.class).get();
+  }
+}
+```
+
+## 프로퍼티 빈의 후처리기 도입
+
+
+프로퍼티 클래스를 빈 등록을 위한 자동 구성을 따로 만드는 필요한 곳에서 @Import 해서 사용할 수 있다
+
+
+
+@MyConfigurationProperties 라는 마커 애노테이션을 만들고, 이를 BeanPostProcessor를 만들어서 빈 오브젝트 생성 후에 후처리 작업을 진행시킬 수 있다. (@ConfigurationProperties 따라하기 )
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface MyConfigurationProperties {
+  String prefix();
+}
+```
+
+BeanPostProcessor
+
+```java
+public interface BeanPostProcessor {
+
+  default Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+    return bean;
+  } 
+  
+  default Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+    return bean;
+  }
+}
+```
+
+마커 애노테이션(MyConfigurationProperties)을 찾아서 프로퍼티를 주입하는 기능을 이 인터페이스를 구현해서 만들고 자동 구성으로 등록되게 한다.
+
+```java
+@MyAutoConfiguration
+public class PropertyPostProcessorConfig {
+
+	@Bean
+	BeanPostProcessor propertyPostProcessor(Environment environment) {
+		return new BeanPostProcessor() {
+			@Override
+			public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+				MyConfigurationProperties annotation = AnnotationUtils.findAnnotation(bean.getClass(),
+					MyConfigurationProperties.class);
+
+				Map<String, Object> attrs = AnnotationUtils.getAnnotationAttributes(annotation);
+
+				String prefix = (String)attrs.get("prefix");
+
+				if (annotation == null) return bean;
+
+				return Binder.get(environment).bindOrCreate(prefix, bean.getClass());
+			}
+		};
+	}
+}
+
+```
+
+
+
+Enable하게 할 수 있따.
+
+애노테이션과 ImportSelector를 조합해서 애노테이션의 엘리먼트 값으로 지정한 클래스를 빈으로 등록하는 방법도 가능하다.
+
+```java
+// 어노테이션 정의
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Import(MyConfigurationPropertiesImportSelector.class)
+public @interface EnableMyConfigurationProperties {
+	Class<?> value();
+}
+
+// Enable 사용
+@MyAutoConfiguration
+@EnableMyConfigurationProperties(ServerProperties.class)
+public class ServerConfig {
+}
+
+// ImportSelector 사용
+public class MyConfigurationPropertiesImportSelector implements DeferredImportSelector {
+	@Override
+	public String[] selectImports(AnnotationMetadata importingClassMetadata) {
+		MultiValueMap<String, Object> attr = importingClassMetadata.getAllAnnotationAttributes(
+			EnableMyConfigurationProperties.class.getName());
+
+		Class propertyClass = (Class)attr.getFirst("value");
+		return new String[] {propertyClass.getName()};
+	}
+}
+```
+
