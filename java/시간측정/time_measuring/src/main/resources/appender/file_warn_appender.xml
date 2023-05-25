@@ -1,0 +1,21 @@
+<included>
+
+    <!-- warn 패턴 -->
+    <property name="WARN_LOG_PATTERN"
+              value="%cyan(%date GMT) [%highlight(%-5level)] [%magenta(%thread)] [%blue(%logger{36}.%M\(%line\))] %msg %n"/>
+
+    <appender name="warnAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/warn/warn.log</file>
+        <append>true</append>
+        <encoder>
+            <pattern>${WARN_LOG_PATTERN}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/warn/warn.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>30MB</maxFileSize>
+            <maxHistory>15</maxHistory>
+            <!--전체 용량 제어(maxHistory와 함께 사용 필수)-->
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+</included>

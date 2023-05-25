@@ -1,0 +1,21 @@
+<included>
+    <appender name="errorAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/error/error.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>warn</level>
+        </filter>
+        <append>true</append>
+        <encoder>
+            <pattern>%cyan(%date GMT) [%highlight(%-5level)] [%magenta(%thread)] [%red(%logger{36}.%M\(%line\))] %msg
+                %n
+            </pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/error/error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>30MB</maxFileSize>
+            <maxHistory>15</maxHistory>
+            <!--전체 용량 제어(maxHistory와 함께 사용 필수)-->
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+</included>

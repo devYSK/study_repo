@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <include resource="appender/console_appender.xml"/>
+    <include resource="appender/file_error_appender.xml"/>
+    <include resource="appender/file_warn_appender.xml"/>
+    <include resource="appender/sql/sql_appender.xml"/>
+    <include resource="appender/aws/cloud_watch_appender.xml"/>
+
+    <logger name="sqlLogger" level="debug" additivity="false">
+        <appender-ref ref="sqlAppender"/>
+    </logger>
+
+    <logger name="warnLogger" level="warn" additivity="false">
+        <appender-ref ref="warnAppender"/>
+        <appender-ref ref="cloudWatchAppender"/>
+        <appender-ref ref="consoleAppender"/>
+    </logger>
+
+    <logger name="errorLogger" level="error" additivity="false">
+        <appender-ref ref="errorAppender"/>
+        <appender-ref ref="consoleAppender"/>
+        <appender-ref ref="cloudWatchAppender"/>
+    </logger>
+
+    <root>
+        <level value="info"/>
+        <appender-ref ref="consoleAppender"/>
+    </root>
+
+    <springProfile name="local, test">
+        <logger name="sqlLogger" level="debug" additivity="false">
+            <appender-ref ref="sqlAppender"/>
+        </logger>
+
+        <logger name="org.springframework" level="INFO">
+            <appender-ref ref="consoleAppender"/>
+        </logger>
+
+        <logger name="org.hibernate.SQL" level="DEBUG">
+            <appender-ref ref="sqlAppender"/>
+        </logger>
+
+        <logger name="org.hibernate.SQL_SLOW" level="INFO">
+            <appender-ref ref="sqlAppender"/>
+        </logger>
+
+    </springProfile>
+
+    <springProfile name="dev, prod">
+
+        <logger name="warnLogger" level="warn" additivity="false">
+            <appender-ref ref="warnLogger"/>
+            <appender-ref ref="consoleAppender"/>
+            <appender-ref ref="cloudWatchAppender"/>
+        </logger>
+
+        <logger name="errorLogger" level="error" additivity="false">
+            <appender-ref ref="errorAppender"/>
+            <appender-ref ref="consoleAppender"/>
+            <appender-ref ref="cloudWatchAppender"/>
+        </logger>
+
+        <logger name="org.springframework" level="INFO">
+            <appender-ref ref="consoleAppender"/>
+        </logger>
+
+        <logger name="org.hibernate.SQL" level="DEBUG">
+            <appender-ref ref="sqlAppender"/>
+        </logger>
+
+        <logger name="org.hibernate.SQL_SLOW" level="INFO">
+            <appender-ref ref="sqlAppender"/>
+        </logger>
+
+    </springProfile>
+
+
+</configuration>

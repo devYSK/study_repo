@@ -61,6 +61,19 @@
             <version>31.1-jre</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/ca.pjer/logback-awslogs-appender -->
+        <dependency>
+            <groupId>ca.pjer</groupId>
+            <artifactId>logback-awslogs-appender</artifactId>
+            <version>1.6.0</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-logs -->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-logs</artifactId>
+            <version>1.12.472</version>
+        </dependency>
 
 
     </dependencies>

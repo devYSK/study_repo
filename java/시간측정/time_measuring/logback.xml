@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="consoleLogback" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!--<pattern>[%date GMT][%-5level][%logger{36}.%M\(%line\)] %msg %n</pattern>-->
+            <pattern>%cyan(%date GMT) [%highlight(%-5level)] [%magenta(%thread)] [%boldBlue(%logger{36}.%M\(%line\))] %msg %n</pattern>
+        </encoder>
+    </appender>
+    <appender name="fileLogback" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${logging.path:-logs}/logback-file.log</file>
+        <append>true</append>
+        <encoder>
+            <!--<pattern>[%date GMT][%-5level][%logger{36}.%M\(%line\)] %msg %n</pattern>-->
+            <pattern>%cyan(%date GMT) [%highlight(%-5level)] [%magenta(%thread)] [%blue(%logger{36}.%M\(%line\))] %msg %n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${logging.path:-logs}/logback-file.%d{yyyyMMdd}.%i.log</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>100MB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+    <appender name="accessLogTest" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logging.path:-logs}/logback-accessLog.log</file>
+        <append>true</append>
+        <encoder>
+            <!--<pattern>%d{ISO8601} %msg %n</pattern>-->
+            <pattern>%cyan(%date GMT) [%highlight(%-5level)] [%magenta(%thread)] [%blue(%logger{36}.%M\(%line\))] %msg %n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logging.path:-logs}/access.%d{yyyyMMdd}.log.gz
+            </fileNamePattern>
+            <maxHistory>2</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="yskLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logging.path:-logs}/logback-yskLog.log</file>
+        <append>true</append>
+        <encoder>
+            <!--<pattern>%d{ISO8601} %msg %n</pattern>-->
+            <pattern>%cyan(%date GMT) [%highlight(%-5level)] [%magenta(%thread)] [%blue(%logger{36}.%M\(%line\))] %msg %n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logging.path:-logs}/ysk.%d{yyyyMMdd}.log.gz
+            </fileNamePattern>
+            <maxHistory>2</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+
+    <appender name="errorLogback" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>warn</level>
+        </filter>
+
+        <file>${logging.path:-logs}/logback-error.log</file>
+        <append>true</append>
+        <encoder>
+            <!--<pattern>[%date GMT][%-5level][%logger{36}.%M\(%line\)] %msg %n</pattern>-->
+            <pattern>%cyan(%date GMT) [%highlight(%-5level)] [%magenta(%thread)] [%blue(%logger{36}.%M\(%line\))] %msg %n</pattern>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${logging.path:-logs}/logback-error.%d{yyyyMMdd}.%i.log</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>100MB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+    <logger name="io.home.test.base.web" level="error" additivity="false">
+        <appender-ref ref="errorLogback"/>
+    </logger>
+    <logger name="io.home.test.base.web" level="info" additivity="false">
+        <appender-ref ref="fileLogback"/>
+        <appender-ref ref="consoleLogback"/>
+    </logger>
+    <logger name="org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer" level="info"
+            additivity="false">
+        <appender-ref ref="fileLogback"/>
+        <appender-ref ref="consoleLogback"/>
+    </logger>
+    <logger name="ACCESS" level="info" additivity="false">
+        <appender-ref ref="accessLogTest" />
+        <appender-ref ref="consoleLogback"/>
+    </logger>
+
+
+    <logger name="ysk" level="info" additivity="false">
+        <appender-ref ref="yskLogger" />
+        <appender-ref ref="consoleLogback"/>
+    </logger>
+
+    <root>
+        <level value="info"/>
+        <appender-ref ref="consoleLogback"/>
+    </root>
+</configuration>

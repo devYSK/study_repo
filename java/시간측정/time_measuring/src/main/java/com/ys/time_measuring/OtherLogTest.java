@@ -2,12 +2,12 @@ package com.ys.time_measuring;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class OtherLogTest {
-
 
 	public void call() {
 		log.info("info call");
