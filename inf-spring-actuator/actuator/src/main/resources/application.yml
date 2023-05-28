@@ -1,0 +1,30 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  info:
+    os:
+      enabled: true
+    java:
+      enabled: true
+    env:
+      enabled: true
+    git:
+      enabled: true
+      mode: "full"
+    build:
+      enabled: true
+  endpoint:
+    env:
+      show-values: always
+
+info:
+  my-app:
+    any-value: someValue
+    version: "${build.version}"
+    sourceCompatibility : "${sourceCompatibility}"
+    group-id: ${build.group}
+    java:
+      version: ${java.version}
+  made-by: ysk
