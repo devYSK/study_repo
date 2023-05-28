@@ -1,0 +1,79 @@
+29-May-2023 02:40:17.715 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 서버 버전 이름:    Apache Tomcat/10.1.9
+29-May-2023 02:40:17.716 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log Server 빌드 시각:  May 9 2023 14:30:05 UTC
+29-May-2023 02:40:17.719 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log Server 버전 번호:  10.1.9.0
+29-May-2023 02:40:17.719 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 운영체제 이름:     Mac OS X
+29-May-2023 02:40:17.719 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 운영체제 버전:     13.0.1
+29-May-2023 02:40:17.719 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 아키텍처:          aarch64
+29-May-2023 02:40:17.719 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 자바 홈:           /Users/ysk/Library/Java/JavaVirtualMachines/corretto-17.0.5/Contents/Home
+29-May-2023 02:40:17.719 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log JVM 버전:          17.0.5+8-LTS
+29-May-2023 02:40:17.719 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log JVM 벤더:          Amazon.com Inc.
+29-May-2023 02:40:17.719 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log CATALINA_BASE:     /Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9
+29-May-2023 02:40:17.719 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log CATALINA_HOME:     /Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9
+29-May-2023 02:40:17.725 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Djava.util.logging.config.file=/Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9/conf/logging.properties
+29-May-2023 02:40:17.725 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager
+29-May-2023 02:40:17.726 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Djdk.tls.ephemeralDHKeySize=2048
+29-May-2023 02:40:17.726 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Djava.protocol.handler.pkgs=org.apache.catalina.webresources
+29-May-2023 02:40:17.726 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Dorg.apache.catalina.security.SecurityListener.UMASK=0027
+29-May-2023 02:40:17.726 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  --add-opens=java.base/java.lang=ALL-UNNAMED
+29-May-2023 02:40:17.726 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  --add-opens=java.base/java.io=ALL-UNNAMED
+29-May-2023 02:40:17.726 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  --add-opens=java.base/java.util=ALL-UNNAMED
+29-May-2023 02:40:17.726 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+29-May-2023 02:40:17.726 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  --add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED
+29-May-2023 02:40:17.726 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Dcatalina.base=/Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9
+29-May-2023 02:40:17.726 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Dcatalina.home=/Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9
+29-May-2023 02:40:17.726 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Djava.io.tmpdir=/Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9/temp
+29-May-2023 02:40:17.733 정보 [main] org.apache.catalina.core.AprLifecycleListener.lifecycleEvent 프로덕션 환경들에서 최적의 성능을 제공하는, APR 기반 Apache Tomcat Native 라이브러리가, 다음 java.library.path에서 발견되지 않습니다: [/Users/ysk/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.]
+29-May-2023 02:40:17.886 정보 [main] org.apache.coyote.AbstractProtocol.init 프로토콜 핸들러 ["http-nio-8080"]을(를) 초기화합니다.
+29-May-2023 02:40:17.906 정보 [main] org.apache.catalina.startup.Catalina.load [307] 밀리초 내에 서버가 초기화되었습니다.
+29-May-2023 02:40:17.928 정보 [main] org.apache.catalina.core.StandardService.startInternal 서비스 [Catalina]을(를) 시작합니다.
+29-May-2023 02:40:17.928 정보 [main] org.apache.catalina.core.StandardEngine.startInternal 서버 엔진을 시작합니다: [Apache Tomcat/10.1.9]
+29-May-2023 02:40:17.939 정보 [main] org.apache.catalina.startup.HostConfig.deployWAR 웹 애플리케이션 아카이브 [/Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9/webapps/ROOT.war]을(를) 배치합니다.
+29-May-2023 02:40:18.121 정보 [main] org.apache.jasper.servlet.TldScanner.scanJars 적어도 하나의 JAR가 TLD들을 찾기 위해 스캔되었으나 아무 것도 찾지 못했습니다. 스캔했으나 TLD가 없는 JAR들의 전체 목록을 보시려면, 로그 레벨을 디버그 레벨로 설정하십시오. 스캔 과정에서 불필요한 JAR들을 건너뛰면, 시스템 시작 시간과 JSP 컴파일 시간을 단축시킬 수 있습니다.
+29-May-2023 02:40:18.151 정보 [main] org.apache.catalina.startup.HostConfig.deployWAR 웹 애플리케이션 아카이브 [/Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9/webapps/ROOT.war]의 배치가 [210] 밀리초에 완료되었습니다.
+29-May-2023 02:40:18.153 정보 [main] org.apache.coyote.AbstractProtocol.start 프로토콜 핸들러 ["http-nio-8080"]을(를) 시작합니다.
+29-May-2023 02:40:18.161 정보 [main] org.apache.catalina.startup.Catalina.start 서버가 [254] 밀리초 내에 시작되었습니다.
+TestServlet.service
+29-May-2023 02:40:42.737 정보 [main] org.apache.catalina.core.StandardServer.await 셧다운 포트를 통해 유효한 셧다운 명령을 받았습니다. 서버 인스턴스를 중지시킵니다.
+29-May-2023 02:40:42.738 정보 [main] org.apache.coyote.AbstractProtocol.pause 프로토콜 핸들러 ["http-nio-8080"]을(를) 일시 정지 중
+29-May-2023 02:40:42.741 정보 [main] org.apache.catalina.core.StandardService.stopInternal 서비스 [Catalina]을(를) 중지시킵니다.
+29-May-2023 02:40:42.748 정보 [main] org.apache.coyote.AbstractProtocol.stop 프로토콜 핸들러 ["http-nio-8080"]을(를) 중지시킵니다.
+29-May-2023 02:40:42.751 정보 [main] org.apache.coyote.AbstractProtocol.destroy 프로토콜 핸들러 ["http-nio-8080"]을(를) 소멸시킵니다.
+29-May-2023 02:41:45.558 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 서버 버전 이름:    Apache Tomcat/10.1.9
+29-May-2023 02:41:45.561 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log Server 빌드 시각:  May 9 2023 14:30:05 UTC
+29-May-2023 02:41:45.561 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log Server 버전 번호:  10.1.9.0
+29-May-2023 02:41:45.561 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 운영체제 이름:     Mac OS X
+29-May-2023 02:41:45.561 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 운영체제 버전:     13.0.1
+29-May-2023 02:41:45.561 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 아키텍처:          aarch64
+29-May-2023 02:41:45.561 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 자바 홈:           /Users/ysk/Library/Java/JavaVirtualMachines/corretto-17.0.5/Contents/Home
+29-May-2023 02:41:45.561 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log JVM 버전:          17.0.5+8-LTS
+29-May-2023 02:41:45.561 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log JVM 벤더:          Amazon.com Inc.
+29-May-2023 02:41:45.561 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log CATALINA_BASE:     /Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9
+29-May-2023 02:41:45.562 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log CATALINA_HOME:     /Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9
+29-May-2023 02:41:45.568 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Djava.util.logging.config.file=/Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9/conf/logging.properties
+29-May-2023 02:41:45.569 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager
+29-May-2023 02:41:45.569 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Djdk.tls.ephemeralDHKeySize=2048
+29-May-2023 02:41:45.569 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Djava.protocol.handler.pkgs=org.apache.catalina.webresources
+29-May-2023 02:41:45.569 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Dorg.apache.catalina.security.SecurityListener.UMASK=0027
+29-May-2023 02:41:45.569 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  --add-opens=java.base/java.lang=ALL-UNNAMED
+29-May-2023 02:41:45.569 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  --add-opens=java.base/java.io=ALL-UNNAMED
+29-May-2023 02:41:45.569 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  --add-opens=java.base/java.util=ALL-UNNAMED
+29-May-2023 02:41:45.569 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+29-May-2023 02:41:45.569 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  --add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED
+29-May-2023 02:41:45.569 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Dcatalina.base=/Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9
+29-May-2023 02:41:45.569 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Dcatalina.home=/Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9
+29-May-2023 02:41:45.582 정보 [main] org.apache.catalina.startup.VersionLoggerListener.log 명령 행 아규먼트:  -Djava.io.tmpdir=/Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9/temp
+29-May-2023 02:41:45.589 정보 [main] org.apache.catalina.core.AprLifecycleListener.lifecycleEvent 프로덕션 환경들에서 최적의 성능을 제공하는, APR 기반 Apache Tomcat Native 라이브러리가, 다음 java.library.path에서 발견되지 않습니다: [/Users/ysk/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.]
+29-May-2023 02:41:45.764 정보 [main] org.apache.coyote.AbstractProtocol.init 프로토콜 핸들러 ["http-nio-8080"]을(를) 초기화합니다.
+29-May-2023 02:41:45.797 정보 [main] org.apache.catalina.startup.Catalina.load [398] 밀리초 내에 서버가 초기화되었습니다.
+29-May-2023 02:41:45.824 정보 [main] org.apache.catalina.core.StandardService.startInternal 서비스 [Catalina]을(를) 시작합니다.
+29-May-2023 02:41:45.824 정보 [main] org.apache.catalina.core.StandardEngine.startInternal 서버 엔진을 시작합니다: [Apache Tomcat/10.1.9]
+29-May-2023 02:41:45.835 정보 [main] org.apache.catalina.startup.HostConfig.deployWAR 웹 애플리케이션 아카이브 [/Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9/webapps/ROOT.war]을(를) 배치합니다.
+29-May-2023 02:41:46.079 정보 [main] org.apache.jasper.servlet.TldScanner.scanJars 적어도 하나의 JAR가 TLD들을 찾기 위해 스캔되었으나 아무 것도 찾지 못했습니다. 스캔했으나 TLD가 없는 JAR들의 전체 목록을 보시려면, 로그 레벨을 디버그 레벨로 설정하십시오. 스캔 과정에서 불필요한 JAR들을 건너뛰면, 시스템 시작 시간과 JSP 컴파일 시간을 단축시킬 수 있습니다.
+29-May-2023 02:41:46.127 정보 [main] org.apache.catalina.startup.HostConfig.deployWAR 웹 애플리케이션 아카이브 [/Users/ysk/study/study_repo/inf-spring-boot/tomcat/apache-tomcat-10.1.9/webapps/ROOT.war]의 배치가 [291] 밀리초에 완료되었습니다.
+29-May-2023 02:41:46.131 정보 [main] org.apache.coyote.AbstractProtocol.start 프로토콜 핸들러 ["http-nio-8080"]을(를) 시작합니다.
+29-May-2023 02:41:46.140 정보 [main] org.apache.catalina.startup.Catalina.start 서버가 [342] 밀리초 내에 시작되었습니다.
+29-May-2023 02:41:51.768 정보 [main] org.apache.catalina.core.StandardServer.await 셧다운 포트를 통해 유효한 셧다운 명령을 받았습니다. 서버 인스턴스를 중지시킵니다.
+29-May-2023 02:41:51.769 정보 [main] org.apache.coyote.AbstractProtocol.pause 프로토콜 핸들러 ["http-nio-8080"]을(를) 일시 정지 중
+29-May-2023 02:41:51.771 정보 [main] org.apache.catalina.core.StandardService.stopInternal 서비스 [Catalina]을(를) 중지시킵니다.
+29-May-2023 02:41:51.777 정보 [main] org.apache.coyote.AbstractProtocol.stop 프로토콜 핸들러 ["http-nio-8080"]을(를) 중지시킵니다.
+29-May-2023 02:41:51.780 정보 [main] org.apache.coyote.AbstractProtocol.destroy 프로토콜 핸들러 ["http-nio-8080"]을(를) 소멸시킵니다.

@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+    id 'war'
+}
+
+group = 'hello'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    //서블릿
+    implementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+
+    //스프링 MVC 추가
+    implementation 'org.springframework:spring-webmvc:6.0.4'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+//war 풀기, 인텔리J 무료버전 필요
+task explodedWar(type: Copy) {
+    into "$buildDir/exploded"
+    with war
+}
