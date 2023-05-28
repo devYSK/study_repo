@@ -822,4 +822,329 @@ public class GaugeConfigWithMeterBinder {
 
 my.timer 라고 파라미터값을 넣었으므로 actuator 에서는 my.timer 가 path에 들어가게 됩니다.
 
-timer 의 경우 시간값을 측정하고 싶은 곳에 timer 로 감싸서 구현을 해야합니다. 그래서 반드시 Timer 를 bean 으로 등록해둬야 합니다.
+timer 의 경우 시간값을 측정하고 싶은 곳에 timer 로 감싸서 구현을 해야합니다. 
+
+그래서 반드시 Timer 를 bean 으로 등록해둬야 합니다.
+
+```java
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+
+@Configuration
+@RequiredArgsConstructor
+public class TimerConfig {
+
+	private final MeterRegistry meterRegistry;
+
+	@Bean
+	public Timer myTimer() {
+		return Timer
+			.builder("my.timer")
+			.register(meterRegistry);
+	}
+}
+```
+
+## timer 적용
+
+아래처럼 controller 내의 특정 메서드의 수행 시간을 timer metric 을 이용해서 측정해봤습니다.
+
+위에서 만든 Timer bean을 생성자 주입으로 받았습니다. 
+
+@Qualifier("myTimer")는 넣지 않아도 오류가 나지 않으나, timer 를 개인적으로 더 추가해서 테스트 하는 분들이 있을듯 하여 Timer 타입의 bean이 2개 이상 있어도 오류가 나지 않게 미리 @Qualifier 를 추가해두었습니다.
+
+timer 로 측정하고 싶은 코드를 Timer.record() 메서드 내에 넣어주면 됩니다.
+
+```java
+@RestController
+@Slf4j
+@RequestMapping("/api")
+@RequiredArgsConstructor
+public class TimerController {
+
+	@Qualifier("myTimer")  // 없어도 오류는 없으나 Timer 타입 bean이 추가되면 오류나므로 예방차원에서 추가.
+	private final Timer myTimer;
+
+	@GetMapping("/timer")
+	public String timer() {
+		myTimer.record(() -> {
+			try {
+				// 3초 정도 걸리는 코드가 있다는 가정
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+		});
+		return "ok";
+	}
+
+}
+```
+
+* 3초 정도 걸리는 코드가 있다는 가정
+
+http://localhost:8080/api/timer 후 접속 후 
+
+http://localhost:8080/actuator/metrics/my.timer에 접속
+
+```json
+// http://localhost:8080/actuator/metrics/my.timer
+{
+  "name": "my.timer",
+  "baseUnit": "seconds",
+  "measurements": [
+    {
+      "statistic": "COUNT",
+      "value": 2.0
+    },
+    {
+      "statistic": "TOTAL_TIME",
+      "value": 6.006541208 // 2번 호출해서 총 6초 걸림.
+    },
+    {
+      "statistic": "MAX",
+      "value": 3.005719333
+    }
+  ],
+  "availableTags": [
+    
+  ]
+}
+```
+
+
+
+## timer debugging
+
+timer 는 어떤식으로 동작하길래 Timer.record() 메서드의 파라미터에 Runnable 을 넣어줘야 할까요
+
+record() 메서드에 디버그 포인트를 걸고 내부 코드를 따라가보니
+
+Runnable 실행 전후에 시간을 알아낸후 그걸 계산해서 수행시간을 측정하는걸 알 수있습니다.
+
+```java
+public abstract class AbstractTimer extends AbstractMeter implements Timer {
+ 	// 생략
+  @Override
+  public void record(Runnable f) {
+    final long s = clock.monotonicTime();
+    
+    try {
+      f.run(); 
+    }
+    finally {
+      final long e = clock.monotonicTime();
+      record(e - s, TimeUnit.NANOSECONDS); 
+    }  
+  }
+
+}
+```
+
+## Timer.Sample
+
+좀 복잡한 로직에서 Timer 를 사용하고 싶다면 Timer.Sample 을 이용하는것도 좋은 방식입니다.
+
+* https://micrometer.io/docs/concepts#_storing_start_state_in_timer_sample
+
+```java
+Timer.Sample sample = Timer.start(registry);
+
+// do stuff
+Response response = ...
+
+sample.stop(registry.timer("my.timer", "response", response.status()));
+```
+
+
+
+my.timer2 에 대해 Timer.Sample 을 사용해봤습니다. 결과는 동일하니 테스트 결과는 skip 합니다.
+
+```java
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+
+@RestController
+@Slf4j
+@RequestMapping("/api")
+@RequiredArgsConstructor
+public class TimerController {
+
+	private final MeterRegistry meterRegistry;
+
+	@GetMapping("/timer2")
+	public String timer2() {
+
+		Timer.Sample sample = Timer.start(meterRegistry); // this 
+
+		internal();
+
+		sample.stop(meterRegistry.timer("my.timer2"));
+		return "ok";
+	}
+
+	private void internal() {
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+}
+```
+
+
+
+## @Timed aop 어노테이션
+
+micrometer 라이브러리에서는 AOP를 활용한 @Timed 라는 어노테이션을 제공하며 이를 통해 쉽게 timer 를 적용할 수 있습니다.
+
+Timer metric 에서 @Timed 라는 어노테이션을 적용하려면 TimedAspect 타입의 bean을 아래처럼 등록해줘야 합니다
+
+```java
+@Configuration
+public class TimedConfiguration {
+	@Bean
+	public TimedAspect timedAspect(MeterRegistry meterRegistry) {
+		return new TimedAspect(meterRegistry);
+	}
+}
+```
+
+rest controller 에 아래처럼 특정 메서드 위에 @Timed 어노테이션을 사용했습니다. 
+
+```java
+import io.micrometer.core.annotation.Timed;
+
+@RestController
+@RequestMapping("/api")
+public class TimerController {
+
+	@Timed("my.timer3")
+	@GetMapping("/timer3/{sleepSeconds}")
+	public String timer3(@PathVariable("sleepSeconds") int sleepSeconds) throws InterruptedException {
+		Thread.sleep(sleepSeconds);
+		return "ok";
+	}
+}
+```
+
+* http://localhost:8080/api/timer3/1000
+* http://localhost:8080/actuator/metrics/my.timer3
+
+```java
+// http://localhost:8080/actuator/metrics/my.timer3
+
+{
+  "name": "my.timer3",
+  "baseUnit": "seconds",
+  "measurements": [
+    {
+      "statistic": "COUNT",
+      "value": 1.0
+    },
+    {
+      "statistic": "TOTAL_TIME",
+      "value": 1.007909
+    },
+    {
+      "statistic": "MAX",
+      "value": 1.007909
+    }
+  ],
+  "availableTags": [
+    {
+      "tag": "exception",
+      "values": [
+        "none"
+      ]
+    },
+    {
+      "tag": "method",
+      "values": [
+        "timer3"
+      ]
+    },
+    {
+      "tag": "class",
+      "values": [
+        "com.ys.actuator.timer.TimerController"
+      ]
+    }
+  ]
+}
+```
+
+## FunctionTimer
+
+Counter metric 파트에서 자체 counter 관리 bean 이 있다면, 이를 재활용하기 위해 FunctionCounter 라는 클래스를 이용하면 된다고 배웠습니다
+
+timer 도 동일하게 FunctionTimer 가 있으며 사용 패턴은 동일합니다.
+
+
+
+자체적으로 시간을 관리하는 bean 이 있다고 가정하겠습니다.
+
+ 테스트 용도이니, 현재 시간값을 count, 누적 시간 으로 지정했습니다. 
+
+실무에서는 특정 메서드 호출횟수와 소요시간 등을 직접 계산하는 로직이 들어가야 합니다.
+
+```java
+@Service
+public class MyTimerManager {
+
+	public long getCount() {
+		return System.currentTimeMillis();
+	}
+
+	public long getTotalTime() {
+		return System.currentTimeMillis() * 2;
+	}
+}
+```
+
+timer 를 등록하기 위해 아래처럼 FunctionTimer 타입의 bean을 생성하며, 이때 위에서 만든 bean을 주입받아서 사용하면 됩니다.
+
+```java
+@Configuration
+public class FunctionTimerConfig {
+
+	@Bean
+	FunctionTimer myFunctionTimer(MeterRegistry meterRegistry, MyTimerManager myTimerManager) {
+		return FunctionTimer.builder("my.timer5.latency", 
+				myTimerManager,
+				MyTimerManager::getCount,
+				MyTimerManager::getTotalTime,
+				TimeUnit.SECONDS)
+			.register(meterRegistry);
+	}
+}
+```
+
+* 수와 누적시간을 가져오는 메서드를 지정해주고, 누적시간값의 단위 즉 초, 분, 시 등을 지정해주면 됩니다. 
+* 아쉽게도 FunctionTimer 의 경우 max 값은 지원되지 않는 것으로 보입니다.
+
+## MeterBinder
+
+MeterBinder 를 통해 등록도 가능합니다. 
+
+MeterBinder 가 bean으로 등록되다보니 그에 맞게 bindTo() 메서드 문법에 맞게 구현해야 하는 차이가 있을 뿐 동작은 동일합니다.
+
+```java
+@Configuration
+public class TimerConfigWithMeterBinder {
+
+	@Bean
+	public MeterBinder myTimerWithMeterBinder(MyTimerManager myTimerManager) {
+		return registry -> {
+			FunctionTimer functionTimer = FunctionTimer.builder("my.timerWithMeterBinder.latency",
+					myTimerManager,
+					MyTimerManager::getCount,
+					MyTimerManager::getTotalTime,
+					TimeUnit.SECONDS)
+				.register(registry);
+		};
+	}
+}
+```
