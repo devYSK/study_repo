@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ys.mybatistojpa.mapper.ItemMapper">
+    <sql id="itemFields">
+        `item_id`,
+        `item_name`,
+        `price`
+    </sql>
+
+    <!-- NOTE #6 : Items 테이블에 대한 select query -->
+    <select id="getItem" resultType="Item">
+        select
+          <include refid="itemFields" />
+        from `Items`
+        where `item_id` = #{value}
+    </select>
+
+    <select id="getItemCount" resultType="int">
+        select
+          count(*) as cnt
+        from `Items`;
+    </select>
+
+    <select id="getItems" resultType="Item">
+        select
+          <include refid="itemFields" />
+        from `Items`
+        order by `item_id` asc
+        limit #{offset}, #{limit}
+    </select>
+
+    <!-- NOTE #7 : Items 테이블에 대한 insert query -->
+    <insert id="insertItem" parameterType="Item">
+        insert into `Items`
+        (
+        `item_name`,
+        `price`
+        )
+        values
+        (
+        #{itemName},
+        #{price}
+        )
+        <selectKey resultType="long" keyProperty="itemId" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <!-- NOTE #8 : Items 테이블에 대한 update query -->
+    <update id="updateItem" parameterType="Item">
+        update `Items`
+        set
+          `item_name` = #{itemName},
+          `price` = #{price}
+        where `item_id` = #{itemId}
+    </update>
+
+    <!-- NOTE #9 : Items 테이블에 대한 delete query -->
+    <delete id="deleteItem">
+        delete from `Items`
+        where `item_id` = #{value}
+    </delete>
+
+</mapper>

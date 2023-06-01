@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:test;INIT=RUNSCRIPT FROM 'classpath:/script/schema.sql'
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+        show-sql: true
+    open-in-view: false
+    database: h2
+  sql:
+    init:
+      schema-locations:
+        - classpath:script/schema.sql
+      encoding: UTF-8
+      mode: always
+
+
+
+mybatis:
+  type-aliases-package: com.heroes.smartstadium
+  mapper-locations: classpath*:/mybatis/mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    return-instance-for-empty-row: true
+    use-generated-keys: true

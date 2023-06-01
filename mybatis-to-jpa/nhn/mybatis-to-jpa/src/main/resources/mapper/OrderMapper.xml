@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ys.mybatistojpa.mapper.OrderMapper">
+    <resultMap id="orderWithOrderItemAndItem" type="Order">
+        <id column="order_id" jdbcType="BIGINT" property="orderId" />
+        <result column="order_date" jdbcType="TIMESTAMP" property="orderDate" />
+
+        <collection property="orderItems" ofType="OrderItem">
+            <id column="order_id" property="orderId" />
+            <id column="line_number" property="lineNumber" />
+            <result column="quantity" property="quantity" />
+
+            <association property="item" column="item_id" javaType="Item">
+                <id column="item_id" property="itemId" />
+                <result column="item_name" property="itemName" />
+                <result column="price" property="price" />
+            </association>
+        </collection>
+    </resultMap>
+
+    <sql id="orderFields">
+          order_id,
+          order_date
+    </sql>
+
+    <sql id="selectOrderWithOrderItemAndItem">
+        select
+          A.order_id,
+          A.order_date,
+          B.line_number,
+          B.quantity,
+          B.item_id,
+          C.item_name,
+          C.price
+        from Orders A, OrderItems B, Items C
+        where A.order_id = B.order_id
+        and B.item_id = C.item_id
+    </sql>
+
+    <!-- NOTE #11 : Orders 테이블에 대한 select query -->
+    <select id="getOrder" resultMap="orderWithOrderItemAndItem">
+        <include refid="selectOrderWithOrderItemAndItem" />
+        and A.order_id = #{value}
+    </select>
+
+    <select id="getOrderCount" resultType="int">
+        select
+          count(*) as cnt
+        from Orders;
+    </select>
+
+    <select id="getOrders" resultMap="orderWithOrderItemAndItem">
+        <include refid="selectOrderWithOrderItemAndItem" />
+        and A.order_id in (
+          select
+            order_id
+          from Orders
+          order by order_date desc
+          limit #{offset}, #{limit}
+        )
+    </select>
+
+    <!-- NOTE #12 : Orders 테이블에 대한 insert query -->
+    <insert id="insertOrder" parameterType="Order">
+        insert into `Orders`
+        (
+        `order_date`
+        )
+        values
+        (
+        now()
+        )
+
+        <selectKey resultType="Long" keyProperty="orderId" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <!-- NOTE #13 : Orders 테이블에 대한 delete query -->
+    <delete id="deleteOrder">
+        delete from `Orders`
+        where `order_id` = #{value}
+    </delete>
+
+</mapper>
