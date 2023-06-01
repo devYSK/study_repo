@@ -26,8 +26,8 @@ spring:
 
 
 mybatis:
-  type-aliases-package: com.heroes.smartstadium
-  mapper-locations: classpath*:/mybatis/mapper/**/*.xml
+  type-aliases-package: com.ys.mybatistojpa
+  mapper-locations: classpath*:/mapper/**/*.xml
   configuration:
     map-underscore-to-camel-case: true
     return-instance-for-empty-row: true

@@ -1,0 +1,29 @@
+*.class
+*~
+
+# ignore eclipse or spring settings
+.project
+.classpath
+.settings/
+.springBeans
+
+# ignore intelij or webstorm settings
+*.iml
+.idea/
+deploy/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+/target/
+
+*.bak
+
+# ignore log
+log/
+
+_build/

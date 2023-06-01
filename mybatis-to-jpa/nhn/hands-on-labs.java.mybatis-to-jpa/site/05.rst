@@ -1,0 +1,66 @@
+***************
+연관관계 설정
+***************
+
+
+OrderItemEntity 클래스에 ItemEntity 로의 연관관계를 추가합니다
+================================================================
+
+* ``@JoinColumn`` : 외래키 맵핑
+* ``@ManyToOne`` : 연관관계가 다대일 관계(many-to-one)임을 명시
+
+.. code-block:: java
+
+    public class OrderItemEntity {
+        // ...
+
+        // OrderItemEntity-ItemEntity 연관관계 추가
+        @JoinColumn(name = "item_id")
+        @ManyToOne
+        private ItemEntity item;
+
+    }
+
+
+OrderItemEntity 클래스에 OrderEntity 로의 연관관계를 추가합니다
+================================================================
+
+* ``@MapsId`` : 외래키와 맵핑한 연관관계를 기본 키에도 맵핑
+
+.. code-block:: java
+
+    public class OrderItemEntity {
+        // ...
+
+        // OrderItemEntity-OrderEntity 연관관계 추가
+        @JoinColumn(name = "order_id")
+        @ManyToOne(fetch = FetchType.LAZY)
+        @MapsId("orderId")
+        private OrderEntity order;
+
+    }
+
+
+OrderEntity 클래스에 OrderItemEntity로의 연관관계를 추가합니다
+===============================================================
+
+``OrderItemEntity`` 에 ``OrderEntity`` 로의 연관관계를 이미 설정한 상태에서,
+``OrderEntity`` 에도 ``OrderItemEntity`` 으로의 연관관계를 양방향으로 추가 설정하는 것이기 때문에,
+``@OneToMany`` 맵핑 정보의 ``mappedBy`` 속성을 통해 연관관계의 주인을 지정한다.
+
+* ``@OneToMany`` : 연관관계가 일대다 관계one-to-(many)임을 명시
+
+.. code-block:: java
+
+    import java.util.ArrayList;
+    import java.util.List;
+
+    public class OrderEntity {
+        // ...
+
+        // OrderEntity-OrderItemEntity 연관관계 추가
+        @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.REMOVE })
+        List<OrderItemEntity> orderItems = new ArrayList<>();
+
+    }
+

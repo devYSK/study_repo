@@ -1,0 +1,120 @@
+************
+Entity 생성
+************
+
+* Entity는 JPA를 이용해서 데이터베이스 테이블과 맵핑할 클래스입니다
+
+Item Entity 클래스를 생성합니다
+=================================================
+
+* ``@Entity`` : JPA가 관리할 객체임을 명시
+* ``@Table`` : 맵핑할 데이터베이스 테이블 이름을 명시
+* ``@Id`` : 기본 키(PK) 맵핑
+* ``@Column`` : 필드와 컬럼을 맵핑 (생략 가능)
+* ``@GeneratedValue`` : 기본 키 맵핑 전략을 지정
+
+.. code-block:: java
+
+    package com.nhnent.forward.mybatistojpa.entity;
+
+    import lombok.Getter;
+    import lombok.Setter;
+
+    import javax.persistence.*;
+
+    @Getter
+    @Setter
+    @Entity
+    @Table(name = "Items")
+    public class ItemEntity {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(name = "item_id")
+        private Long itemId;
+
+        @Column(name = "item_name")
+        private String itemName;
+
+        private Long price;
+
+    }
+
+Order Entity 클래스를 생성합니다
+=================================================
+
+* ``Temporal`` : 날짜 타입 컬럼 맵핑
+
+.. code-block:: java
+
+    package com.nhnent.forward.mybatistojpa.entity;
+
+    import lombok.Getter;
+    import lombok.Setter;
+
+    import javax.persistence.*;
+    import java.util.Date;
+
+    @Getter
+    @Setter
+    @Entity
+    @Table(name = "Orders")
+    public class OrderEntity {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(name = "order_id")
+        private Long orderId;
+
+        @Temporal(TemporalType.TIMESTAMP)
+        @Column(name = "order_date")
+        private Date orderDate;
+
+    }
+
+
+OrderItem Entity 클래스를 생성합니다
+=================================================
+
+* ``OrderItems`` 테이블은 ``order_id`` 컬럼과 ``line_number`` 컬럼으로 이루어진 복합키를 가집니다.
+* ``@EmbeddedId`` 와 ``@Embeddable`` 를 이용해서 복합키를 설정합니다
+    * ``@EmbeddedId`` : Entity 클래스의 필드에 지정
+    * ``@Embeddable`` : 복합키 식별자 클래스에 지정
+
+.. code-block:: java
+
+    package com.nhnent.forward.mybatistojpa.entity;
+
+    import lombok.*;
+
+    import javax.persistence.*;
+    import java.io.Serializable;
+
+    @Getter
+    @Setter
+    @Entity
+    @Table(name = "OrderItems")
+    public class OrderItemEntity {
+        // 복합키 필드
+        @EmbeddedId
+        private Pk pk = new Pk();
+
+        @Column
+        private Integer quantity;
+
+
+        // 복합키 식별자 클래스
+        @Getter
+        @Setter
+        @NoArgsConstructor
+        @AllArgsConstructor
+        @EqualsAndHashCode
+        @Embeddable
+        public static class Pk implements Serializable {
+            @Column(name = "order_id")
+            private Long orderId;
+
+            @Column(name = "line_number")
+            private Integer lineNumber;
+
+        }
+
+    }

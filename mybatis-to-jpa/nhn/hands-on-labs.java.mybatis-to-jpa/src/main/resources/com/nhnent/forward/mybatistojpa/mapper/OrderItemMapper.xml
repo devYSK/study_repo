@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nhnent.forward.mybatistojpa.mapper.OrderItemMapper">
+    <!-- NOTE #15 : OrderItems 테이블에 대한 insert query -->
+    <insert id="insertOrderItem" parameterType="OrderItem">
+        insert into `OrderItems`
+        (
+          `order_id`,
+          `line_number`,
+          `item_id`,
+          `quantity`
+        )
+        values
+        (
+          #{orderId},
+          #{lineNumber},
+          #{item.itemId},
+          #{quantity}
+        )
+    </insert>
+
+    <!-- NOTE #16 : OrderItems 테이블에 대한 delete query -->
+    <delete id="deleteOrderItem">
+        delete from `OrderItems`
+        where `order_id` = #{value}
+    </delete>
+
+</mapper>

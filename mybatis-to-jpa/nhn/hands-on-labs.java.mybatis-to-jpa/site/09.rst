@@ -1,0 +1,15 @@
+*******************************
+불필요한 mybatis 관련 파일 삭제
+*******************************
+
+불필요한 mybatis 관련 파일들을 삭제합니다
+================================================
+
+- src/main/java/com/nhnent/forward/mybatistojpa/config/MybatisConfig.java
+- src/main/java/com/nhnent/forward/mybatistojpa/mapper/ItemMapper.java
+- src/main/java/com/nhnent/forward/mybatistojpa/mapper/OrderItemMapper.java
+- src/main/java/com/nhnent/forward/mybatistojpa/mapper/OrderMapper.java
+- src/main/java/com/nhnent/forward/mybatistojpa/model/Page.java
+- src/main/resources/com/nhnent/forward/mybatistojpa/mapper/ItemMapper.xml
+- src/main/resources/com/nhnent/forward/mybatistojpa/mapper/OrderItemMapper.xml
+- src/main/resources/com/nhnent/forward/mybatistojpa/mapper/OrderMapper.xml

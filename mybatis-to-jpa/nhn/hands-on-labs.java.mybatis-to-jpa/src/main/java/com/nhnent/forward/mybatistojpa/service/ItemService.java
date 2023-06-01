@@ -1,27 +1,18 @@
-package com.ys.mybatistojpa.service;
+package com.nhnent.forward.mybatistojpa.service;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
+import com.nhnent.forward.mybatistojpa.mapper.ItemMapper;
+import com.nhnent.forward.mybatistojpa.model.Item;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ys.mybatistojpa.entity.ItemEntity;
-import com.ys.mybatistojpa.mapper.ItemMapper;
-import com.ys.mybatistojpa.model.Item;
-import com.ys.mybatistojpa.repository.ItemRepository;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 public class ItemService {
     @Autowired
     private ItemMapper itemMapper;
-
-    @Autowired
-    private ItemRepository itemRepository;
 
     // NOTE #21 : pagination 구현
     public List<Item> getItems(int pageNumber, int pageSize) {
@@ -63,15 +54,6 @@ public class ItemService {
     @Transactional
     public boolean deleteItem(Long itemId) {
         return (itemMapper.deleteItem(itemId) == 1);
-    }
-
-    public List<Item> getItems(Pageable pageable) {
-        Page<ItemEntity> itemPage = itemRepository.findAll(pageable);
-
-        return itemPage.getContent()
-            .stream()
-            .map(ItemEntity::toItemDto)
-            .toList();
     }
 
 }

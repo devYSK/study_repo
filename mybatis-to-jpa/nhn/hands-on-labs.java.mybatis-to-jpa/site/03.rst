@@ -1,0 +1,149 @@
+*********
+JPA 설정
+*********
+
+JPA 설정을 위한 Configuration 클래스를 생성합니다
+=================================================
+
+.. code-block:: java
+
+    package com.nhnent.forward.mybatistojpa.config;
+
+    import org.springframework.context.annotation.Configuration;
+
+    @Configuration
+    public class JpaConfig {
+    }    
+
+설정 파일에 대한 설정을 추가합니다
+===================================
+
+* property 파일에서 jdbc 설정 정보를 가져올 수 있도록 ``@PropertySource`` 와 ``@Value`` 어노테이션을 설정합니다
+
+.. code-block:: java
+
+    import org.springframework.beans.factory.annotation.Value;
+    import org.springframework.context.annotation.PropertySource;
+
+    @Configuration
+    @PropertySource("classpath:/properties/jdbc.properties")
+    public class JpaConfig {
+            @Value("${jdbc.driverClassName}")
+            private String driveClassName;
+
+            @Value("${jdbc.url}")
+            private String url;
+
+            @Value("${jdbc.username}")
+            private String username;
+
+            @Value("${jdbc.password}")
+            private String password;
+
+    }    
+
+JPA Repository와 트랙잭션 설정을 추가합니다
+=============================================
+
+* ``@EnableJpaRepositories`` : JPA Repository 인터페이스를 지정된 패키지 하위에서 스캔하여 자동으로 빈으로 등록해줍니다
+* ``@EnableTransactionManagement``: Spring의 선언적 트랜잭션 처리 기능을 활성화합니다
+
+.. code-block:: java
+
+    import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+    import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+    // ...
+    // JPA Repository 설정 추가 
+    @EnableJpaRepositories("com.nhnent.forward.mybatistojpa.repository")
+    // 트랜잭션 설정 추가
+    @EnableTransactionManagement
+    public class JpaConfig {
+        // ...
+    }
+
+data source 설정 Bean 메쏘드를 추가합니다
+==========================================
+
+.. code-block:: java
+
+    import org.apache.commons.dbcp2.BasicDataSource;
+    import org.springframework.context.annotation.Bean;
+
+    import javax.sql.DataSource;
+
+    public class JpaConfig {
+        // ...
+
+        @Bean
+        public DataSource dataSource() {
+            BasicDataSource dataSource = new BasicDataSource();
+            dataSource.setDriverClassName(driveClassName);
+            dataSource.setUrl(url);
+            dataSource.setUsername(username);
+            dataSource.setPassword(password);
+
+            return dataSource;
+        }
+    }        
+
+entityManagerFactory 와 transactionManager Bean 메쏘드를 추가합니다
+=====================================================================
+
+* Entity는 JPA를 이용해서 데이터베이스 테이블과 맵핑할 클래스입니다
+* JPA는 EntityManager를 통해서 Entity의 저장, 수정, 삭제, 조회 등 Entity와 관련된 모든 일을 처리합니다
+* EntityManagerFactory는 EntityManager를 생성하는 팩토리입니다
+* JPA를 이용하기 위해서는 EntityManagerFactory Bean과 transactionManager Bean을 설정해주어야 합니다
+
+.. code-block:: java
+
+    import org.springframework.orm.jpa.JpaTransactionManager;
+    import org.springframework.orm.jpa.JpaVendorAdapter;
+    import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+    import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+    import org.springframework.transaction.PlatformTransactionManager;
+
+    import javax.persistence.EntityManagerFactory;
+    import java.util.Properties;
+
+    public class JpaConfig {
+        // ...
+         
+        @Bean
+        public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
+            LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
+            emf.setDataSource(dataSource);
+            emf.setPackagesToScan("com.nhnent.forward.mybatistojpa.entity");
+            emf.setJpaVendorAdapter(jpaVendorAdapters());
+            emf.setJpaProperties(jpaProperties());
+
+            return emf;
+        }
+
+        @Bean
+        public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
+            JpaTransactionManager transactionManager = new JpaTransactionManager();
+            transactionManager.setEntityManagerFactory(entityManagerFactory);
+
+            return transactionManager;
+        }
+
+        private JpaVendorAdapter jpaVendorAdapters() {
+            HibernateJpaVendorAdapter hibernateJpaVendorAdapter = new HibernateJpaVendorAdapter();
+            hibernateJpaVendorAdapter.setDatabasePlatform("org.hibernate.dialect.MySQL5Dialect");
+
+            return hibernateJpaVendorAdapter;
+        }
+
+        private Properties jpaProperties() {
+            Properties jpaProperties = new Properties();
+            jpaProperties.setProperty("hibernate.show_sql", "true");
+            jpaProperties.setProperty("hibernate.format_sql", "true");
+            jpaProperties.setProperty("hibernate.use_sql_comments", "true");
+            jpaProperties.setProperty("hibernate.globally_quoted_identifiers", "true");
+            jpaProperties.setProperty("hibernate.temp.use_jdbc_metadata_defaults", "false");
+
+            return jpaProperties;
+        }
+    }
+
