@@ -1,0 +1,9 @@
+management:
+  endpoints:
+    jmx:
+      exposure:
+        include: "health,info"
+    web:
+      exposure:
+        include: "*"
+        exclude: "env,beans"
