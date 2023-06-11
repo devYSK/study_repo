@@ -36,3 +36,8 @@ info:
 logging:
   level:
     hello.LogController: debug
+
+server:
+  tomcat:
+    mbeanregistry:
+      enabled: true

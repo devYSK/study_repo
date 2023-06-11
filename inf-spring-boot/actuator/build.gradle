@@ -32,6 +32,8 @@ dependencies {
     //test lombok 사용
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
+
+    implementation 'io.micrometer:micrometer-registry-prometheus' //추가
 }
 
 tasks.named('test') {
