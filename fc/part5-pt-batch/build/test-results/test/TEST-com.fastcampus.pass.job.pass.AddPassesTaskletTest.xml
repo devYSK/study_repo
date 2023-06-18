@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.fastcampus.pass.job.pass.AddPassesTaskletTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2023-06-18T10:20:23" hostname="MacBook-Pro-4.local" time="0.357">
+  <properties/>
+  <testcase name="test_execute()" classname="com.fastcampus.pass.job.pass.AddPassesTaskletTest" time="0.357"/>
+  <system-out><![CDATA[19:20:23.375 [Test worker] INFO com.fastcampus.pass.job.pass.AddPassesTasklet - AddPassesTasklet - execute: 이용권 0건 추가 완료, startedAt=2023-06-17T19:20:23.371582
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
