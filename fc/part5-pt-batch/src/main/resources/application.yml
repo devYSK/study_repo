@@ -12,3 +12,7 @@ spring:
   batch:
     jdbc:
       initialize-schema: always
+
+kakaotalk:
+  host: https://kapi.kakao.com
+  token: YOUR_ACCESS_TOKEN

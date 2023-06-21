@@ -164,3 +164,9 @@ public class ExpirePassesJobConfig {
 Spring Batch는 Step과 그 하위 Chunk의 반족 작업이며 Repeat 정책을 따른다
 
 ![image-20230618185002241](./images//image-20230618185002241.png)
+
+
+
+# 멀티스레드 기반 예약 수업 전 알람
+
+![image-20230621132338024](./images//image-20230621132338024.png)
