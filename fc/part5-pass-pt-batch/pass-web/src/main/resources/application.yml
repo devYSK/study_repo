@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: pass-web
+  datasource:                           # docker-compose? ???? DB ?? ?????.
+    url: jdbc:mysql://127.0.0.1:3306/pass_pt?zeroDateTimeBehavior=convertToNull&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  thymeleaf:
+    cache: false
+
+server:
+  port: 9090

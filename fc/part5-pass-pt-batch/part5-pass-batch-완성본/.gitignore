@@ -1,0 +1,15 @@
+# IntelliJ
+.idea
+*.iws
+*.iml
+*.ipr
+
+# Gradle files
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+gradlew.bat
+
+# Eclipse
+bin
+target/

@@ -1,0 +1,22 @@
+{
+  "groups": [
+    {
+      "name": "kakaotalk",
+      "type": "com.fastcampus.pass.config.KakaoTalkMessageConfig",
+      "sourceType": "com.fastcampus.pass.config.KakaoTalkMessageConfig"
+    }
+  ],
+  "properties": [
+    {
+      "name": "kakaotalk.host",
+      "type": "java.lang.String",
+      "sourceType": "com.fastcampus.pass.config.KakaoTalkMessageConfig"
+    },
+    {
+      "name": "kakaotalk.token",
+      "type": "java.lang.String",
+      "sourceType": "com.fastcampus.pass.config.KakaoTalkMessageConfig"
+    }
+  ],
+  "hints": []
+}
