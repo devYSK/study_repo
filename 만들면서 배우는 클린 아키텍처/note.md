@@ -181,9 +181,120 @@ SOLID를 보자
 
 # 3. 코드 구성하기
 
+가장 먼저 제대로 해야 하는것은 패키지 구조다.
+
+한 패키지에 있는 클래스들이 import 하지 말아야 할 다른 패키지에 있는 클래스들을 불러오면 안됌
+
+## 계층으로 구성하기
+
+```
+buckpal
+|
+|-- domain
+|   |
+|   |-- Account
+|   |   |-- Activity
+|   |   |-- AccountRepository
+|   |   |-- AccountService
+|  
+|-- persistence
+|   |-- AccountRepositoryImp1
+|
+|-- web
+    |-- AccountController
+```
+
+* `계층으로 코드를 구성하면 기능적인 측면들이 섞이기 쉽다.`
+
+의존 역전 원칙을 적용해서 의존성이 Domain 패키지에 있는 도메인 코드만을 향하도록 했다.
+
+
+
+다음 세가지 이유로 이 구조는 최적의 구조가 아니다.
+
+1. 애플리케이션의 기능 조각(functional slice)이나 특성(feature)을 구분 짓는 패키지 경계가 없다
+   * 연관되지 않은 클래스들끼리 web 아래, persistence 아래, domain 아래에 묶일 수 있다.
+
+2. 애플리케이션이 어떤 유스케이스들을 제공하는지 파악할 수 없다.
+   * AccountService와 AccountController가 어떤 유스케이스를 구현했는지 파악할 수 없다. 
+   * 특정 기능을 찾기 위해서 어떤 서비스가 이를 구현했는지 추측해야 하고, 해당 서비스 내에서 뒤져야 한다. 
+3. 패키지 구조를 통해서는 우리가 목표로 하는 헥사고날 아키텍처를 파악할 수 없다. 추측은 가능하지만, 어떤 기능이 어디서 호출되는지 알 수가 없다
+
+## 기능으로 구성하기 
+
+```java
+buckpal
+|
+|-- account
+|   |-- AccountController
+|   |   AccountRepositoryImp1
+|   |-- AccountRepository
+|   |-- AccountService
+```
+
+* 기능을 기준으로 코드를 구성하면 기반 아키텍처가 명확하게 보이지 않는다. 
+
+기능에 의한 패키징 방식은 계층에 의한 패키징 방식보다 아키텍처의 가시성을 훨씬 더 떨어뜨린다.
+
+## 아키텍처적으로 표현력 있는 패키지 구조
+
+```
+buckpal
+|
+|-- account
+|   |-- adapter
+|   |   |-- in
+|   |   |   |-- web
+|   |   |       |-- AccountController
+|   |   |-- out
+|   |       |-- persistence
+|   |           |-- AccountPersistenceAdapter
+|   |           |-- SpringDataAccountRepository
+|
+|-- domain
+|   |-- Account
+|   |-- Activity
+|
+|-- application
+|   |-- SendMoneyService
+|   |-- port
+|   |   |-- in
+|   |   |   |-- SendMoneyUseCase
+|   |   |-- out
+|   |       |-- LoadAccountPort
+|   |       |-- UpdateAccountStatePort
+```
+
+
+
+## 의존성 주입의 역할
+
+클린아키텍처의 본질적인 요건은 애플리케이션 계층이 인커밍/아웃고잉 (in-out) 어뎁터에 의존성을 갖지 않는것이다.
+
+어떻게 해야 할까? -> 의존성 역전 원칙을 이용하면 된다.
+
+애플리케이션 계층에 인터페이스를 만들고, 어뎁터에 해당 인터페이스를 구현한 클래스를 두면 된다. -> 포트
+
+<img src="./images//image-20230718223742114.png" width = 700 height = 500>
+
 
 
 # 4. 유스케이스 구현하기
+
+
+
+일반적으로 유스케이스는 다음과 같은 단계를 따른다
+
+1. 입력을 받는다
+2. 비즈니스 규칙을 검증한다
+3. 모델 상태를 조작한다
+4. 출력을 반환한다
+
+유스케이스 코드가 도메인 로직에만 신경써야 하고 입력 유효성 검증으로 오염되면 안된다.
+
+그러나 유즈케이스는 business rule을 검증할 책임이 있다. 
+
+
 
 
 
