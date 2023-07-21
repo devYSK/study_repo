@@ -47,7 +47,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*" #  이 설정은 모든 Actuator 엔드포인트를 외부에 노출합니다
+        include: "*" #  이 설정은 모든 Actuator 엔드포인트를 외부에 노출
       base-path: system/actuator # Actuator 엔드포인트의 기본 경로를 system/actuator로 지정
   server:
     port: 8090 # Actuator 엔드포인트가 서비스될 서버의 포트를 8090으로 지정
@@ -290,45 +290,28 @@ prometheus.yml
 ```yaml
 global:
   scrape_interval: 15s     # scrap target의 기본 interval을 15초로 변경 / default = 1m
-  scrape_timeout: 15s      # scrap request 가 timeout 나는 길이 / default = 10s
-  evaluation_interval: 2m  # rule 을 얼마나 빈번하게 검증하는지 / default = 1m
+  scrape_timeout: 15s      # scrap request 가 timeout waite/ default = 10s
 
-  # Attach these labels to any time series or alerts when communicating with
-  # external systems (federation, remote storage, Alertmanager).
   external_labels:
-    monitor: 'codelab-monitor'       # 기본적으로 붙여줄 라벨
-  query_log_file: query_log_file.log # prometheus의 쿼리 로그들을 기록, 없으면 기록안함
-
-# Alertmanager configuration
-alerting:
-  alertmanagers:
-    - static_configs:
-        - targets:
-          # - alertmanager:9093
-
-# 규칙을 로딩하고 'evaluation_interval' 설정에 따라 정기적으로 평가한다.
-rule_files:
-  # - "rule.yml"  # 파일 위치는 prometheus.yml 이 있는 곳과 동일 위치
-  # - "rule2.yml" # 여러개 가능
+    monitor: 'ysk-monitor'       # 기본적으로 붙여줄 라벨
+  query_log_file: query_log_file.log # prometheus의 쿼리 로그들을 기록. 설정되지않으면 기록하지않는다.
 
 # 매트릭을 수집할 엔드포인드로 여기선 Prometheus 서버 자신을 가리킨다.
 scrape_configs:
  
- # 이 설정에서 수집한 타임시리즈에 `job=<job_name>`으로 잡의 이름을 설정한다.
+ # 이 설정에서 수집한 타임시리즈에 `job=<job_name>`으로 잡의 이름을 설정.
  # metrics_path의 기본 경로는 '/metrics'이고 scheme의 기본값은 `http`다
 
   # 여기를 추가! 
-  - job_name: "spring-actuator" # job_name 은 모든 scrap 내에서 고유해야함
-    metrics_path: '/api/system/actuator/prometheus' # 스프링부트에서 설정한 endpoint
-    scrape_interval: 1s # global에서 default 값을 정의해주었기 떄문에 안써도됨
-    honor_labels: false       # 옵션 - 라벨 충동이 있을경우 라벨을 변경할지설정(false일 경우 라벨 안바뀜) | default = false
-    honor_timestamps: false   # 옵션 - honor_labels이 참일 경우, metrics timestamp가 노출됨(true일 경우) | default = false
-    scheme: 'http'            # 옵션 - request를 보낼 scheme 설정 | default = http
+  - job_name: "spring-actuator" # job_name 은 모든 scrap 내에서 고유해야한다
+    metrics_path: '/system/actuator/prometheus' # 스프링부트에서 설정한 endpoint
+    scrape_interval: 15s # global에서 default 값을 정의해주었기 떄문에 안써도 된다. 
+    scheme: 'http'            # request를 보낼 scheme 설정 | default = http
     static_configs:
-      - targets: ['서버아이피:8090'] # request를 보낼 server ip 그리고 actuator port를 적어주면 됩니다.
+      - targets: ['서버주소:8090'] # request를 보낼 server ip 그리고 actuator port를 적어주면 된다.
     basic_auth:
       username: 'ysk'
-      password: 'ysk good'
+      password: 'yskgood'
 ```
 
 * job_name : 수집하는 이름이다. 임의의 이름을 사용하면 됩니다.
@@ -336,12 +319,16 @@ scrape_configs:
 * scrape_interval : 수집할 주기를 설정.
 * targets : 수집할 서버의 IP, PORT를 지정.
 
-## 프로메테우스의 다양한 인증방법
+> 외에도 알림, rule 등 다양한 설정을 할 수 있습니다.
+
+## 프로메테우스의 수집 요청시 다양한 인증방법
 
 Prometheus에서 원격 시스템 (ex actuator)에서 scrape 하는 방식에 대한 인증 설정은 다음과 같이 다양합니다.
 
 * Prometheus의 HTTP 인증 설정 : https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
 * Prometheus의 Configuration 문서: https://prometheus.io/docs/prometheus/latest/configuration/configuration/
+
+> VPN, VPC을 이용한 내부망으로 호출할 수도 있습니다.
 
 1. none auth : 인증방식 없이 호출합니다. 이러면 endpoint가 노출되서 위험합니다.
 2. basic auth
@@ -424,7 +411,7 @@ tls_config:
 
 예를 들어, `basic_auth`와 `authorization` 설정은 동시에 사용할 수 없습니다. 
 
-설정하는 방식은 사용하려는 인증 방법에 따라 다르며, 각 설정에 대한 자세한 사항은 Prometheus의 공식 문서를 참고해야 합니다.
+설정하는 방식은 사용하려는 인증 방법에 따라 다르며, 각 설정에 대한 자세한 사항은 Prometheus의 공식 문서를 참고해서 볼 수 있습니다.
 
 
 
@@ -447,19 +434,20 @@ docker-compose up -d
 sudo chmod -R 777 ./prometheus
 ```
 
-안그러면 권한때문에 오류가 나서 실행 안될수도 있따
+안그러면 권한때문에 오류가 나서 실행 안될수도 있습니다
 
 ```
 docker ps
 docker logs -f prometheus
 ```
 
-명령어로 확인 가능합니다.  
+명령어로 확인 가능합니다.    
 
 
-그라파나도 마찬입니다
 
-실행 안될수도 있으니  `/grafana` 디렉토리의 권한을 docker에서 수정할 수 있도록 변경해야합니다.
+그라파나도 마찬가지입니다
+
+실행이 안된다면  `/grafana` 디렉토리의 권한을 docker에서 수정할 수 있도록 변경해야합니다.
 
 ```zsh
 sudo chmod -R 777 ./grafana
@@ -490,34 +478,30 @@ docker start grafana
 # 서버 접속
 
 - Prometheus
-  - http://서버아이피:9090
+  - http://서버주소:9090
   - 그라파나랑 연결해두고, 그라파나로만 모니터링 하며 프로메테우스 포트는 접속 못하게 닫아두는 것이 좋습니다.
   - 인증은 다르게 처리해야 합니다.
   - https://prometheus.io/docs/guides/basic-auth/
 - Grafana
-  - http://서버아이피:3000
+  - http://서버주소:3000
     - 기본 계정 ID/PW: admin/admin
-  - 비밀번호를 변경해야 합니다
-
-
-
-
+  - 비밀번호를 변경할 수 있습니다.
 
 ## 프로메테우스 접속
 
-* http://서버아이피:9090/
+* http://서버주소:9090/
 
 프로메테우스 메뉴 ->  Status Configuration 에 들어가서 prometheus.yml 에 입력한 부분이 추가되어 있는지 확인하면 됩니다.
 
-* http://서버아이피:9090/config
+* http://서버주소:9090/config
 
 <img src="./images//image-20230721002301475.png" width = 450 height = 900>
 
-* 보안을 위해 민감한 정보는 다 가렸습니다.
+* 보안을 위해 민감한 정보는 다 가렸으며, prometheus.yml에 작성한 내용들입니다.
 
 프로메테우스 메뉴 Status Targets 에 들어가서 연동이 잘 되었는지 확인해봅시다.
 
-* http://서버ip/targets
+* http://서버주소:포트번호/targets
 
 <img src="./images//image-20230721002512896.png" width = 800 height = 300>
 
@@ -528,11 +512,11 @@ docker start grafana
 
 ## 그라파나 접속
 
-http://서버아이피:3000
+http://서버주소:3000
 
 - 기본 계정 ID/PW: admin/admin
 
-비밀번호를 변경해야 합니다
+비밀번호를 변경
 
 * http://서버Ip:3000/profile/password 에 접속
 
@@ -584,7 +568,9 @@ http://prometheus:9090
 
 또한 프로메테우스, 그라파나는 각 그래프마다 경보(Alert)을 설정할 수 있으며 이메일, 슬랙을 포함한 다양한 알림 방법을 제공합니다.
 
-이는 추후 다른 포스팅으로 정리하겠습니다.  
+* 추후 다른 포스팅으로 정리할 예정입니다
+
+
 
 
 개발자로써, 엔지니어로써, 프로메테우스와 그라파나와 같은 도구를 이용해 실시간으로 시스템을 모니터링 하며, 문제가 발생하면 즉시 대응할 수 있도록 대비해야 합니다.
