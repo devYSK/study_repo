@@ -20,7 +20,7 @@
 
 
 
-
+[toc]
 
 
 
@@ -296,11 +296,237 @@ buckpal
 
 
 
+`나는 유스케이스 코드가 도메인 로직에만 신경 써야 하 고 입력 유효성 검증으로 오염되면 안 된다고 생각한다.` 
+
+`그래서 입력 유효성 검증은 곧 살펴볼 다른 곳에서 처리한다.`
+
+서비스 문제를 피하기 위해서 모든 유스케이스를 한 서비스 클래
+
+스에 모두 넣지 않고 각 유스케이스별로 분리된 각각의 서비스를 만들어 보자
+
+
+
+## 입력 유효성 검증
+
+입력 유효성 검증은 유스케이스 클래스의 책임이 아니라고 이야기하긴 했지만, 
+
+애플리케이션 계층의 책임에 해당한다
+
+
+
+유스케이스는 하나 이상의 어댑터에서 호출될 텐데, 그러면 유효성 검증 을 각 어댑터에서 전부 구현해야한다. 
+
+* 그럼 그 과정에서 실수할 수도 있고, 유효성 검증 을 해야 한다는 사실을 잊어버리게 될 수도 있다.
+
+애플리케이션 계층에서 입력 유효성을 검증해야 하는 이유는, 
+
+그렇게 하지 않을 경우 애플리케이션 코어의 바깥쪽으로부터 유효하지 않은 입력값을 받게 되고, 모델의 상태를 해칠 수 있기 때문이다.
+
+java bean validation을 이용하면 쉽게 이용할 수 있다.
+
+```java
+@Value
+@EqualsAndHashCode(callSuper = false)
+public class SendMoneyCommand extends SelfValidating<SendMoneyCommand> {
+
+    @NotNull
+    private final AccountId sourceAccountId;
+
+    @NotNull
+    private final AccountId targetAccountId;
+
+    @NotNull
+    private final Money money;
+
+    public SendMoneyCommand(
+            AccountId sourceAccountId,
+            AccountId targetAccountId,
+            Money money) {
+        this.sourceAccountId = sourceAccountId;
+        this.targetAccountId = targetAccountId;
+        this.money = money;
+        this.validateSelf();
+    }
+}
+
+///
+
+public abstract class SelfValidating<T> {
+
+	private Validator validator;
+
+	public SelfValidating() {
+		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+		validator = factory.getValidator();
+	}
+
+	/**
+	 * 이 인스턴스의 속성에 대한 모든 Bean 유효성 검사를 평가합니다.
+	 */
+	protected void validateSelf() {
+		Set<ConstraintViolation<T>> violations = validator.validate((T) this);
+		if (!violations.isEmpty()) {
+			throw new ConstraintViolationException(violations);
+		}
+	}
+}
+
+```
+
+## 유스케이스마다 다른 입력 모델
+
+각기 다른 유스케이스에 동일한 입력 모델을 사용하고 싶은 생각이 들 때가 있다.
+
+*  '계좌 등록하기'와 
+*  계좌 정보 업데이트하기'라는 두 가지 유스케이스를 보자.
+*  둘 모두 거의 똑 같은 계좌 상세 정보가 필요하다.
+
+불변 커맨드 객체의 필드에 대해서 nuLL을 유효한 상태로 받아들이는 것은 그 자체로 코드 냄새(code smell) 다. 
+
+하지만 더 문제가 되는 부분은 이제 입력 유효성을 어떻게 검증하냐. 이건 비즈니스 코드를 입력 유효성 검증과 관련된 관심사로 오염시킨다.
+
+
+
+## 읽기 전용 유스케이스
+
+인커밍 전용 포트를 만들고 이를 '쿼리 서비스(query service)'에 구현하는 것이다.
+
 
 
 # 5. 웹 어댑터 구현하기
 
+클린 아키텍처에서 도메인 외부세계와의 모든 커뮤니케이션은 어댑터를 통해 이뤄진다.
 
+![image-20230725234300480](./images//image-20230725234300480.png)
+
+웹 어댑터는 주도하는, 혹은 인커밍 어뎁터다.
+
+외부로부터 요청을 받아 애플리케이션 코드를 호출해서 일을 한다.
+
+제어 흐름은 웹 어댑터에 있는 컨트롤러에서 애플리케이션 계층에 있는 서비스로 흐른다.
+
+애플리케이션 계층은 웹 어댑터가 통신할 수 있는 `포트` 를 제공하고, 서비스는 이 포트를 구현하여 웹 어뎁터가 이 포트를 호출한다.
+
+> 의존 역전 원칙이 적용되어있따.
+
+![image-20230725234432355](./images//image-20230725234432355.png)
+
+왜 위 그림처럼 사용하면 안되고, 어댑터(컨트롤러)와 유스케이스(서비스) 사이에 간접 계층을 넣어야 할까?
+
+애플리케이션 코어가 외부 세계와 통신할 수 있는 곳에 대한 명세가 포트이기 때문이다.
+
+포트를 적절한 곳에 위치시키면, 외부와 어떤 통신이 일어나는지 정확히 알 수 있고,
+
+`이는 레거시 코드를 다루는 유지보수 엔지니어에게는 무척 소중한 정보다.`
+
+![image-20230725234547062](./images//image-20230725234547062.png)
+
+엄밀히 말하자면, 이 포트는 아웃고잉 포트이기 때문에
+
+웹 어댑터는 인커밍 어뎁터인 동시에 아웃고잉 어뎁터가 된다
+
+## 웹 어뎁터의 책임
+
+REST API 웹 어뎁터의 책임은 무엇일까?
+
+1. ﻿﻿﻿﻿HTTP 요청을 자바 객체로 매핑
+2. ﻿﻿﻿﻿권한 검사
+3. ﻿﻿﻿﻿입력 유효성 검증
+4. ﻿﻿﻿﻿입력을 유스케이스의 입력 모델로 매핑
+5. ﻿﻿﻿﻿유스케이스 호출
+6. ﻿﻿﻿﻿유스케이스의 출력을 HTTP로 매핑
+7. ﻿﻿﻿﻿HTTP 응답을 반환
+
+보통 웹 어뎁터가 인증과 권한 부여 여부를 수행하고 실패한 경우 에러를 반환한다.
+
+또한 들어오는 객체의 상태 유효성 검증은 할 수 있다.
+
+참고로, 유스케이스(서비스)의 입력 모델과 구조나 의미가 다를 수 있으므로, `또 다른 유효성 검증을 해야한다.`
+
+대신, **웹 어댑터의 입력 모델을 유스케이스의 입력 모델로 변환할 수 있다는 것 을 검증해**야 한다.
+
+HTTP와 관련된 것은 애플리케이션 계층 으로 침투해서는 안 된다. 우리가 바깥 계층에서 HTTP를 다루고 있다는 것을 애플리케 이션 코어가 알게 되면 HTTP를 사용하지 않는 또 다른 인커밍 어댑터의 요청에 대해 동 일한 도메인 로직을 수행할 수 있는 선택지를 잃게 된다.
+
+ 좋은 아키텍처에서는 선택의 여지를 남겨둔다.
+
+> 즉, 단일한 통신 방식(HTTP)에 종속되어 있지 않고, 다양한 통신 방식이나 프로토콜에 대응할 수 있는 유연성을 갖추고 있어야 한다는 것
+
+웹 어댑터와 애플리케이션 계층 간의 이 같은 경계는 
+웹 계층에서부터 개발을 시작하는 대신 
+`도메인과 애플리케이션 계층부터 개발하기 시작하면 자연스럽게 생긴다.` 
+특정 인커밍 어댑터를 생각할 필요 없이 유스케이스를 먼저 구현하면 경계를 흐리게 만들 유혹에 빠지지 않을 수 있다.
+
+> 도메인 부터 구현하자 
+
+## 컨트롤러 나누기
+
+ 클래스들이 같은 소속이라는 것을 표현하기 위해 같은 패키지 수준(hierarchy)에 놓아야 한다.
+
+그럼 컨트롤러를 몇 개 만들어야 할까? 
+
+너무 적은 것보다는 너무 많은 게 낫다. 
+
+각 컨트롤러가 가능한 한 좁고 다른 컨트롤러와 가능한 한 적게 공유하는 웹 어댑터 조각을 구현 해야 한다.
+
+
+
+컨트롤러 작성시 주의점
+
+
+
+클래스마다 코드는 적을수록 좋다.
+
+테스트코드도 마찬가지다. 컨트롤러에 코드가 많아질수록 해당하는 테스트 코드도 많아진다.
+
+가급적 메서드와 클래스명은 유스케이스를 최대한 반영해서 지어야 한다.
+
+```java
+
+@WebAdapter
+@RestController
+@RequiredArgsConstructor
+class SendMoneyController {
+
+	private final SendMoneyUseCase sendMoneyUseCase;
+
+	@PostMapping(path = "/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}")
+	void sendMoney(
+			@PathVariable("sourceAccountId") Long sourceAccountId,
+			@PathVariable("targetAccountId") Long targetAccountId,
+			@PathVariable("amount") Long amount) {
+
+		SendMoneyCommand command = new SendMoneyCommand(
+				new Account.AccountId(sourceAccountId),
+				new Account.AccountId(targetAccountId),
+				Money.of(amount));
+
+		sendMoneyUseCase.sendMoney(command);
+	}
+
+}
+```
+
+또한 각 컨트롤러가 CreateAccountResource,  UpdateAccountResource 같은 컨트롤러 자체의 모델을 가지고 있거나, 
+
+예제 코드 sendMoney처럼 원시값을 받아도 된다.
+
+이러한 전용 모델 클래스들은 컨트롤러의 패키지에 대해 private으로 선언할 수 있기 때문에 실수로 다른 곳에서 재사용될 일이 없다.
+
+
+
+## 유지보수 가능한 소프트웨어를 만드는데 어떻게 도움이 될까?
+
+애플리케이션의 웹 어댑터를 구현할 때는 
+
+HTTP 요청을 애플리케이션의 유스케이스에 대한 메서드 호출로 변환하고
+
+결과를 다시 HTTP로 변환하고 어떤 도메인 로직도 수행하지 않는 어댑터를 만들고 있다는 점을 염두에 둬야 한다. 
+
+반면 애플리케이션 계층은 HTTP에 대한 상세 정보를 노출시키지 앉도록 HTTP와 관련된 작 업을 해서는 안 된다. 
+
+이렇게 하면 필요할 경우 웹 어댑터를 다른 어댑터로 쉽게 교체할 수 있다.
+
+이렇게 세분화된 컨트롤러를 만드는 것은 처음에는 조금 더 공수가 들겠지만 유지보수하는 동안에는 분명히 빛을 발할 것이다.
 
 # 6. 영속성 어댑터 구현하기
 

@@ -1,6 +1,7 @@
 package com.ys.cleanarchiecture.domain;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -9,9 +10,7 @@ import lombok.Value;
 public class Account {
 
 	private final AccountId id;
-
 	private final Money baselineBalance;
-
 	private final ActivityWindow activityWindow;
 
 	public Money calculateBalance() {
@@ -59,4 +58,15 @@ public class Account {
 		private Long value;
 	}
 
+	public Optional<AccountId> getId() {
+		return Optional.ofNullable(this.id);
+	}
+
+	public Money getBaselineBalance() {
+		return baselineBalance;
+	}
+
+	public ActivityWindow getActivityWindow() {
+		return activityWindow;
+	}
 }

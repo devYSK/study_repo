@@ -21,7 +21,6 @@ public class ActivityWindow {
 				.getTimestamp();
 	}
 
-
 	public LocalDateTime getEndTimestamp() {
 		return activities.stream()
 				.max(Comparator.comparing(Activity::getTimestamp))
