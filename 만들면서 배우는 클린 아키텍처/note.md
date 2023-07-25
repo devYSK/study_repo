@@ -530,11 +530,340 @@ HTTP 요청을 애플리케이션의 유스케이스에 대한 메서드 호출�
 
 # 6. 영속성 어댑터 구현하기
 
+영속성 계층을 왜 어뎁터로 만들까?
 
+전통적인 계층형 아키텍처에 는 결국 모든 것이 영속성 계층에 의존하게 되어 '데이터베이스 주도 설계'가 된다.
+
+이러한 의존성을 역전시키기 위해 영속성 계층을 애플리케이션 계 층의 플러그인으로 만들어 사용하자.
+
+![image-20230726000635181](./images//image-20230726000635181.png)
+
+애플리케이션 서비스에서는 영속성 기능을 사용하기 위해 포트 인터페이스를 호출한다.
+
+이 포트는 DB와 통신할 책임을 가진 영속성 어댑터 클래스에 의해 구현된다.
+
+* 헥사고날 아키텍처에서 영속성 어댑터는 주도되는, 혹은 아웃고잉 어댑터다
+
+* 애플리케이션 계층에 의해 호출될뿐 애플리케이션을 호출하기는 않기 떄문이다 
+
+영속성 계층에 대한 코드 의존성을 없애기 위해 포트같은 간접 계층을 추가하고 있다는 사실을 잊지 말자/
+
+## 영속성 어댑터의 책임
+
+1. ﻿﻿﻿﻿입력을 받는다
+2. ﻿﻿﻿﻿입력을 데이터베이스 포맷으로 매핑한다
+3. ﻿﻿﻿﻿입력을 데이터베이스로 보낸다
+4. ﻿﻿﻿﻿데이터베이스 출력을 애플리케이션 포맷으로 매핑한다
+5. ﻿﻿﻿﻿출력을 반환한다
+
+데이터베이스 응답을 포트에 정의된 출력 모델로 매핑해서 반환한다. 
+
+다시 한번 말하지만, 출력 모델이 영속성 어댑터가 아니라 애플리케이션 코어에 위치하는 것 이 중요하다.
+
+## 포트 인터페이스 나누기
+
+![image-20230726000946006](./images//image-20230726000946006.png)
+
+데이터베이스 연산에 의존하는 각 서비스는 `인터페이스에서 단 하나의 메서드만 사용하더라도` 
+
+하나의 넓은 포트 인터페이스에 의존성을 갖게 된다. 코드에 불필요한 의존 성이 생겼다는 뜻
+
+어떤 문제가 있을까?
+
+* 단위테스트시 어떤 메서드를 호출해야 하는지 찾아 모킹해야함 -> 확인해야 하는 문제
+
+인터페이스 분리 원칙(Interface Segregation Principle, ISP)은 이 문제의 답을 제시한다. 
+
+이 원칙은 클라이언트가 오로지 자신이 필요로 하는 메서드만 알면 되도록 넓은 인터 페이스를 특화된 인터페이스로 분리해야 한다고 설명한다.
+
+![image-20230726001117589](./images//image-20230726001117589.png)
+
+위처럼 각 서비스는 실제로 필요한 메서드에만 의존한다.
+
+포트의 이름이 포트의 역할을 명확하게 잘 표현하고 있다. 
+
+테스트에서는 어떤 메서드를 모킹할지 고민할 필요가 없다. 왜냐하면 대부분의 경우 포트당 하나의 메서드만 있을 것이기 때문이다.
+
+이렇게 매우 좁은 포트를 만드는 것은 코딩을 플러그 앤드 플레이(plug-and-play) 경험으로 만든다. 
+
+서비스 코드를 짤 때는 필요한 포트에 그저 ''꽂기만' 하면 된다
+
+## 영속성 어댑터 나누기
+
+예를 들어, 그림과같이 영속성 연산이 필요한 도메인 클래스(또는 DDD에서의 애그리거트) 하나당 하나의 영속성 어댑터를 구현하는 방식을 선택할 수 있다.
+
+> 애그리거트 : • 불변식을 만족해서 하나의 단위로 취급될 수 있는 연관 객체의 모음.
+
+![image-20230726001557778](./images//image-20230726001557778.png)
+
+```java
+package domain;
+
+
+@AllArgsConstructor
+public class Account {
+
+	private final AccountId id;
+	private final Money baselineBalance;
+	private final ActivityWindow activityWindow;
+
+  public static Account withoutId(
+		Money baselineBalance,
+		ActivityWindow activityWindow) {
+		
+		return new Account(null, baselineBalance, activityWindow);
+	}
+
+	public static Account withId(
+		AccountId accountId,
+		Money baselineBalance,
+		ActivityWindow activityWindow) {
+		
+		return new Account(accountId, baselineBalance, activityWindow);
+	}
+
+	public boolean withdraw(Money money, AccountId targetAccountId) {
+		...
+	}
+
+	private boolean mayWithdraw(Money money) {
+    ...
+	}
+
+	public boolean deposit(Money money, AccountId sourceAccountId) {
+		...
+  }
+}
+
+```
+
+데이터베이스와의 통신에 스프링 데이터 JPA(Spring Data JPA)를 사용할 것이므로 계좌 의 데이터베이스 상태를 표현하는 Entity 애너테이션이 추가된 클래스도 필요하다.
+
+```java
+package adapter.persistence;
+
+@Entity
+@Table(name = "account")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+class AccountJpaEntity {
+
+	@Id
+	@GeneratedValue
+	private Long id;
+
+}
+//
+package adapter.persistence;
+
+@Entity
+@Table(name = "activity")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+class ActivityJpaEntity {
+
+	@Id
+	@GeneratedValue
+	private Long id;
+
+	@Column
+	private LocalDateTime timestamp;
+
+	@Column
+	private Long ownerAccountId;
+
+	@Column
+	private Long sourceAccountId;
+
+	@Column
+	private Long targetAccountId;
+
+	@Column
+	private Long amount;
+
+}
+
+```
+
+다음처럼, 포트를 구현하는 어뎁터를 만들면 된다
+
+```java
+package adapter.persistence;
+
+import application.port.out.LoadAccountPort;
+import application.port.out.UpdateAccountStatePort;
+import domain.Account;
+import domain.Account.AccountId;
+import domain.Activity;
+
+@RequiredArgsConstructor
+@PersistenceAdapter
+class AccountPersistenceAdapter implements LoadAccountPort, UpdateAccountStatePort {
+
+	private final SpringDataAccountRepository accountRepository;
+	private final ActivityRepository activityRepository;
+	private final AccountMapper accountMapper;
+
+	@Override
+	public Account loadAccount(
+					AccountId accountId,
+					LocalDateTime baselineDate) {
+
+		AccountJpaEntity account =
+				accountRepository.findById(accountId.getValue())
+						.orElseThrow(EntityNotFoundException::new);
+
+		List<ActivityJpaEntity> activities =
+				activityRepository.findByOwnerSince(
+						accountId.getValue(),
+						baselineDate);
+
+		Long withdrawalBalance = orZero(activityRepository
+				.getWithdrawalBalanceUntil(
+						accountId.getValue(),
+						baselineDate));
+
+		Long depositBalance = orZero(activityRepository
+				.getDepositBalanceUntil(
+						accountId.getValue(),
+						baselineDate));
+
+		return accountMapper.mapToDomainEntity(
+				account,
+				activities,
+				withdrawalBalance,
+				depositBalance);
+
+	}
+
+	private Long orZero(Long value){
+		return value == null ? 0L : value;
+	}
+
+
+	@Override
+	public void updateActivities(Account account) {
+		for (Activity activity : account.getActivityWindow().getActivities()) {
+			if (activity.getId() == null) {
+				activityRepository.save(accountMapper.mapToJpaEntity(activity));
+			}
+		}
+	}
+
+}
+
+```
+
+영속성 측면과의 타협 없이 풍부한 도메인 모델을 생성하고 싶다면 도메인 모델과 영속성 모델을 매핑하는 것이 좋다.
+
+## 데이터베이스 트랜잭션은 어떻게 해야 할까?
+
+트랜잭션은 하나의 특정한 유스케이스에 대해서 일어나는 모든 쓰기 작업에 걸쳐 있어야한다. 
+
+그래야 그중 하나라도 실패할 경우 다 같이 롤백될 수 있기 때문이다.
+
+```java
+@RequiredArgsConstructor
+@UseCase
+@Transactional
+public class SendMoneyService implements SendMoneyUseCase {
+
+  ...
+    
+}
+```
+
+## 유지보수 가능한 소프트웨어를 만드는데 어떻게 도움이 될까? - 영속성
+
+도메인 코드에 플러그인처럼 동작하는 영속성 어댑터를 만들면 도메인 코드가 영속성과
+
+관련된 것들로부터 분리되어 풍부한 도메인 모델을 만들 수 있다.
+
+포트 뒤에서 애플리케이션이 모르게 다른 영속성 기술을 사용할 수도 있다.
+
+포트의 명세만 지켜진다면 영속성 계층 전체를 교체할 수도 있다.
 
 # 7. 아키텍처 요소 테스트하기
 
+## 테스트 피라미드
 
+![image-20230726002815294](./images//image-20230726002815294.png)
+
+기본 전제는 
+
+* 만드는 비용이 적고, 
+
+* 유지보수하기 쉽고, 
+
+* 빨리 실행되고, 
+
+* 안정적인 작은 크기의 테스트들에 대해 높은 커버리지를 유지해야 한다는 것이다. 
+
+이 테스트는 하나의 단위(일반적으로 하나의 클래스)가 제대로 동작하는지 확인할 수 있는 단위 테스트들이다.
+
+
+
+육각형 아키텍처를 테스트하기 위해 내가 선택한 계층들을 한번 살펴보자. 
+
+단위 테스트, 통합 테스트, 시스템 테스트의 정의는 맥락에 따라 다르다
+
+
+
+**단위테스트**
+
+일반적으로 하나의 클래스를 인스턴스화하 고 해당 클래스의 인터페이스를 통해 기능들을 테스트한다. 
+
+만약 테스트 중인 클래스가 다른 클래스에 의존한다면 의존되는 클래스들은 인스턴스화하지 않고 테스트하는 동안
+
+필요한 작업들을 흉내 내는 목(mock)으로 대체한다.
+
+
+
+**통합테스트**
+
+이 테스트는 연결된 여러 유닛을 인스턴스화하고 시작점이 되는 클래스의 인터페이스로 데이터를 보낸 후 유닛들의 네트워크가 기대한 대로 잘 동작하는지 검증한다. 
+
+통합 테스트에서는 두 계층 간의 경계를 걸쳐서 테스트할 수 있기 때문에 `객체 네트워크가 완전하지 않거나` `어떤 시점에는 목을 대상으로 수행해야 한다.`
+
+**시스템 테스트**
+
+시스템 테스트 위에는 애플리케이션의 UI를 포함하는 엔드투엔드(end-to-end) 테스트 층이 있을 수 있다
+
+
+
+단위 테스트와 통합 테스트를 만들었다면 시스템 테스 트는 앞서 커버한 코드와 겹치는 부분이 많을 것이다. 
+
+그럼 추가적인 다른 장점도 있을 까? 물론이다. 일반적으로 시스템 테스트는 단위 테스트와 통합 테스트가 발견하는 버그 와는 또 다른 종류의 버그를 발견해서 수정할 수 있게 해준다. 
+
+예를 들어. 단위 테스트나 통합 테스트만으로는 알아차리지 못했을 계층 간 매핑 버그 같은 것들 말이다.
+
+## 얼마만큼의 테스트가 충분할까?
+
+다음은 육각형 아키텍처에서 사용하는 전략이다.
+
+- ﻿﻿도메인 엔티티를 구현할 때는 단위 테스트로 커버하자
+- ﻿﻿유스케이스를 구현할 때는 단위 테스트로 커버하자
+
+- ﻿﻿어댑터를 구현할 때는 통합 테스트로 커버하자
+- ﻿﻿사용자가 취할 수 있는 중요 애플리케이션 경로는 시스템 테스트로 커버하자
+
+## 유지보수가 가능한 소프트웨어를 만드는데 어떻게 도움이 될까?
+
+육각형 아키텍처는 도메인 로직과 바깥으로 향한 어댑터를 깔끔하게 분리한다. 
+
+덕분에 핵심 도메인 로직은 단위 테스트로, 어댑터는 통합 테스트로 처리하는 명확한 테스트 전략을 정의할 수 있다.
+
+입출력 포트는 테스트에서 아주 뚜렷한 모킹 지점이 된다. 각 포트에 대해 모킹할지, 실제 구현을 이용할지 선택할 수 있다. 
+
+만약 포트가 아주 작고 핵심만 담고 있다면 모킹하는 것이 아주 쉬울 것이다. 
+
+* 포트 인터페이스가 더 적은 메서드를 제공할수록 어떤 메서 드를 모킹해야 할지 덜 헷갈린다.
+
+모킹하는 것이 너무 버거워지거나 코드의 특정 부분을 커버하기 위해 어떤 종류의 테스트를 써야 할지 `모르겠다면 이는 경고 신호다.` 
+
+이런 측면에서 `테스트는 아키텍처의 문제에 대해 경고하고 유지보수 가능한 코드를 만들기 위한 올바른 길로 인도하는 카나리아 의 역할`도 한다고 할 수 있다.
 
 # 8. 경계 간 매핑하기
 
