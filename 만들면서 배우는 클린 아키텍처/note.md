@@ -1094,6 +1094,65 @@ bean scanning은 아주 편리한 기능이지만,
 
 # 10. 아키텍처 경계 강제하기
 
+일정 규모 이상의 모든 프로젝트에서는 시간이 지나면서 아키텍처가 서서히 무너 지게 된다. 계층 간의 경계가 약화되고, 코드는 점점 더 테스트하기 어려워지고, 새로운 기능을 구현하는 데 점점 더 많은 시간이 든다.
+
+## 경계와 의존성
+
+![image-20230729204210932](./images//image-20230729204210932.png)
+
+`아키텍처 경계를 강제한다는 것은 의존성이 올바른 방향을 향하도록 강제하는 것을 의미한다. 아키텍처에서 허용되지 않은 의존성을 점선 화살표로 표시했다.`
+
+
+
+의존성 규칙을 강제하는 법을 알아보고, 잘못된 방향을 가리키는 의존성을 없애보자
+
+## 접근 제한자
+
+package-private (default)가 중요하다.
+
+패키지를 통해 응집적인 모듈로 만들어주기 때문이다.
+
+이 모듈 내에 있는 클래스들은 서로 접근 가능하지만, 패키지 바깥에서는 접근할 수 없다. 
+
+모듈의 진입점으로 활용될 클래스들만 골라서 public으로 만들면 된다.
+
+```sh
+buckpal
+├── adapter
+│   ├── in
+│   │   └── web
+│   │       └── o AccountController
+│   └── out
+│       └── persistence
+│           └── o AccountPersistenceAdapter
+│           └── o SpringDataAccountRepository
+├── domain
+│   ├── + Account
+│   └── + Activity
+└── application
+    ├── port
+    │   ├── in
+    │   │   └── + SendMoneyUseCase
+    │   └── out
+    │       ├── + LoadAccountPort
+    │       └── + UpdateAccountStatePort
+    └── service
+        └── o SendMoneyService
+
+```
+
+* `o` 는 package-private(default)
+* `+` 는 public
+* persistence 패키지는 외부에서 접근할 필요가 없기 때문에 package-private - 영속성 어뎁터는 자신이 구현하는 출력 포트를 통해 접근되기 때문
+*  domain 패키지는 다른 계층에서 접근할 수 있어야 하고 
+* application 계층은 web 어댑터와 persistence 어댑터에서 접근 가능해야 한다.
+
+## 컴파일 후 체크 - (post-compile check) - ArchUnit
+
+ArchUnit - https://github.com/TNG/ArchUnit
+
+## 애플리케이션 모듈 쪼개기
+
 
 
 # 11. 의식적으로 지름길 사용하기
@@ -1101,4 +1160,18 @@ bean scanning은 아주 편리한 기능이지만,
 
 
 # 12. 아키텍처 스타일 결정하기
+
+
+
+언제 헥사고날 아키텍처 스타일을 쓰고 계층형 아키텍처를 써야할까?
+
+## 도메인이 왕이다
+
+> 외부의 영향을 받지 않고 도메인 코드를 자유롭게 발전시킬 수 있다는 것은
+>
+> 헥사고날 아키텍처 스타일이 내세우는 가장 중요한 기치다.
+
+헥사고날아키텍처가 DDD랑 잘 어울리는 이유다.
+
+도메인을 중심에 두는 아키텍처 없이, 도메인 코드를 향한 의존성을 역전시키지 않고서는 DDD를 제대로 할 가능성이 없다.
 
