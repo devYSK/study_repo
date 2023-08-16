@@ -1623,3 +1623,360 @@ $ ../src/redis-trib.rb rebalance 127.0.0.1:5001
 $ ../src/redis-trib.rb rebalance --use-empty-masters 192.0.0.1:5001
 ```
 
+# 6.5 Redis Cluster 장애 복구
+
+분산/복제 시스템의 가장 큰 장점은 장애가 발생하더라도 데이터 안정성을 최대한 보장해야 한다
+
+그러기 위해 Slave 서버는 Master 서버의 장애 상태를 인지하고 빠른 시간 내에 Master 서버로 Failover 되어야 한다
+
+
+
+# 6.6 Client for Redis Server
+
+Java 프로그래밍 언어에서 Redis Server에 접속하여 데이터를 처리할 수 있는 클라이언트를 위한 API 소프트웨어
+
+## JEDIS
+
+* https://github.com/redis/jedis
+
+```groovy
+dependencies {
+    // https://mvnrepository.com/artifact/redis.clients/jedis
+    implementation 'redis.clients:jedis:4.4.3'
+}
+```
+
+```java
+public class JedisTest {
+
+	public static void main(String[] args) {
+		Jedis jedis = new Jedis("127.0.0.1", 7001);
+		jedis.set("10", "Computing Team");
+		String value = jedis.get("10");
+
+		System.out.println(value);
+	}
+}
+```
+
+### **2) Master-Slave-Sentinel Redis Server connection 예제**
+
+```java
+
+public class JedisTestSentinelEndpoint {
+	private static final String MASTER_NAME = "mymaster";
+	public static final String PASSWORD = "1234";
+	private static final Set sentinels;
+
+	static {
+		sentinels = new HashSet<>();
+		sentinels.add("127.0.0.1:7001");
+		sentinels.add("127.0.0.1:7002");
+		sentinels.add("127.0.0.1:7003");
+	}
+
+	public JedisTestSentinelEndpoint() {
+
+	}
+
+	public static void main(String[] args) throws InterruptedException {
+		new JedisTestSentinelEndpoint().runTest();
+	}
+
+	private void runTest() throws InterruptedException {
+		JedisSentinelPool pool = new JedisSentinelPool(MASTER_NAME, sentinels);
+		Jedis jedis = null;
+		try {
+			printer("Fetching connection from pool");
+			jedis = pool.getResource();
+
+			printer("Authentication !!");
+			jedis.auth(PASSWORD);
+
+			printer("Authentication Finish...");
+
+
+			printer("Connected to " + jedis.info());
+			printer("Writing...");
+
+			jedis.set("10", "Computing Team");
+			printer("Reading...");
+			jedis.get("1101");
+
+			jedis.zadd("type", 0, "bentz");
+			jedis.zadd("type", 0, "bmw");
+			jedis.zrange("type", 0, -1);
+		} catch (JedisException e) {
+			printer("Connection error of some sort!");
+			printer(e.getMessage());
+			Thread.sleep(2 * 1_000);
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+	}
+
+	private static void printer(String str) {
+		System.out.println(str);
+	}
+}
+
+```
+
+> 책 설명 너무 오래되서 구리다.
+
+
+
+## Redission
+
+https://github.com/redisson/redisson/wiki/Table-of-Content
+
+**Redisson Edition 다운로드**
+
+https://redisson.pro/
+
+**1) Standalone Redis Server connection 예제**
+
+```java
+Config config = new Config();
+config.useSingleServer().setAddress("redis://127.0.0.1:5000");
+RedissonClient redisson = Redisson.create(config);
+```
+
+**2) Master-Slave Redis Server connection 예제**
+
+```java
+Config config = new Config();
+config.useMasterSlaveServers()
+       // SSL 연결을 위해 redis://를 사용
+       .setMasterAddress("redis://127.0.0.1:5000")
+       .addSlaveAddress("redis://127.0.0.1:5001", "redis://127.0.0.1:5002")
+       .addSlaveAddress("redis://127.0.0.1:5003");
+
+RedissonClient redisson = Redisson.create(config);
+```
+
+
+
+**3) Master-Slave-Sentinel Redis connection 예제**
+
+```java
+Config config = new Config();
+config.useSentinelServers()
+       .setMasterName("mymaster")
+       .addSentinelAddress("redis://127.0.0.1:6000", "redis://127.0.0.1:6001")
+       .addSentinelAddress("redis://127.0.0.1:6002");
+
+RedissonClient redisson = Redisson.create(config);
+```
+
+**4) Redis Cluster Server connection 예제**
+
+```java
+Config config = new Config();
+config.useClusterServers()
+       // 클러스터 상태 검색 간격(milliseconds)
+       .setScanInterval(2000)
+       // SSL 연결을 위해 redis://를 사용
+       .addNodeAddress("redis://127.0.0.1:5001", "redis://127.0.0.1:5002")
+       .addNodeAddress("redis://127.0.0.1:5003");
+
+RedissonClient redisson = Redisson.create(config);
+```
+
+
+
+## Lettuce
+
+https://github.com/lettuce-io/lettuce-core
+
+
+
+**1) Master-Slave-Sentinel Redis Server connection 예제**
+
+```java
+RedisURI redisUri = RedisURI.create("127.0.0.1", 6000);
+RedisClient client = new RedisCliet(redisUri);
+
+RedisSentinelAsyncConnection<String, String> connection = client.connectSentinelAsync();
+
+Map<String, String> map = connection.master("mymaster").get();
+```
+
+**2) Sentinel Master Redis Server connection 예제**
+
+```java
+RedisURI redisUri = RedisURI.Builder.sentinel("127.0.0.1:6000", "mymaster").withSentinel("127.0.0.1:6001").build;
+RedisClient client = RedisClient.create(redisUri);
+
+RedisConnection<String, String> connection = client.connect();
+```
+
+**3) Redis Cluster Server connection 예제**
+
+```java
+RedisURI node1 = RedisURI.create("127.0.0.1", 6000);
+RedisURI node2 = RedisURI.create("127.0.0.1", 6001);
+
+RedisClusterClient clusterClient = RedisClusterClient.create(Arrays.asList(node1, node2));
+StatefulRedisClusterConnection<String, String> connection = clusterClient.connect();
+RedisAdvancedClusterCommands<String, String> syncCommands = connection.sync();
+...
+connection.close();
+clusterClient.shutdown();
+```
+
+# 6.7 Logging & Monitoring
+
+Redis Server에는 예기치 못한 장애가 발생하게 되면 서버 내에는 시간별로 장애 발생 원인과 이벤트 정보들이 기록된다 
+
+## 1. Logging 정보
+
+**1 loglevel 파라미터**
+
+Redis Server 내에서 발생하는 다양한 상태 정보를 구체적으로 수집할 것인지 사용자가 결정할 수 있다
+
+**2. logfile 파라미터**
+
+사용자가 원하는 경로에 워하는 이름의 파일로 저장할 수 있다
+
+```sh
+-- redis.conf 파일
+
+$ vi redis.conf
+logfile    "/home/redis/log_5001.log"         # 로그 정보가 저장되거나 경로와 이름. 미리 만들어 두어야 함?
+loglevel   notice                             # 로그 수집 레벨
+
+syslog-enabled  yes                           # 시스템 로그 정보의 수집 여부 결정
+
+syslog-ident    redis123                      # 시스템 로그 식별자
+```
+
+* https://redis.io/docs/management/config-file/
+
+로그 레벨
+
+| 로그 레벨 | 설명                                                         |
+| --------- | ------------------------------------------------------------ |
+| debug     | 많은 정보가 있으며, 개발/테스팅에 유용합니다.                |
+| verbose   | 유용하지 않은 많은 정보가 있지만, debug 레벨처럼 많은 정보가 기록되진 않음 |
+| notice    | \- 적당히 상세한 정보들이 기록됨<br />\- 프로덕션 환경에서 원하는 정보들이 있음 |
+| warning   | 매우 중요하거나 위기의 메시지만 기록됩니다.                  |
+| nothing   | 로그가 기록되지 않습니다.                                    |
+
+ex)
+
+```
+# in redis.conf ...
+vi redis.conf
+
+loglevel nothing
+```
+
+## 2. 모니터링
+
+Redis Server의 상태를 모니터링하는 방법
+
+```sh
+# conf 파일에 설정해야 한다
+$ vi redis.conf
+
+config set latency-monitor-threshold   25       # 25 millisecond 이상 소요되는 작업을 수집 분석
+
+$ ./redis-cli -c -p 5001
+127.0.0.1:5001> debug sleep .25                 # .025초 이상 소요된 작업 수집
+OK
+> latency latest                                # 조건을 만족하는 작업 리스트
+1) 1) "command"
+   2) (integer) 1405067976
+   3) (integer) 251
+   4) (integer) 1001
+
+----
+> latency doctor                                # Advice Report 제공
+> exit
+
+----
+$ ./redis-cli -p 5001 -latency                  # Latency 상태 모니터링
+
+$ ./redis-cli -p 5001 --latency-history         # Latency 히스토리 상태 모니터링
+
+$ ./redis-cli -p 5001 --bigkeys
+
+$ ./redis-cli -p 5001 monitor                   # 하나의 세션에서 다른 클라이언트 작업 모니터링
+```
+
+
+
+# 6.8 Subscribe & Publish ( Redis Pub Sub)
+
+Redis는 서버와 클라이트 간에 메시지를 송수신할 수 있는 긴으을 통해 데이터베이스 운영 관리가 가능하도록 Subscribe와 Publish 명령어를 제공한다
+
+**1) Publish 명령어**
+
+메시지를 송신할 때 실행함
+
+**2) Subscribe 명령어**
+
+수신할 때 실행하는 명령어
+
+**주요 특징**
+
+* Subscribe는 클라이언트로부터 해당 채널로 보낸 메시지를 푸시함
+
+*  하나 이상의 채널에 가입한 클라이언트는 채널을 해제할 수 있지만 메시지를 내보내는 명령을 실행할 수 없음
+
+*  Subscribe 명령어를 실행하면 일관된 메시지 스트림을 수행할 수 있음
+
+*  Unscribe 명령어는 메시지 수신을 취소할 때 실행해야 함
+
+* Publish, Subscribe는 Key-Value 저장공간과 관련이 없으며 전송과 수신 데이터는 어떤 기능으로 인해 방해받지 않도록 설계되어 있음
+
+*  Psubscribe는 사용자가 지정한 특정 패턴의 메시지만 수신함
+
+### 실습
+
+```
+<Session-1>
+> subscribe redis                       # redis는 채널명
+
+<Session-2>
+> publish redis hello                   # hello : 전송 내용
+> publish redis "Hello World ~~"
+
+<Session-3>
+> subscribe redis
+
+<Session-2>
+> publish redis "Hello World ~~"
+
+<Session-1>
+> psubscribe r*                         # r* : 채널명
+redis
+
+<Session-2>
+> publish redis hello
+```
+
+# 6.9 Server Monitor
+
+Redis-cli는 Redis Server 내에서 실행되는 모든 이벤트 정보를 온라인으로 수신할 수 있ㄷ
+
+```sh
+<Session 1>
+$ redis-cli -p 6379 monitor
+OK
+
+< Session 2>
+$ redis-cli
+127.0.0.1:6379> set 1 a
+OK
+127.0.0.1:6379> get 1
+"a"
+
+<Session 1>
+$ redis-cli monitor
+OK
+```
+
