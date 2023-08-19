@@ -1,11 +1,10 @@
 package com.ys.springboot_blog_hodol.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ys.springboot_blog_hodol.domain.Post;
-import com.ys.springboot_blog_hodol.repository.PostRepository;
-import com.ys.springboot_blog_hodol.request.PostCreate;
-import com.ys.springboot_blog_hodol.request.PostEdit;
-import com.ys.springboot_blog_hodol.request.PostSearch;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,10 +15,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ys.springboot_blog_hodol.WithTestUser;
+import com.ys.springboot_blog_hodol.domain.Post;
+import com.ys.springboot_blog_hodol.repository.PostRepository;
+import com.ys.springboot_blog_hodol.request.PostCreate;
+import com.ys.springboot_blog_hodol.request.PostEdit;
+import com.ys.springboot_blog_hodol.request.PostSearch;
 
 /**
  * @author : ysk
@@ -41,6 +43,12 @@ class PostControllerTest {
     @BeforeEach
     void clean() {
         postRepository.deleteAll();
+    }
+
+    @WithTestUser
+    @Test
+    void tes123t3() {
+        
     }
 
     @Test

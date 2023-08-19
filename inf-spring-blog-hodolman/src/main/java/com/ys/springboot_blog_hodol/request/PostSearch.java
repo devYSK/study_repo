@@ -1,19 +1,18 @@
 package com.ys.springboot_blog_hodol.request;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
-import static java.lang.Math.*;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
-/**
- * @author : ysk
- */
-@Data
-@Builder @NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@Builder
 public class PostSearch {
+
+    private static final int MAX_SIZE = 2000;
 
     @Builder.Default
     private Integer page = 1;
@@ -21,8 +20,7 @@ public class PostSearch {
     @Builder.Default
     private Integer size = 10;
 
-    public long getOffSet() {
-        return (long)(max(1, page) - 1) * min(size, 2000);
+    public long getOffset() {
+        return (long) (max(1, page) - 1) * min(size, MAX_SIZE);
     }
-
 }
