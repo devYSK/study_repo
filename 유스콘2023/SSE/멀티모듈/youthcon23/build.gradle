@@ -1,0 +1,41 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.7.14' apply(false)
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+}
+
+allprojects {
+    group = 'hello'
+    version = '0.0.1-SNAPSHOT'
+
+    java {
+        sourceCompatibility = '11'
+    }
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+
+    apply {plugin('java')}
+    apply {plugin('org.springframework.boot')}
+    apply {plugin('io.spring.dependency-management')}
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+    tasks.named('bootJar') {
+        enabled = false // 루트 모듈 제외한 하위모듈 모두 bootJar 사용하지않겠다 .
+    }
+
+    tasks.named('jar') {
+        enabled = true
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+}
+
