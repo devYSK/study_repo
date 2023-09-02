@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  inf-redis:
+    container_name: inf-redis
+    environment:
+      - TZ=Asia/Seoul
+      - ALLOW_EMPTY_PASSWORD=yes
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass 1234
+    volumes:
+      - /Users/ysk/dev/volume/inf-redis/data:/data
+      - /Users/ysk/dev/volume/inf-redis/config:/usr/local/etc/redis
