@@ -1,0 +1,55 @@
+plugins {
+	id 'org.springframework.boot' version '2.7.2'
+	id 'io.spring.dependency-management' version '1.0.12.RELEASE'
+	id 'java'
+}
+
+group = 'dev.be'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	/**
+	 * Spring Boot and springCloudVersion must be compatible.
+	 * 2.6.x, 2.7.x (Starting with 2021.0.3) = 2021.0.x
+	 * ref : https://spring.io/projects/spring-cloud
+	 */
+	// Feign
+	set('springCloudVersion', '2021.0.3')
+
+	set('commonsLangVersion', '3.12.0')
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	// Feign
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+	// for `StringUtils`
+	// https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+	implementation "org.apache.commons:commons-lang3:${commonsLangVersion}"
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
