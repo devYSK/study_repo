@@ -1,0 +1,18 @@
+pluginManagement {
+    plugins {
+        id 'org.springframework.boot' version "${springBootVersion}"
+        id 'io.spring.dependency-management' version "${springDependencyManagementVersion}"
+        id 'org.asciidoctor.jvm.convert' version "${asciidoctorConvertVersion}"
+        id 'io.spring.javaformat' version "${springJavaFormatVersion}"
+    }
+}
+
+rootProject.name = 'spring-boot-java-template'
+
+include 'core:core-enum'
+include 'core:core-api'
+include 'storage:db-core'
+include 'tests:api-docs'
+include 'support:logging'
+include 'support:monitoring'
+include 'clients:client-example'

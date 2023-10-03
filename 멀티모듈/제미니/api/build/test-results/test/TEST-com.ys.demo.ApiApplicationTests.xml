@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ys.demo.ApiApplicationTests" tests="1" skipped="0" failures="0" errors="0" timestamp="2023-10-02T04:09:03" hostname="MacBook-Pro-4.local" time="0.462">
+  <properties/>
+  <testcase name="contextLoads()" classname="com.ys.demo.ApiApplicationTests" time="0.462"/>
+  <system-out><![CDATA[13:09:03.130 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.ys.demo.ApiApplicationTests]: ApiApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+13:09:03.182 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.ys.demo.ApiApplication for test class com.ys.demo.ApiApplicationTests
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.1.4)
+
+2023-10-02T13:09:03.395+09:00  INFO 14002 --- [    Test worker] com.ys.demo.ApiApplicationTests          : Starting ApiApplicationTests using Java 17.0.5 with PID 14002 (started by ysk in /Users/ysk/study/study_repo/멀티모듈/제미니/api)
+2023-10-02T13:09:03.396+09:00  INFO 14002 --- [    Test worker] com.ys.demo.ApiApplicationTests          : No active profile set, falling back to 1 default profile: "default"
+2023-10-02T13:09:03.987+09:00  INFO 14002 --- [    Test worker] com.ys.demo.ApiApplicationTests          : Started ApiApplicationTests in 0.729 seconds (process running for 1.301)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
