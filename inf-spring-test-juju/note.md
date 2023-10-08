@@ -1198,3 +1198,141 @@ sonar {
 gradle -> tasks -> verification -> sonar 실행 
 
 * http://localhost:9000/dashboard?id=test&selectedTutorial=local 에 결과가 나옴 
+
+## 정적 코드 테스트 - 코드 스타일 검증
+
+```groovy
+plugins {
+    // ...
+    id 'com.diffplug.spotless' version '6.21.0'
+}
+
+spotless {
+    java {
+        googleJavaFormat()
+
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        indentWithSpaces()
+        endWithNewline()
+    }
+}
+```
+
+script/pre-commit 생성 
+
+```sh
+#!/bin/sh
+
+targetFiles=$(git diff --staged --name-only)
+
+echo "Apply Spotless.."
+./gradlew spotlessApply
+
+for file in $targetFiles; do
+  if test -f "$file"; then
+    git add $file
+  fi
+done
+```
+
+```
+$ chmod +x script/pre-commit
+```
+
+build.gradle에 추가 
+
+```groovy
+tasks.register('addGitPrecommitHook', Copy) {
+    from 'script/pre-commit'
+    into '.git/hooks'
+}
+```
+
+
+
+# Pull Request 테스트 - 테스트 자동화 
+
+![image-20231008202624876](./images//image-20231008202624876.png)
+
+.github/workflows/pull-request-test.yaml
+
+```yml
+name: Pull Request Test
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions: read-all
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v3.0.2
+
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            application:
+              - 'build.gradle'
+              - 'src/**'
+
+      - name: JDK 설치
+        if: steps.changes.outputs.application == 'true'
+        uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: 17
+          cache: 'gradle'
+      - name: Gradle Build
+        if: steps.changes.outputs.application == 'true'
+        run: |
+          ./gradlew build --parallel
+
+      - name: Coverage Report
+        if: steps.changes.outputs.application == 'true'
+        uses: madrapps/jacoco-report@v1.6.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: Code Coverage
+          update-comment: true
+          min-coverage-overall: 30
+          min-coverage-changed-files: 30
+          paths: |
+            ${{ github.workspace }}/**/build/jacoco/jacoco.xml
+
+  style-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v3.0.2
+
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            application:
+              - 'build.gradle'
+              - 'src/**'
+
+      - name: JDK 설치
+        if: steps.changes.outputs.application == 'true'
+        uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: 17
+          cache: 'gradle'
+
+      - name: Style Check
+        if: steps.changes.outputs.application == 'true'
+        run: |
+          ./gradlew spotlessCheck
+```
+
