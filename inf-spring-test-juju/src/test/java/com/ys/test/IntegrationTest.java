@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
@@ -32,6 +33,8 @@ public class IntegrationTest {
 	static RedisContainer redis;
 
 	static LocalStackContainer aws;
+
+	static KafkaContainer kafka;
 
 	static {
 		// 루트 디렉토리
@@ -63,6 +66,11 @@ public class IntegrationTest {
 			.withServices(LocalStackContainer.Service.S3)
 			.withStartupTimeout(Duration.ofSeconds(600));
 		aws.start();
+
+		kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.0"))
+			.withKraft();
+
+		kafka.start();
 	}
 
 	static class IntegrationTestInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
@@ -96,6 +104,8 @@ public class IntegrationTest {
 			} catch (Exception e) {
 				// ignore ..
 			}
+
+			properties.put("spring.kafka.bootstrap-servers", kafka.getBootstrapServers());
 
 			TestPropertyValues.of(properties)
 							  .applyTo(applicationContext); // 마지막에 설정 해야 적용된다

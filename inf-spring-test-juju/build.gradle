@@ -2,6 +2,60 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.1.4'
     id 'io.spring.dependency-management' version '1.1.3'
+    id 'jacoco'
+    id "org.sonarqube" version "4.0.0.2929"
+}
+
+jacoco {
+    toolVersion = "0.8.8"
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+
+    jacoco {}
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+
+        xml.destination(file("build/jacoco/jacoco.xml"))
+        html.destination(file("build/jacoco/jacoco.html"))
+    }
+
+    finalizedBy(tasks.jacocoTestCoverageVerification)
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            enabled = true
+            element = "CLASS"
+
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = BigDecimal.valueOf(0.5)
+            }
+
+            limit {
+                counter = "LINE"
+                value = "TOTALCOUNT"
+                maximum = BigDecimal.valueOf(300)
+            }
+
+            excludes = List.of(
+                    "*.test.*",
+                    "*.controller.*",
+                    "com.jyujyu.dayonetest.MyCalculatorApplication",
+                    "com.jyujyu.dayonetest.DayonetestApplication",
+            )
+        }
+    }
 }
 
 group = 'com.ys'
@@ -52,12 +106,31 @@ dependencies {
     implementation("software.amazon.awssdk:sts")
     implementation("software.amazon.awssdk:s3")
     testImplementation("org.testcontainers:localstack:1.19.0")
-}
 
-tasks.named('test') {
-    useJUnitPlatform()
+        //
+    implementation("org.springframework.kafka:spring-kafka")
+    testImplementation("org.testcontainers:kafka")
+
+    //
+
+    testImplementation 'com.tngtech.archunit:archunit:1.1.0'
 }
 
 test {
     maxHeapSize = "8192m"
+}
+
+
+sonar {
+    properties {
+        property("sonar.host.url", "http://localhost:9000")
+        property("sonar.login", "sqp_dbf00c5e485c7d46ab66535b6eb2a9f186a13df6") // 생성한 토큰
+        property("sonar.sources", "src/main/java")
+        property("sonar.tests", "src/test/java")
+        property("sonar.sourceEncoding", "UTF-8")
+        property("sonar.projectKey", "test") // 생성한 프로젝트 이름
+        property("sonar.projectName", "test") // 생성한 프로젝트 이름
+        property("sonar.coverage.jacoco.xmlReportPaths", "build/jacoco/jacoco.xml") // 생성한 jacoco xml 경로
+
+    }
 }

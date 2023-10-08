@@ -685,3 +685,516 @@ class S3ServiceTest extends IntegrationTest {
 }
 ```
 
+
+
+# Kafka 테스트
+
+```groovy
+dependencies {
+    // 생략  ...
+
+    implementation("org.springframework.kafka:spring-kafka")
+    testImplementation("org.testcontainers:kafka")
+}
+```
+
+```yaml
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      auto-offset-reset: earliest
+
+```
+
+코드 작성
+
+```java
+@RequiredArgsConstructor
+@Configuration
+public class KafkaConsumerApplication {
+	private final KafkaConsumerService kafkaConsumerService;
+
+	@Bean
+	public NewTopic topic() {
+		return TopicBuilder.name("test-topic")
+						   .build();
+	}
+
+	@KafkaListener(id = "test-id", topics = "test-topic")
+	public void listen(String message) {
+		kafkaConsumerService.process(message);
+	}
+	
+}
+//
+@Service
+public class KafkaProducerService {
+	private final KafkaTemplate<String, String> kafkaTemplate;
+
+	public void send(String topic, String message) {
+		kafkaTemplate.send(topic, message);
+	}
+}
+//
+@Service
+public class KafkaConsumerService {
+
+	public void process(String message) {
+		System.out.println("processing ... " + message);
+	}
+}
+```
+
+컨테이너 설정
+
+```java
+@SpringBootTest
+@ContextConfiguration(initializers = IntegrationTest.IntegrationTestInitializer.class)
+public class IntegrationTest {
+
+	static KafkaContainer kafka;
+
+	static {
+		kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.0"))
+			.withKraft();
+		kafka.start();
+	}
+
+	static class IntegrationTestInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+		@Override
+		public void initialize(ConfigurableApplicationContext applicationContext) {
+			Map<String, String> properties = new HashMap<>();
+
+			properties.put("spring.kafka.bootstrap-servers", kafka.getBootstrapServers());
+
+			TestPropertyValues.of(properties)
+							  .applyTo(applicationContext); // 마지막에 설정 해야 적용된다
+		}
+	}
+}
+
+```
+
+테스트 작성
+
+```java
+class KafkaConsumerApplicationTests extends IntegrationTest {
+
+	@Autowired
+	private KafkaProducerService kafkaProducerService;
+
+	@MockBean
+	private KafkaConsumerService kafkaConsumerService;
+
+	@Test
+	void kafkaSendAndConsumeTest() {
+		String topic = "test-topic";
+		String expectValue = "expect-value";
+
+		kafkaProducerService.send(topic, expectValue);
+
+		var stringCaptor = ArgumentCaptor.forClass(String.class);
+
+		Mockito.verify(kafkaConsumerService, Mockito.timeout(5000)
+													.times(1))
+			   .process(stringCaptor.capture());
+
+		Assertions.assertEquals(expectValue, stringCaptor.getValue());
+	}
+	
+}
+```
+
+## API로 카프카 테스트
+
+docker-compose.yaml 에 아래처럼 로컬 카프카 컨테이너를 추가
+
+```yaml
+services:
+  # 생략 ...
+
+  local-kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: broker
+    container_name: broker
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid"
+      # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+```
+
+```java
+@RequiredArgsConstructor
+@RestController
+public class KafkaApi {
+    private final KafkaProduceService kafkaProduceService;
+
+    @GetMapping("/kafka/producer/send")
+    public void send(
+            @RequestParam("topic") String topic,
+            @RequestParam("value") String value
+    ) {
+        kafkaProduceService.send(topic, value);
+    }
+}
+```
+
+
+
+# 정적 테스트
+
+* ArchUnit : 
+* https://www.archunit.org/userguide/html/000_Index.html
+
+```groovy
+dependencies {
+    // 생략 ...
+
+    testImplementation 'com.tngtech.archunit:archunit:1.1.0'
+}
+```
+
+```java
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
+
+import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.lang.ArchRule;
+
+class ArchitectureTest {
+
+	private static final String ROOT_PACKAGE = "com.ys.test";
+
+	JavaClasses javaClasses = new ClassFileImporter()
+		.withImportOption(new ImportOption.DoNotIncludeTests())
+		.importPackages(ROOT_PACKAGE); // 우리 루트 패키지명
+
+	@BeforeEach
+	void beforeEach() {
+		javaClasses = new ClassFileImporter()
+			.withImportOption(new ImportOption.DoNotIncludeTests())
+			.importPackages(ROOT_PACKAGE); // 모든 소스 파일이 대상
+	}
+
+	@Test
+	@DisplayName("컨트롤러 패키지 안에 있는 클래스들은 Api로 끝나야 한다")
+	void controllerTest() {
+		ArchRule rule = classes().that()
+								 .resideInAnyPackage("..controller")
+								 .should()
+								 .haveSimpleNameEndingWith("Api");
+
+		rule.check(javaClasses);
+	}
+
+	@Test
+	@DisplayName("repository 패키지 안에 있는 클래스들은 interface여야 한다")
+	void archRepositoryTest() {
+
+		ArchRule rule = classes()
+			.that().resideInAnyPackage("..repository..")
+			.should().beInterfaces();
+
+		rule.check(javaClasses);
+	}
+
+	@Test
+	@DisplayName("controller 패키지 안에 있는 클래스들은 RestController나 Controller 어노테이션이여야 한다.")
+	void archControllerTest() {
+		ArchRule rule = classes()
+			.that().resideInAnyPackage("..controller")
+			.should().beAnnotatedWith(RestController.class)
+			.orShould().beAnnotatedWith(Controller.class);
+
+		rule.check(javaClasses);
+	}
+}
+
+```
+
+
+
+# ArchUnit 의존관계 아키텍처 검증
+
+Controller
+
+- Controller는 Service와 Request / Response를 사용할 수 있음
+- Controller는 의존되지 않음
+- Controller는 Model(or Entity)을 사용할 수 없음
+
+Service
+
+- Service는 Controller를 의존하면 안됨
+
+Model
+
+- Model은 오직 Service와 Repository에 의해 의존됨
+- Model은 아무것도 의존하지 않음
+
+```java
+class ArchitectureTest {
+
+	private static final String ROOT_PACKAGE = "com.ys.test";
+
+	JavaClasses javaClasses = new ClassFileImporter()
+		.withImportOption(new ImportOption.DoNotIncludeTests())
+		.importPackages(ROOT_PACKAGE); // 우리 루트 패키지명
+
+	@BeforeEach
+	void beforeEach() {
+		javaClasses = new ClassFileImporter()
+			.withImportOption(new ImportOption.DoNotIncludeTests())
+			.importPackages(ROOT_PACKAGE); // 모든 소스 파일이 대상
+	}
+
+	@Test
+	void controllerDependencyTest() {
+		ArchRule rule = classes()
+			.that()
+			.resideInAnyPackage("..controller")
+			.should()
+			.dependOnClassesThat()
+			.resideInAnyPackage("..request..", "..response..", "..service..");
+
+		rule.check(javaClasses);
+	}
+
+	@DisplayName("Controller는 의존되지 않음")
+	@Test
+	void controllerDependencyTest2() {
+
+		ArchRule rule = classes()
+			.that()
+			.resideInAnyPackage("..controller")
+			.should()
+			.onlyHaveDependentClassesThat()
+			.resideInAnyPackage("..controller");
+
+		rule.check(javaClasses);
+	}
+
+	@DisplayName("Controller는 Model 사용 불가")
+	@Test
+	void controllerDependencyTest3() {
+
+		ArchRule rule = noClasses()
+			.that()
+			.resideInAnyPackage("..controller")
+			.should()
+			.onlyHaveDependentClassesThat()
+			.resideInAnyPackage("..model..");
+
+		rule.check(javaClasses);
+	}
+  
+  @DisplayName("model은 아무것도 의존하지 않음")
+	@Test
+	void modelDependencyTest() {
+		ArchRule rule = classes()
+			.that()
+			.resideInAnyPackage("..model..")
+			.should()
+			.onlyDependOnClassesThat()
+			.resideInAnyPackage("..model..", "java..", "jakarta..");
+
+		rule.check(javaClasses);
+
+	}
+  
+}
+```
+
+
+
+
+
+# 테스트 커버러지 측정 및 검증
+
+Jacoco 공식 문서는 난해합니다! Gradle의 Jacoco Plugin 가이드를 읽어보세요!
+
+https://docs.gradle.org/current/userguide/jacoco_plugin.html
+
+
+
+gradle 설정
+
+```groovy
+plugins {
+    // 생략 ...
+
+    id 'jacoco'
+}
+
+jacoco {
+    toolVersion = "0.8.8"
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+
+    jacoco {}
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+
+        xml.destination(file("build/jacoco/jacoco.xml"))
+        html.destination(file("build/jacoco/jacoco.html"))
+    }
+
+    finalizedBy(tasks.jacocoTestCoverageVerification)
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            enabled = true
+            element = "CLASS"
+
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = BigDecimal.valueOf(0.5)
+            }
+
+            limit {
+                counter = "LINE"
+                value = "TOTALCOUNT"
+                maximum = BigDecimal.valueOf(300)
+            }
+
+            excludes = List.of(
+                    "*.test.*",
+                    "*.controller.*",
+                    "com.jyujyu.dayonetest.MyCalculatorApplication",
+                    "com.jyujyu.dayonetest.DayonetestApplication",
+            )
+        }
+    }
+}
+```
+
+
+
+# 정적 코드 분석 - 소나큐브 
+
+소나큐브 유저 가이드를 읽어보고, 소나큐브의 컨셉과 용어를 익혀보세요!
+
+https://docs.sonarsource.com/sonarqube/10.1/user-guide/concepts/
+
+![image-20231008190432707](./images//image-20231008190432707.png)
+
+소나큐브로 코드를 분석하게 되면, 기본적으로 이슈(Issue)라는 것이 생겨납니다.
+
+이슈는 이슈 타입(Issue Type)과 이슈 심각도(Issue Severity)로 나누어지게 되며, 이 분류에 따라 이슈에 우선순위를 매겨 관리해야 합니다!
+
+
+
+이슈 타입은 버그, 취약점, 코드스멜로 나누어지게 되며, 버그와 취약점에 해당하지 않는 이슈의 경우 코드 스멜로 분류됩니다.
+
+- 버그 : 애플리케이션에 버그를 일으킬 가능성이 매우 큰 코드
+- 취약점 : 애플리케이션에 보안적 문제를 일으킬 가능성이 매운 큰 코드
+- 코드 스멜 : 버그와 취약점에 해당하지 않지만 Rule에 의해 발견된 코드
+
+이슈 심각도는 BLOCKER, CRITICAL, MAJOR, MINOR, INFO 순서로 심각도를 나타내며 
+
+이름에서 느껴지듯이 BLOCKER와 CRITICAL의 경우 서비스에 즉각적인 문제를 일으킬 수 있으므로 배포가 되기전 확인이 필수적으로 되어야합니다!
+
+
+
+## 소나 큐브 도커 컴포즈 
+
+```yaml
+version: "3.8"
+
+services:
+  local-sonar:
+    image: sonarqube:9.9.2-community
+    ports:
+      - "9000:9000"
+      - "9092:9092"
+```
+
+```bash
+$ docker-compose -f sonar-docker-compose.yaml up
+```
+
+http://localhost:9000/sessions/new?return_to=%2F 접속
+
+* id : admin
+* password : admin
+
+하단 manualy 클릭
+
+* http://localhost:9000/projects/create?mode=manual 
+
+![image-20231008192402893](./images//image-20231008192402893.png)
+
+다음 locally 클릭 
+
+![image-20231008192434658](./images//image-20231008192434658.png)
+
+다음  generate
+
+
+
+![image-20231008192456254](./images//image-20231008192456254.png)
+
+* 키를 잘 복사해야 한다 
+
+다음 Continue 누르고 gradle 선택 
+
+![image-20231008192610119](./images//image-20231008192610119.png)
+
+gradle 세팅
+
+```groovy
+plugins {
+    id "org.sonarqube" version "4.0.0.2929"
+}
+
+
+
+sonar {
+    properties {
+        property("sonar.host.url", "http://localhost:9000")
+        property("sonar.login", "sqp_dbf00c5e485c7d46ab66535b6eb2a9f186a13df6") // 생성한 토큰
+        property("sonar.sources", "src/main/java")
+        property("sonar.tests", "src/test/java")
+        property("sonar.sourceEncoding", "UTF-8")
+        property("sonar.projectKey", "test") // 생성한 프로젝트 이름
+        property("sonar.projectName", "test") // 생성한 프로젝트 이름
+        property("sonar.coverage.jacoco.xmlReportPaths", "build/jacoco/jacoco.xml") // 생성한 jacoco xml 경로
+
+    }
+}
+```
+
+gradle -> tasks -> verification -> sonar 실행 
+
+* http://localhost:9000/dashboard?id=test&selectedTutorial=local 에 결과가 나옴 
