@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ys.test.S3ServiceTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2023-10-08T09:03:56" hostname="MacBook-Pro-4.local" time="0.864">
+  <properties/>
+  <testcase name="s3PutAndGetTest()" classname="com.ys.test.S3ServiceTest" time="0.864"/>
+  <system-out><![CDATA[18:03:25.371 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.ys.test.IntegrationTest]: IntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+18:03:25.432 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.ys.test.TestApplication for test class com.ys.test.S3ServiceTest
+18:03:25.507 [Test worker] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+18:03:25.653 [Test worker] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Loaded org.testcontainers.dockerclient.UnixSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first
+18:03:25.816 [Test worker] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with Docker accessed via Unix socket (/Users/ysk/.docker/run/docker.sock)
+18:03:25.817 [Test worker] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
+18:03:25.845 [Test worker] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
+  Server Version: 24.0.6
+  API Version: 1.43
+  Operating System: Docker Desktop
+  Total Memory: 7950 MB
+18:03:25.845 [Test worker] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+18:03:25.845 [Test worker] INFO org.testcontainers.DockerClientFactory -- Checking the system...
+18:03:25.846 [Test worker] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
+18:03:25.870 [Test worker] INFO tc.testcontainers/ryuk:0.5.1 -- Creating container for image: testcontainers/ryuk:0.5.1
+18:03:26.245 [Test worker] INFO tc.testcontainers/ryuk:0.5.1 -- Container testcontainers/ryuk:0.5.1 is starting: 2937147c69ba126224e719e91119e1920494bb18af69ec7d39a676678fc0365a
+18:03:26.572 [Test worker] INFO tc.testcontainers/ryuk:0.5.1 -- Container testcontainers/ryuk:0.5.1 started in PT0.726006S
+18:03:26.587 [Test worker] INFO org.testcontainers.containers.ComposeDelegate -- Preemptively checking local images for 'redis:6', referenced via a compose file or transitive Dockerfile. If not available, it will be pulled.
+18:03:26.587 [Test worker] INFO org.testcontainers.containers.ComposeDelegate -- Preemptively checking local images for 'mysql:8', referenced via a compose file or transitive Dockerfile. If not available, it will be pulled.
+18:03:26.587 [Test worker] INFO org.testcontainers.containers.ComposeDelegate -- Preemptively checking local images for 'flyway/flyway:latest', referenced via a compose file or transitive Dockerfile. If not available, it will be pulled.
+18:03:26.587 [Test worker] INFO org.testcontainers.containers.ComposeDelegate -- Preemptively checking local images for 'localstack/localstack:latest', referenced via a compose file or transitive Dockerfile. If not available, it will be pulled.
+18:03:26.591 [Test worker] INFO tc.docker/compose:1.29.2 -- Creating container for image: docker/compose:1.29.2
+18:03:26.900 [Test worker] INFO tc.docker/compose:1.29.2 -- Container docker/compose:1.29.2 is starting: a7a64e62faa8bd776b4bb89c2abaabbe2e4bfa988e833745bef69f65759013de
+18:03:27.057 [Test worker] WARN tc.docker/compose:1.29.2 -- The architecture 'amd64' for image 'docker/compose:1.29.2' (ID sha256:32d8a4638cd83922fdd94cadf4f1850b595d29757488c73adf05f4b99ebd1318) does not match the Docker server architecture 'arm64'. This will cause the container to execute much more slowly due to emulation and may lead to timeout failures.
+18:03:33.303 [Test worker] INFO tc.docker/compose:1.29.2 -- Container docker/compose:1.29.2 started in PT6.712133S
+18:03:33.306 [Test worker] INFO tc.docker/compose:1.29.2 -- Docker Compose container is running for command: up -d
+18:03:33.314 [Test worker] INFO tc.docker/compose:1.29.2 -- Docker Compose has finished running
+18:03:33.314 [docker-java-stream--179281232] INFO tc.docker/compose:1.29.2 -- STDERR: Creating network "a9sbesqpmwzf_default" with the default driver
+18:03:33.314 [docker-java-stream--179281232] INFO tc.docker/compose:1.29.2 -- STDERR: Creating a9sbesqpmwzf_local-db_1 ... 
+18:03:33.314 [docker-java-stream--179281232] INFO tc.docker/compose:1.29.2 -- STDERR: Creating a9sbesqpmwzf_local-redis_1 ... 
+18:03:33.314 [docker-java-stream--179281232] INFO tc.docker/compose:1.29.2 -- STDERR: Creating a9sbesqpmwzf_local-aws_1   ... 
+18:03:33.314 [docker-java-stream--179281232] INFO tc.docker/compose:1.29.2 -- STDERR: Creating a9sbesqpmwzf_local-db_1    ... done
+18:03:33.314 [docker-java-stream--179281232] INFO tc.docker/compose:1.29.2 -- STDERR: Creating a9sbesqpmwzf_local-db-migrate_1 ... 
+18:03:33.314 [docker-java-stream--179281232] INFO tc.docker/compose:1.29.2 -- STDERR: Creating a9sbesqpmwzf_local-redis_1      ... done
+18:03:33.314 [docker-java-stream--179281232] INFO tc.docker/compose:1.29.2 -- STDERR: Creating a9sbesqpmwzf_local-aws_1        ... done
+18:03:33.314 [docker-java-stream--179281232] INFO tc.docker/compose:1.29.2 -- STDERR: Creating a9sbesqpmwzf_local-db-migrate_1 ... done
+18:03:33.321 [Test worker] INFO tc.alpine/socat:1.7.4.3-r0 -- Creating container for image: alpine/socat:1.7.4.3-r0
+18:03:33.400 [Test worker] INFO tc.alpine/socat:1.7.4.3-r0 -- Container alpine/socat:1.7.4.3-r0 is starting: f95faf0d339e5d2e5999d6eb2051f797e16da1499e948f6801aa07976cd50108
+18:03:33.854 [Test worker] INFO tc.alpine/socat:1.7.4.3-r0 -- Container alpine/socat:1.7.4.3-r0 started in PT0.53381S
+18:03:41.910 [Test worker] INFO tc.redis:6 -- Creating container for image: redis:6
+18:03:41.950 [Test worker] INFO tc.redis:6 -- Container redis:6 is starting: eaeaabfa24a730f716c14eba9d5d972c2768c0227ef1ea00f3c0dd427a40fede
+18:03:42.217 [Test worker] INFO tc.redis:6 -- Container redis:6 started in PT0.307415S
+18:03:42.219 [Test worker] INFO tc.localstack/localstack:latest -- LOCALSTACK_HOST environment variable set to localhost (to match host-routable address for container)
+18:03:42.219 [Test worker] INFO tc.localstack/localstack:latest -- Creating container for image: localstack/localstack:latest
+18:03:42.254 [Test worker] INFO tc.localstack/localstack:latest -- Container localstack/localstack:latest is starting: bd79d457a96ae79b5c683b9f1464293079f7dbbf5d8f4676aabde3323314193d
+18:03:44.414 [Test worker] INFO tc.localstack/localstack:latest -- Container localstack/localstack:latest started in PT2.194994S
+18:03:44.416 [Test worker] INFO org.testcontainers.containers.ComposeDelegate -- Preemptively checking local images for 'redis:6', referenced via a compose file or transitive Dockerfile. If not available, it will be pulled.
+18:03:44.421 [Test worker] INFO org.testcontainers.containers.ComposeDelegate -- Preemptively checking local images for 'mysql:8', referenced via a compose file or transitive Dockerfile. If not available, it will be pulled.
+18:03:44.421 [Test worker] INFO org.testcontainers.containers.ComposeDelegate -- Preemptively checking local images for 'flyway/flyway:latest', referenced via a compose file or transitive Dockerfile. If not available, it will be pulled.
+18:03:44.421 [Test worker] INFO org.testcontainers.containers.ComposeDelegate -- Preemptively checking local images for 'localstack/localstack:latest', referenced via a compose file or transitive Dockerfile. If not available, it will be pulled.
+18:03:44.423 [Test worker] INFO tc.docker/compose:1.29.2 -- Creating container for image: docker/compose:1.29.2
+18:03:44.456 [Test worker] INFO tc.docker/compose:1.29.2 -- Container docker/compose:1.29.2 is starting: 98f2976bd734a2b065b1433fea88b052ca3665687bf98c7d3e6a25a2a61ef803
+18:03:44.630 [Test worker] WARN tc.docker/compose:1.29.2 -- The architecture 'amd64' for image 'docker/compose:1.29.2' (ID sha256:32d8a4638cd83922fdd94cadf4f1850b595d29757488c73adf05f4b99ebd1318) does not match the Docker server architecture 'arm64'. This will cause the container to execute much more slowly due to emulation and may lead to timeout failures.
+18:03:49.478 [Test worker] INFO tc.docker/compose:1.29.2 -- Container docker/compose:1.29.2 started in PT5.055161S
+18:03:49.479 [Test worker] INFO tc.docker/compose:1.29.2 -- Docker Compose container is running for command: up -d
+18:03:49.483 [Test worker] INFO tc.docker/compose:1.29.2 -- Docker Compose has finished running
+18:03:49.485 [docker-java-stream--1861301935] INFO tc.docker/compose:1.29.2 -- STDERR: a9sbesqpmwzf_local-aws_1 is up-to-date
+18:03:49.485 [docker-java-stream--1861301935] INFO tc.docker/compose:1.29.2 -- STDERR: a9sbesqpmwzf_local-redis_1 is up-to-date
+18:03:49.485 [docker-java-stream--1861301935] INFO tc.docker/compose:1.29.2 -- STDERR: a9sbesqpmwzf_local-db_1 is up-to-date
+18:03:49.485 [docker-java-stream--1861301935] INFO tc.docker/compose:1.29.2 -- STDERR: Starting a9sbesqpmwzf_local-db-migrate_1 ... 
+18:03:49.485 [docker-java-stream--1861301935] INFO tc.docker/compose:1.29.2 -- STDERR: Starting a9sbesqpmwzf_local-db-migrate_1 ... done
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.1.4)
+
+endPoint!! http://127.0.0.1:54936
+2023-10-08T18:03:53.641+09:00  INFO 19205 --- [    Test worker] com.ys.test.S3ServiceTest                : Starting S3ServiceTest using Java 17.0.5 with PID 19205 (started by ysk in /Users/ysk/study/study_repo/inf-spring-test-juju)
+2023-10-08T18:03:53.643+09:00  INFO 19205 --- [    Test worker] com.ys.test.S3ServiceTest                : No active profile set, falling back to 1 default profile: "default"
+2023-10-08T18:03:54.017+09:00  INFO 19205 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2023-10-08T18:03:54.018+09:00  INFO 19205 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2023-10-08T18:03:54.104+09:00  INFO 19205 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 82 ms. Found 3 JPA repository interfaces.
+2023-10-08T18:03:54.119+09:00  INFO 19205 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2023-10-08T18:03:54.120+09:00  INFO 19205 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2023-10-08T18:03:54.130+09:00  INFO 19205 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ys.test.repository.StudentFailRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2023-10-08T18:03:54.130+09:00  INFO 19205 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ys.test.repository.StudentPassRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2023-10-08T18:03:54.130+09:00  INFO 19205 --- [    Test worker] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.ys.test.repository.StudentScoreRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2023-10-08T18:03:54.131+09:00  INFO 19205 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 5 ms. Found 0 Redis repository interfaces.
+2023-10-08T18:03:54.383+09:00  INFO 19205 --- [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2023-10-08T18:03:54.424+09:00  INFO 19205 --- [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.2.9.Final
+2023-10-08T18:03:54.426+09:00  INFO 19205 --- [    Test worker] org.hibernate.cfg.Environment            : HHH000406: Using bytecode reflection optimizer
+2023-10-08T18:03:54.506+09:00  INFO 19205 --- [    Test worker] o.h.b.i.BytecodeProviderInitiator        : HHH000021: Bytecode provider name : bytebuddy
+2023-10-08T18:03:54.585+09:00  INFO 19205 --- [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2023-10-08T18:03:54.595+09:00  INFO 19205 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2023-10-08T18:03:54.859+09:00  INFO 19205 --- [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@19540247
+2023-10-08T18:03:54.860+09:00  INFO 19205 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2023-10-08T18:03:54.887+09:00  WARN 19205 --- [    Test worker] org.hibernate.orm.deprecation            : HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2023-10-08T18:03:54.996+09:00  INFO 19205 --- [    Test worker] o.h.b.i.BytecodeProviderInitiator        : HHH000021: Bytecode provider name : bytebuddy
+2023-10-08T18:03:55.350+09:00  INFO 19205 --- [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+Hibernate: 
+    create table student_fail (
+        student_fail_id bigint not null auto_increment,
+        avg_score float(53),
+        exam varchar(255),
+        student_name varchar(255),
+        primary key (student_fail_id)
+    ) engine=InnoDB
+Hibernate: 
+    create table student_pass (
+        student_pass_id bigint not null auto_increment,
+        avg_score float(53),
+        exam varchar(255),
+        student_name varchar(255),
+        primary key (student_pass_id)
+    ) engine=InnoDB
+Hibernate: 
+    create table student_score (
+        student_score_id bigint not null auto_increment,
+        english_score integer,
+        exam varchar(255),
+        kor_score integer,
+        math_score integer,
+        student_name varchar(255),
+        primary key (student_score_id)
+    ) engine=InnoDB
+2023-10-08T18:03:55.442+09:00  INFO 19205 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2023-10-08T18:03:56.117+09:00  WARN 19205 --- [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2023-10-08T18:03:56.339+09:00  INFO 19205 --- [    Test worker] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:mysql://localhost:54928/score'
+2023-10-08T18:03:56.369+09:00  INFO 19205 --- [    Test worker] com.ys.test.S3ServiceTest                : Started S3ServiceTest in 6.834 seconds (process running for 31.465)
+============================== here
+10
+10
+[hello ysk!]
+[hello ysk!]
+============================== here
+2023-10-08T18:03:57.362+09:00  INFO 19205 --- [    Test worker] tc.docker/compose:1.29.2                 : Creating container for image: docker/compose:1.29.2
+2023-10-08T18:03:57.392+09:00  INFO 19205 --- [    Test worker] tc.docker/compose:1.29.2                 : Container docker/compose:1.29.2 is starting: dec36950354abf54b24ae8f98e28d9d0372b67d5285ddae6757e3158d4940fe4
+2023-10-08T18:03:57.583+09:00  WARN 19205 --- [    Test worker] tc.docker/compose:1.29.2                 : The architecture 'amd64' for image 'docker/compose:1.29.2' (ID sha256:32d8a4638cd83922fdd94cadf4f1850b595d29757488c73adf05f4b99ebd1318) does not match the Docker server architecture 'arm64'. This will cause the container to execute much more slowly due to emulation and may lead to timeout failures.
+2023-10-08T18:04:06.204+09:00  INFO 19205 --- [    Test worker] tc.docker/compose:1.29.2                 : Container docker/compose:1.29.2 started in PT8.842402S
+2023-10-08T18:04:06.207+09:00  INFO 19205 --- [    Test worker] tc.docker/compose:1.29.2                 : Docker Compose container is running for command: down -v
+2023-10-08T18:04:06.223+09:00  INFO 19205 --- [    Test worker] tc.docker/compose:1.29.2                 : Docker Compose has finished running
+2023-10-08T18:04:06.223+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Stopping a9sbesqpmwzf_local-aws_1   ... 
+2023-10-08T18:04:06.226+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Stopping a9sbesqpmwzf_local-db_1    ... 
+2023-10-08T18:04:06.226+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Stopping a9sbesqpmwzf_local-redis_1 ... 
+2023-10-08T18:04:06.226+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Stopping a9sbesqpmwzf_local-redis_1 ... done
+2023-10-08T18:04:06.226+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Stopping a9sbesqpmwzf_local-db_1    ... done
+2023-10-08T18:04:06.226+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Stopping a9sbesqpmwzf_local-aws_1   ... done
+2023-10-08T18:04:06.226+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Removing a9sbesqpmwzf_local-db-migrate_1 ... 
+2023-10-08T18:04:06.226+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Removing a9sbesqpmwzf_local-aws_1        ... 
+2023-10-08T18:04:06.226+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Removing a9sbesqpmwzf_local-db_1         ... 
+2023-10-08T18:04:06.227+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Removing a9sbesqpmwzf_local-redis_1      ... 
+2023-10-08T18:04:06.227+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Removing a9sbesqpmwzf_local-db-migrate_1 ... done
+2023-10-08T18:04:06.227+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Removing a9sbesqpmwzf_local-db_1         ... done
+2023-10-08T18:04:06.227+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Removing a9sbesqpmwzf_local-aws_1        ... done
+2023-10-08T18:04:06.227+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Removing a9sbesqpmwzf_local-redis_1      ... done
+2023-10-08T18:04:06.227+09:00  INFO 19205 --- [ream--553465079] tc.docker/compose:1.29.2                 : STDERR: Removing network a9sbesqpmwzf_default
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

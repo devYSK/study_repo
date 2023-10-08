@@ -271,28 +271,46 @@ testImplementation 'org.testcontainers:testcontainers:1.19.0'
 
 ```java
 @SpringBootTest
+@ContextConfiguration(initializers = IntegrationTest.IntegrationTestInitializer.class)
 public class IntegrationTest {
 
 	static DockerComposeContainer rdbms;
 
 	static {
 		// 루트 디렉토리
-		rdbms = new DockerComposeContainer(new File("docker-compose-test.yml"))
+		rdbms = new DockerComposeContainer( new File("infra/test/docker-compose.yml"))
 			.withExposedService(
-				"local-db", // 컴포즈내의 서비스명 
-				3306, // 서비스 포트 
-				Wait.forLogMessage(".*ready for connections.*", 1) // 로그 메시지 
+				"local-db", // 컴포즈내의 서비스명
+				3306, // 서비스 포트
+				Wait.forLogMessage(".*ready for connections.*", 1)
 					.withStartupTimeout(Duration.ofSeconds(300))
-			) 
+			)
 			.withExposedService(
-				"local-db-migrate", // 컴포즈 내의 서비스명 
-				0, // 서비스 포트. 없으면 0 
-				Wait.forLogMessage("(.*SuccessFully applied.*) | (.*Successfully validated.*)", 1)
+				"local-db-migrate", // 컴포즈 내의 서비스명
+				0, // 서비스 포트. 없으면 0
+				Wait.forLogMessage("(.*Successfully applied.*)|(.*Successfully validated.*)", 1)
 					.withStartupTimeout(Duration.ofSeconds(300))
-				)
+			)
+			// .withLocalCompose(true)
 		;
-    
+
 		rdbms.start();
+	}
+
+	static class IntegrationTestInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+		@Override
+		public void initialize(ConfigurableApplicationContext applicationContext) {
+			Map<String, String> properties = new HashMap<>();
+
+			var rdbmsHost = rdbms.getServiceHost("local-db", 3306);
+			var rdbmsPort = rdbms.getServicePort("local-db", 3306);
+
+			properties.put("spring.datasource.url", "jdbc:mysql://" + rdbmsHost + ":" + rdbmsPort + "/score");
+
+			TestPropertyValues.of(properties)
+							  .applyTo(applicationContext);
+		}
 	}
 }
 
@@ -310,6 +328,32 @@ class TestApplicationTests extends IntegrationTest{
 }
 ```
 
+```yaml
+services:
+  local-db:
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: score
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password
+  local-db-migrate:
+    image: flyway/flyway:latest
+    environment:
+      - FLYWAY_DB_URL=jdbc:mysql://local-db/score?allowPublicKeyRetrieval=true&useSSL=false
+      - FLYWAY_DB_USER=root
+      - FLYWAY_DB_PASSWORD=password
+    command: migrate
+    volumes:
+      - ../../db/flyway.conf:/flyway/conf/flyway.conf
+      - ../../db/migration:/flyway/sql
+    depends_on:
+      - local-db
+```
+
+
+
 ## 테스트 Flow
 
 ![image-20231008151353485](./images//image-20231008151353485.png)
@@ -319,4 +363,325 @@ class TestApplicationTests extends IntegrationTest{
 3. 동적 프로퍼티 주입 : 생성한 컨테이너의 정보를 기반으로 스프링 프로퍼티 동적으로 주입(overwrite)합니다
 4. 테스트 수행 : 생성한 컨테이너를 활용하여 테스트를 수행합니다
 5. 테스트 종료: 테스트 종료와 동시에 생성했던 컨테이너들을 정리합니다
+
+
+
+# Redis 테스트하기
+
+```groovy
+dependencies {
+    // 생략 ...
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    testImplementation "com.redis.testcontainers:testcontainers-redis-junit:1.6.4"
+}
+```
+
+```yaml
+services:
+
+  local-redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
+```
+
+```yaml
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+```
+
+
+
+```java
+@RequiredArgsConstructor
+@Service
+public class RedisService {
+	private final RedisTemplate<String, String> redisTemplate;
+
+	public String get(String key) {
+		return redisTemplate.opsForValue()
+							.get(key);
+	}
+
+	public void set(String key, String value) {
+		redisTemplate.opsForValue()
+					 .set(key, value);
+	}
+}
+```
+
+```java
+@SpringBootTest
+@ContextConfiguration(initializers = IntegrationTest.IntegrationTestInitializer.class)
+
+public class IntegrationTest {
+
+	static RedisContainer redis;
+
+	static {
+
+		redis = new RedisContainer(RedisContainer.DEFAULT_IMAGE_NAME.withTag("6"));
+
+		// 생략 ...
+		redis.start();
+	}
+
+	static class IntegrationTestInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+		@Override
+		public void initialize(ConfigurableApplicationContext applicationContext) {
+			Map<String, String> properties = new HashMap<>();
+      
+      var redisHost = redis.getHost();
+      var redisPort = redis.getFirstMappedPort();
+
+      properties.put("spring.data.redis.host", redisHost);
+      properties.put("spring.data.redis.port", redisPort.toString());
+		}
+	}
+}
+
+```
+
+```java
+public class RedisServiceTest extends IntegrationTest {
+	@Autowired
+	private RedisService redisService;
+
+	@Test
+	@DisplayName("Redis Get / Set 테스트")
+	public void redisGetSetTest() {
+		// given
+		String expectValue = "hello";
+		String key = "hi";
+
+		// when
+		redisService.set(key, expectValue);
+
+		// then
+		String actualValue = redisService.get(key);
+
+		Assertions.assertEquals(expectValue, actualValue);
+	}
+
+}
+```
+
+
+
+# AWS S3 테스트하기
+
+AWS 서비스를 잘 테스트하기 위해서는 AWS 기본 설정이 필요해요. 대표적으로 AWS 인증을 하는 Credentials이라고 부르는 것들입니다! 제가 실습에서 사용한 AWSCredentials는 아래와 같습니다!
+
+![image-20231008173026299](./images//image-20231008173026299.png)
+
+기본적으로 스프링환경에서 AWS SDK는 `AwsCredentialsProvider`라는 인터페이스를 주입받아 인증에 사용합니다. 이 인터페이스의 구현체는 대부분 체이닝된 형식으로 되어있습니다.
+
+AWS에서 기본으로 제공하는 `DefaultCredentialsProvider`는 위와 같은 형식으로 되어있습니다.
+
+`~/.aws/credentials` 파일을 읽거나, 환경변수에서 `AWS_*` 키 값을 가져오거나, AWS ECS와 같은 환경에서는 컨테이너에 부여한 IAM Role을  사용하곤 합니다. 즉 기본적으로 애플리케이션 실행에 필요한 대부분의 Credentials를 지원하며 실제로 AWS 서비스를 이용하기 위해서는 DefaultCredentialsProvider를 사용해야합니다.
+
+하지만, 저희는 테스트를 위해 위 모든 체인에서 사용할 수 있는 인증 정보가 없기 때문에, 정적 문자열을 이용해 가짜로 된 인증 정보인 StaticCredentialsProvider를 만들고, 이를 다시 체이닝하여 사용합니다.
+
+
+
+의존성 설정
+
+```groovy
+dependencies {
+    // ...
+
+    implementation(platform("software.amazon.awssdk:bom:2.20.136"))
+    implementation("commons-io:commons-io:2.13.0")
+    implementation("software.amazon.awssdk:aws-core")
+    implementation("software.amazon.awssdk:sdk-core")
+    implementation("software.amazon.awssdk:sts")
+    implementation("software.amazon.awssdk:s3")
+    testImplementation("org.testcontainers:localstack:1.19.0")
+}
+```
+
+infra/local/docker-compose.yaml
+
+```yaml
+version: "3.8"
+
+services:
+  # 생략 ...
+  local-aws:
+    image: localstack/localstack:1.2
+    environment:
+      - SERVICES=s3
+      - DEBUG=1
+      - PORT_WEB_UI=4567
+      - AWS_DEFAULT_REGION=ap-northeast-2
+      - USE_SSL=0
+    ports:
+      - "4566:4566"
+```
+
+src/main/resources/static/sample.txt 에 생성
+
+```txt
+hello ysk!
+```
+
+application.yml 설정
+
+```
+aws:
+  endpoint: localhost:4566
+```
+
+S3Config 클래스 설정
+
+```java
+@Configuration
+public class S3Config {
+
+	@Value("${aws.endpoint}")
+	String awsEndpoint;
+
+	@Bean
+	public AwsCredentialsProvider awsCredentialsProvider() {
+		return AwsCredentialsProviderChain.builder()
+										  .reuseLastProviderEnabled(true)
+										  .credentialsProviders(List.of(
+											  DefaultCredentialsProvider.create(),
+											  StaticCredentialsProvider.create(AwsBasicCredentials.create("foo", "bar"))
+										  ))
+										  .build();
+	}
+
+	@Bean
+	public S3Client s3Client() {
+		return S3Client.builder()
+					   .credentialsProvider(awsCredentialsProvider())
+					   .region(Region.AP_NORTHEAST_2)
+					   .endpointOverride(URI.create(awsEndpoint))
+					   .build();
+	}
+}
+```
+
+S3Service 생성
+
+```java
+@RequiredArgsConstructor
+@Service
+public class S3Service {
+	
+	private final S3Client s3Client;
+
+	public void putFile(String bucket, String key, File file) {
+		s3Client.putObject((req) -> {
+			req.bucket(bucket);
+			req.key(key);
+		}, RequestBody.fromFile(file));
+	}
+
+	public File getFile(String bucket, String key) {
+		var file = new File("build/output/getFile.txt");
+
+		var res = s3Client.getObject((req) -> {
+			req.bucket(bucket);
+			req.key(key);
+		});
+
+		try {
+			FileUtils.writeByteArrayToFile(file, res.readAllBytes());
+		} catch (Exception e) {
+			// ignore
+		}
+
+		return file;
+	}
+
+}
+```
+
+테스트 컨테이너 설정
+
+```java
+@SpringBootTest
+@ContextConfiguration(initializers = IntegrationTest.IntegrationTestInitializer.class)
+public class IntegrationTest {
+
+	static LocalStackContainer aws;
+
+	static {
+
+		DockerImageName imageName = DockerImageName.parse("localstack/localstack:0.11.2");
+		
+    aws = (new LocalStackContainer(imageName))
+			.withServices(LocalStackContainer.Service.S3)
+			.withStartupTimeout(Duration.ofSeconds(600));
+		aws.start();
+	}
+
+	static class IntegrationTestInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+		@Override
+		public void initialize(ConfigurableApplicationContext applicationContext) {
+			Map<String, String> properties = new HashMap<>();
+
+			try {
+				aws.execInContainer(
+					"awslocal",
+					"s3api",
+					"create-bucket",
+					"--bucket",
+					"test-bucket"
+				);
+
+				properties.put("aws.endpoint", aws.getEndpoint().toString());
+			} catch (Exception e) {
+				// ignore ..
+			}
+      TestPropertyValues.of(properties)
+        .applyTo(applicationContext); // 마지막에 설정 해야 적용된다
+		}
+	}
+}
+
+```
+
+S3Service 테스트
+
+```java
+class S3ServiceTest extends IntegrationTest {
+	@Autowired
+	private S3Service s3Service;
+
+	@Test
+	void s3PutAndGetTest() throws Exception {
+		// given
+		var key = "sampelObject.txt";
+		var sampleFile = new ClassPathResource("static/sample.txt").getFile();
+
+		// when
+		s3Service.putFile("test-bucket", key, sampleFile);
+
+		// then
+		var resultFile = s3Service.getFile("test-bucket", key);
+
+		var sampleFileLines = Files.readAllLines(Paths.get(sampleFile.getPath()));
+		var responseFileLines = Files.readAllLines(Paths.get(resultFile.getPath()));
+
+    
+     System.out.println("============================== here");
+        System.out.println(sampleFile.length());
+        System.out.println(resultFile.length());
+        System.out.println(Arrays.toString(sampleFileLines.toArray()));
+        System.out.println(Arrays.toString(responseFileLines.toArray()));
+        System.out.println("============================== here");
+    
+		Assertions.assertIterableEquals(sampleFileLines, responseFileLines);
+	}
+}
+```
 

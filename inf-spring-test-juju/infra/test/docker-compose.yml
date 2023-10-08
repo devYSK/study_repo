@@ -2,7 +2,6 @@ version: "3.8"
 
 services:
   local-db:
-#    platform: linux/arm64
     image: mysql:8
     environment:
       MYSQL_DATABASE: score
@@ -12,8 +11,6 @@ services:
     command: --default-authentication-plugin=mysql_native_password
   local-db-migrate:
     image: flyway/flyway:latest
-#    platform: linux/arm64
-#    restart: always
     environment:
       - FLYWAY_DB_URL=jdbc:mysql://local-db/score?allowPublicKeyRetrieval=true&useSSL=false
       - FLYWAY_DB_USER=root
@@ -24,3 +21,19 @@ services:
       - ../../db/migration:/flyway/sql
     depends_on:
       - local-db
+
+
+  local-redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
+  local-aws:
+    image: localstack/localstack:latest
+    environment:
+      - SERVICES=s3
+      - DEBUG=1
+      - PORT_WEB_UI=4567
+      - AWS_DEFAULT_REGION=ap-northeast-2
+      - USE_SSL=0
+    ports:
+      - "4566:4566"

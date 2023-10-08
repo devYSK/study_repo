@@ -1,21 +1,20 @@
 version: "3.8"
 
 services:
-#  local-db:
-#    image: mysql:8.0 # mysql:8 대신, mysql:8.0을 사용해주세요!
-#    environment:
-#      MYSQL_DATABASE: score
-#      MYSQL_ROOT_PASSWORD: password
-#    ports:
-#      - 3306:3306
-#    volumes:
-#      - ./dbdata:/var/lib/mysql
+  local-db:
+    image: mysql:8.0 # mysql:8 대신, mysql:8.0을 사용해주세요!
+    environment:
+      MYSQL_DATABASE: score
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - 3306:3306
+    volumes:
+      - ./dbdata:/var/lib/mysql
   local-db-migrate:
     image: flyway/flyway:7
     restart: always
 #    network_mode: "host" # flyway 컨테이너를 host 네트워크 모드로 실행하면 호스트의 네트워크를 직접 사용
     environment:
-#      - FLYWAY_DB_URL=jdbc:mysql://localhost:3306/score
       - FLYWAY_DB_USER=root
       - FLYWAY_DB_PASSWORD=root
       - FLYWAY_DB_URL=jdbc:mysql://host.docker.internal:3306/score
@@ -23,3 +22,8 @@ services:
     volumes:
       - ./db/flyway.conf:/flyway/conf/flyway.conf
       - ./db/migration:/flyway/sql
+
+  local-redis:
+    image: redis:6
+    ports:
+      - "6379:6379"

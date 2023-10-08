@@ -25,7 +25,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
 
-
     runtimeOnly 'com.mysql:mysql-connector-j'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
@@ -41,6 +40,18 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter:1.17.6'
 
 
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    testImplementation "com.redis.testcontainers:testcontainers-redis-junit:1.6.4"
+
+    // ...
+
+    implementation(platform("software.amazon.awssdk:bom:2.20.136"))
+    implementation("commons-io:commons-io:2.13.0")
+    implementation("software.amazon.awssdk:aws-core")
+    implementation("software.amazon.awssdk:sdk-core")
+    implementation("software.amazon.awssdk:sts")
+    implementation("software.amazon.awssdk:s3")
+    testImplementation("org.testcontainers:localstack:1.19.0")
 }
 
 tasks.named('test') {
