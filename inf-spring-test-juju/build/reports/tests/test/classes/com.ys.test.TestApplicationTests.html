@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - TestApplicationTests</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<h1>TestApplicationTests</h1>
+<div class="breadcrumbs">
+<a href="../index.html">all</a> &gt; 
+<a href="../packages/com.ys.test.html">com.ys.test</a> &gt; TestApplicationTests</div>
+<div id="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox" id="tests">
+<div class="counter">1</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="failures">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="ignored">
+<div class="counter">0</div>
+<p>ignored</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="duration">
+<div class="counter">0.386s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success" id="successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div id="tabs">
+<ul class="tabLinks">
+<li>
+<a href="#tab0">Tests</a>
+</li>
+<li>
+<a href="#tab1">Standard output</a>
+</li>
+</ul>
+<div id="tab0" class="tab">
+<h2>Tests</h2>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Duration</th>
+<th>Result</th>
+</tr>
+</thead>
+<tr>
+<td class="success">contextLoads()</td>
+<td class="success">0.386s</td>
+<td class="success">passed</td>
+</tr>
+</table>
+</div>
+<div id="tab1" class="tab">
+<h2>Standard output</h2>
+<span class="code">
+<pre>17:18:50.740 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.ys.test.IntegrationTest]: IntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+17:18:50.807 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.ys.test.TestApplication for test class com.ys.test.TestApplicationTests
+17:18:50.890 [Test worker] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+17:18:51.030 [Test worker] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Loaded org.testcontainers.dockerclient.UnixSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first
+17:18:51.168 [Test worker] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with Docker accessed via Unix socket (/Users/ysk/.docker/run/docker.sock)
+17:18:51.168 [Test worker] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
+17:18:51.188 [Test worker] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
+  Server Version: 24.0.6
+  API Version: 1.43
+  Operating System: Docker Desktop
+  Total Memory: 7950 MB
+17:18:51.188 [Test worker] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+17:18:51.188 [Test worker] INFO org.testcontainers.DockerClientFactory -- Checking the system...
+17:18:51.189 [Test worker] INFO org.testcontainers.DockerClientFactory -- ✔︎ Docker server version should be at least 1.6.0
+17:18:51.217 [Test worker] INFO tc.testcontainers/ryuk:0.5.1 -- Creating container for image: testcontainers/ryuk:0.5.1
+17:18:51.516 [Test worker] INFO tc.testcontainers/ryuk:0.5.1 -- Container testcontainers/ryuk:0.5.1 is starting: b21c9d3401e03e7216b7a0b507293fa8ab5e569f0bb9aea896473182b888b94d
+17:18:51.755 [Test worker] INFO tc.testcontainers/ryuk:0.5.1 -- Container testcontainers/ryuk:0.5.1 started in PT0.566291S
+17:18:51.760 [Test worker] INFO org.testcontainers.containers.ComposeDelegate -- Preemptively checking local images for 'flyway/flyway:latest', referenced via a compose file or transitive Dockerfile. If not available, it will be pulled.
+17:18:51.760 [Test worker] INFO org.testcontainers.containers.ComposeDelegate -- Preemptively checking local images for 'mysql:8', referenced via a compose file or transitive Dockerfile. If not available, it will be pulled.
+17:18:51.765 [Test worker] INFO tc.docker/compose:1.29.2 -- Creating container for image: docker/compose:1.29.2
+17:18:52.051 [Test worker] INFO tc.docker/compose:1.29.2 -- Container docker/compose:1.29.2 is starting: 7818ab84873e44db5d2a8461f4e3defe59687ca9a8d107a59a25b535c78bc62f
+17:18:52.241 [Test worker] WARN tc.docker/compose:1.29.2 -- The architecture 'amd64' for image 'docker/compose:1.29.2' (ID sha256:32d8a4638cd83922fdd94cadf4f1850b595d29757488c73adf05f4b99ebd1318) does not match the Docker server architecture 'arm64'. This will cause the container to execute much more slowly due to emulation and may lead to timeout failures.
+17:18:57.496 [Test worker] INFO tc.docker/compose:1.29.2 -- Container docker/compose:1.29.2 started in PT5.730851S
+17:18:57.497 [Test worker] INFO tc.docker/compose:1.29.2 -- Docker Compose container is running for command: up -d
+17:18:57.502 [Test worker] INFO tc.docker/compose:1.29.2 -- Docker Compose has finished running
+17:18:57.502 [docker-java-stream--862283308] INFO tc.docker/compose:1.29.2 -- STDERR: Creating network &quot;wvebrh4jz6os_default&quot; with the default driver
+17:18:57.502 [docker-java-stream--862283308] INFO tc.docker/compose:1.29.2 -- STDERR: Creating wvebrh4jz6os_local-db_1 ... 
+17:18:57.502 [docker-java-stream--862283308] INFO tc.docker/compose:1.29.2 -- STDERR: Creating wvebrh4jz6os_local-db_1 ... done
+17:18:57.502 [docker-java-stream--862283308] INFO tc.docker/compose:1.29.2 -- STDERR: Creating wvebrh4jz6os_local-db-migrate_1 ... 
+17:18:57.502 [docker-java-stream--862283308] INFO tc.docker/compose:1.29.2 -- STDERR: Creating wvebrh4jz6os_local-db-migrate_1 ... done
+17:18:57.507 [Test worker] INFO tc.alpine/socat:1.7.4.3-r0 -- Creating container for image: alpine/socat:1.7.4.3-r0
+17:18:57.563 [Test worker] INFO tc.alpine/socat:1.7.4.3-r0 -- Container alpine/socat:1.7.4.3-r0 is starting: 961e0047a2c8d12932f7b151ff5b2a193684fc1c3941cac179ba76b49b401a24
+17:18:57.837 [Test worker] INFO tc.alpine/socat:1.7.4.3-r0 -- Container alpine/socat:1.7.4.3-r0 started in PT0.330741S
+17:19:05.788 [Test worker] INFO org.testcontainers.containers.ComposeDelegate -- Preemptively checking local images for 'flyway/flyway:latest', referenced via a compose file or transitive Dockerfile. If not available, it will be pulled.
+17:19:05.788 [Test worker] INFO org.testcontainers.containers.ComposeDelegate -- Preemptively checking local images for 'mysql:8', referenced via a compose file or transitive Dockerfile. If not available, it will be pulled.
+17:19:05.790 [Test worker] INFO tc.docker/compose:1.29.2 -- Creating container for image: docker/compose:1.29.2
+17:19:05.846 [Test worker] INFO tc.docker/compose:1.29.2 -- Container docker/compose:1.29.2 is starting: 21ac72eb8b5e55263a5f20f21133ffb6c09ded85d0e0a352eec3796ed01ae35a
+17:19:06.101 [Test worker] WARN tc.docker/compose:1.29.2 -- The architecture 'amd64' for image 'docker/compose:1.29.2' (ID sha256:32d8a4638cd83922fdd94cadf4f1850b595d29757488c73adf05f4b99ebd1318) does not match the Docker server architecture 'arm64'. This will cause the container to execute much more slowly due to emulation and may lead to timeout failures.
+17:19:11.257 [Test worker] INFO tc.docker/compose:1.29.2 -- Container docker/compose:1.29.2 started in PT5.466478S
+17:19:11.258 [Test worker] INFO tc.docker/compose:1.29.2 -- Docker Compose container is running for command: up -d
+17:19:11.267 [Test worker] INFO tc.docker/compose:1.29.2 -- Docker Compose has finished running
+17:19:11.267 [docker-java-stream-2072291810] INFO tc.docker/compose:1.29.2 -- STDERR: wvebrh4jz6os_local-db_1 is up-to-date
+17:19:11.269 [docker-java-stream-2072291810] INFO tc.docker/compose:1.29.2 -- STDERR: Starting wvebrh4jz6os_local-db-migrate_1 ... 
+17:19:11.269 [docker-java-stream-2072291810] INFO tc.docker/compose:1.29.2 -- STDERR: Starting wvebrh4jz6os_local-db-migrate_1 ... done
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.1.4)
+
+2023-10-08T17:19:11.514+09:00  INFO 76531 --- [    Test worker] com.ys.test.TestApplicationTests         : Starting TestApplicationTests using Java 17.0.5 with PID 76531 (started by ysk in /Users/ysk/study/study_repo/inf-spring-test)
+2023-10-08T17:19:11.515+09:00  INFO 76531 --- [    Test worker] com.ys.test.TestApplicationTests         : No active profile set, falling back to 1 default profile: &quot;default&quot;
+2023-10-08T17:19:11.871+09:00  INFO 76531 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2023-10-08T17:19:11.905+09:00  INFO 76531 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 29 ms. Found 3 JPA repository interfaces.
+2023-10-08T17:19:12.123+09:00  INFO 76531 --- [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2023-10-08T17:19:12.155+09:00  INFO 76531 --- [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.2.9.Final
+2023-10-08T17:19:12.157+09:00  INFO 76531 --- [    Test worker] org.hibernate.cfg.Environment            : HHH000406: Using bytecode reflection optimizer
+2023-10-08T17:19:12.241+09:00  INFO 76531 --- [    Test worker] o.h.b.i.BytecodeProviderInitiator        : HHH000021: Bytecode provider name : bytebuddy
+2023-10-08T17:19:12.336+09:00  INFO 76531 --- [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2023-10-08T17:19:12.345+09:00  INFO 76531 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2023-10-08T17:19:12.624+09:00  INFO 76531 --- [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3f2ef402
+2023-10-08T17:19:12.625+09:00  INFO 76531 --- [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2023-10-08T17:19:12.653+09:00  WARN 76531 --- [    Test worker] org.hibernate.orm.deprecation            : HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2023-10-08T17:19:12.788+09:00  INFO 76531 --- [    Test worker] o.h.b.i.BytecodeProviderInitiator        : HHH000021: Bytecode provider name : bytebuddy
+2023-10-08T17:19:13.175+09:00  INFO 76531 --- [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+Hibernate: 
+    create table student_fail (
+        student_fail_id bigint not null auto_increment,
+        avg_score float(53),
+        exam varchar(255),
+        student_name varchar(255),
+        primary key (student_fail_id)
+    ) engine=InnoDB
+Hibernate: 
+    create table student_pass (
+        student_pass_id bigint not null auto_increment,
+        avg_score float(53),
+        exam varchar(255),
+        student_name varchar(255),
+        primary key (student_pass_id)
+    ) engine=InnoDB
+Hibernate: 
+    create table student_score (
+        student_score_id bigint not null auto_increment,
+        english_score integer,
+        exam varchar(255),
+        kor_score integer,
+        math_score integer,
+        student_name varchar(255),
+        primary key (student_score_id)
+    ) engine=InnoDB
+2023-10-08T17:19:13.262+09:00  INFO 76531 --- [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2023-10-08T17:19:13.516+09:00  WARN 76531 --- [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2023-10-08T17:19:13.679+09:00  INFO 76531 --- [    Test worker] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:mysql://localhost:54052/score'
+2023-10-08T17:19:13.712+09:00  INFO 76531 --- [    Test worker] com.ys.test.TestApplicationTests         : Started TestApplicationTests in 2.373 seconds (process running for 23.529)
+Hibernate: 
+    insert 
+    into
+        student_score
+        (english_score,exam,kor_score,math_score,student_name) 
+    values
+        (?,?,?,?,?)
+Hibernate: 
+    select
+        s1_0.student_score_id,
+        s1_0.english_score,
+        s1_0.exam,
+        s1_0.kor_score,
+        s1_0.math_score,
+        s1_0.student_name 
+    from
+        student_score s1_0 
+    where
+        s1_0.student_score_id=?
+exam
+2023-10-08T17:19:14.242+09:00  INFO 76531 --- [    Test worker] tc.docker/compose:1.29.2                 : Creating container for image: docker/compose:1.29.2
+2023-10-08T17:19:14.272+09:00  INFO 76531 --- [    Test worker] tc.docker/compose:1.29.2                 : Container docker/compose:1.29.2 is starting: 0336c3a6d34a6183f28bf73243ff8fa19423c52e60ce5a29de50b7bba228426e
+2023-10-08T17:19:14.472+09:00  WARN 76531 --- [    Test worker] tc.docker/compose:1.29.2                 : The architecture 'amd64' for image 'docker/compose:1.29.2' (ID sha256:32d8a4638cd83922fdd94cadf4f1850b595d29757488c73adf05f4b99ebd1318) does not match the Docker server architecture 'arm64'. This will cause the container to execute much more slowly due to emulation and may lead to timeout failures.
+2023-10-08T17:19:20.398+09:00  INFO 76531 --- [    Test worker] tc.docker/compose:1.29.2                 : Container docker/compose:1.29.2 started in PT6.156009S
+2023-10-08T17:19:20.399+09:00  INFO 76531 --- [    Test worker] tc.docker/compose:1.29.2                 : Docker Compose container is running for command: down -v
+2023-10-08T17:19:20.402+09:00  INFO 76531 --- [ream-1513908770] tc.docker/compose:1.29.2                 : STDERR: Stopping wvebrh4jz6os_local-db_1 ... 
+2023-10-08T17:19:20.402+09:00  INFO 76531 --- [ream-1513908770] tc.docker/compose:1.29.2                 : STDERR: Stopping wvebrh4jz6os_local-db_1 ... done
+2023-10-08T17:19:20.402+09:00  INFO 76531 --- [ream-1513908770] tc.docker/compose:1.29.2                 : STDERR: Removing wvebrh4jz6os_local-db-migrate_1 ... 
+2023-10-08T17:19:20.402+09:00  INFO 76531 --- [ream-1513908770] tc.docker/compose:1.29.2                 : STDERR: Removing wvebrh4jz6os_local-db_1         ... 
+2023-10-08T17:19:20.402+09:00  INFO 76531 --- [ream-1513908770] tc.docker/compose:1.29.2                 : STDERR: Removing wvebrh4jz6os_local-db-migrate_1 ... done
+2023-10-08T17:19:20.402+09:00  INFO 76531 --- [ream-1513908770] tc.docker/compose:1.29.2                 : STDERR: Removing wvebrh4jz6os_local-db_1         ... done
+2023-10-08T17:19:20.402+09:00  INFO 76531 --- [ream-1513908770] tc.docker/compose:1.29.2                 : STDERR: Removing network wvebrh4jz6os_default
+2023-10-08T17:19:20.405+09:00  INFO 76531 --- [    Test worker] tc.docker/compose:1.29.2                 : Docker Compose has finished running
+</pre>
+</span>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="http://www.gradle.org">Gradle 8.2.1</a> at 2023. 10. 8. 오후 5:19:20</p>
+</div>
+</div>
+</body>
+</html>

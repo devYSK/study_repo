@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  local-db:
+#    platform: linux/arm64
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: score
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password
+  local-db-migrate:
+    image: flyway/flyway:latest
+#    platform: linux/arm64
+#    restart: always
+    environment:
+      - FLYWAY_DB_URL=jdbc:mysql://local-db/score?allowPublicKeyRetrieval=true&useSSL=false
+      - FLYWAY_DB_USER=root
+      - FLYWAY_DB_PASSWORD=password
+    command: migrate
+    volumes:
+      - ../../db/flyway.conf:/flyway/conf/flyway.conf
+      - ../../db/migration:/flyway/sql
+    depends_on:
+      - local-db
