@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ys.test.MyCalculatorTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2023-10-08T03:41:20" hostname="MacBook-Pro-4.local" time="0.035">
+  <properties/>
+  <testcase name="divide" classname="com.ys.test.MyCalculatorTest" time="0.008"/>
+  <testcase name="display name genetation test" classname="com.ys.test.MyCalculatorTest" time="0.0"/>
+  <testcase name="add" classname="com.ys.test.MyCalculatorTest" time="0.024"/>
+  <testcase name="minus" classname="com.ys.test.MyCalculatorTest" time="0.0"/>
+  <testcase name="multiply" classname="com.ys.test.MyCalculatorTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
