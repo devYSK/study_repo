@@ -1,0 +1,66 @@
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 4
+    url: jdbc:postgresql://localhost:5432/sns
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database: postgresql
+    hibernate:
+      dialect: org.hibernate.dialect.PostgreSQLDialect
+      ddl-auto: update
+      properties:
+        format_sql: true
+    show-sql: true
+  redis:
+#    url: redis://:p8e682aad12b7caf6e8a4d75769964a337be7324cd4634764d238a7c4f53b357e@ec2-44-208-247-66.compute-1.amazonaws.com:22049
+    host: localhost
+    port: 6379
+  kafka:
+#    properties:
+      # SASL/SSL 설정 제거 (로컬에서는 일반적으로 필요하지 않습니다.)
+#      security.protocol: SASL_SSL
+#      sasl.mechanism: SCRAM-SHA-256
+#      sasl.jaas.config: org.apache.kafka.common.security.scram.ScramLoginModule required username="r2rj2fh0" password="e_BnIr6ESAbpmuu7L7XugsMNmYlx3eFq"
+    consumer:
+      'spring.json.trusted.packages': "*"
+      bootstrap-servers: localhost:9092  # 로컬 Kafka 브로커 주소로 변경
+      group-id: notification
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.IntegerDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    listener:
+      ack-mode: MANUAL
+    producer:
+      bootstrap-servers: localhost:9092  # 로컬 Kafka 브로커 주소로 변경
+      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      'properties.enable.idempotence': false
+    topic:
+      notification: r2rj2fh0-notification
+#    consumer:
+#      'spring.json.trusted.packages': "*"
+#      bootstrap-servers: dory-01.srvs.cloudkafka.com:9094, dory-02.srvs.cloudkafka.com:9094, dory-03.srvs.cloudkafka.com:9094
+#      group-id: notification
+#      auto-offset-reset: latest
+#      key-deserializer: org.apache.kafka.common.serialization.IntegerDeserializer
+#      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+#    listener:
+#      ack-mode: MANUAL
+#    producer:
+#      bootstrap-servers: dory-01.srvs.cloudkafka.com:9094, dory-02.srvs.cloudkafka.com:9094, dory-03.srvs.cloudkafka.com:9094
+#      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+#      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+#      'properties.enable.idempotence': false
+#    topic:
+#      notification: r2rj2fh0-notification
+
+
+
+
+jwt:
+  secret-key: fast-campus.simple_sns_2022_secret_key
+  token:
+    expired-time-ms: 2592000000

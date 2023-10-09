@@ -1,0 +1,175 @@
+plugins {
+    id 'org.springframework.boot' version '3.1.4'
+    id 'io.spring.dependency-management' version '1.1.3'
+    id 'nu.studer.jooq' version '7.1.1'
+    id 'java'
+}
+
+group = 'com.uno'
+version = '0.1.2-SNAPSHOT'
+sourceCompatibility = '17'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+project.ext {
+    querydslVersion = dependencyManagement.importedProperties['querydsl.version']
+    jooqVersion = dependencyManagement.importedProperties['jooq.version']
+    mysqlVersion = dependencyManagement.importedProperties['mysql.version']
+}
+
+dependencies {
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.data:spring-data-rest-hal-explorer'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // Querydsl
+    implementation "com.querydsl:querydsl-jpa"
+    implementation "com.querydsl:querydsl-collections"
+    annotationProcessor "com.querydsl:querydsl-apt:${project.querydslVersion}:jpa" // querydsl JPAAnnotationProcessor 사용 지정
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api" // java.lang.NoClassDefFoundError (javax.annotation.Generated) 발생 대응
+
+    // Jooq
+    implementation 'org.springframework.boot:spring-boot-starter-jooq'
+    jooqGenerator "com.mysql:mysql-connector-j:${project.mysqlVersion}"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+//// Querydsl 설정부
+def generated = 'src/main/generated'
+
+// querydsl QClass 파일 생성 위치를 지정
+tasks.withType(JavaCompile) {
+    options.getGeneratedSourceOutputDirectory().set(file(generated))
+}
+
+// java source set 에 querydsl QClass 위치 추가
+sourceSets {
+    main.java.srcDirs += [ generated ]
+}
+
+// gradle clean 시에 QClass 디렉토리 삭제
+clean {
+    delete file(generated)
+}
+
+//// Jooq 설정부
+def generatedJooq = 'src/main/generated-jooq'
+
+jooq {
+    // jOOQ 버전 설정
+    version = project.jooqVersion
+
+    configurations {
+        main {
+            generationTool {
+                // 로깅 레벨 설정. WARN, INFO, DEBUG 등이 있습니다.
+                logging = org.jooq.meta.jaxb.Logging.WARN
+
+                // JDBC 연결 정보
+                jdbc {
+                    driver = 'com.mysql.cj.jdbc.Driver'
+                    url = 'jdbc:mysql://localhost:3306/getinline'
+                    user = 'root'
+                    password = 'root'
+                }
+
+                generator {
+                    // Java 코드 생성을 위한 설정
+                    name = 'org.jooq.codegen.JavaGenerator'
+
+                    // 코드 생성 전략 설정
+                    strategy {
+                        name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+                    }
+
+                    // 데이터베이스 설정
+                    database {
+                        // 타겟 데이터베이스의 유형
+                        name = 'org.jooq.meta.mysql.MySQLDatabase'
+
+                        // 타겟 스키마 이름
+                        inputSchema = 'getinline'
+
+                        // 포함할 테이블, 뷰, 루틴의 패턴
+                        includes = '.*'
+                        // 제외할 테이블, 뷰, 루틴의 패턴
+                        excludes = ''
+
+                        // 강제 타입 변환 설정
+                        forcedTypes {
+                            forcedType {
+                                // 변환할 사용자 정의 타입
+                                userType = 'com.uno.getinline.constant.EventStatus'
+                                // Enum 변환 사용
+                                enumConverter = true
+                                // 변환할 컬럼의 패턴
+                                includeExpression = '.*\\.event_status'
+                                // 변환할 SQL 데이터 타입의 패턴
+                                includeTypes = '.*'
+                            }
+                            forcedType {
+                                userType = 'com.uno.getinline.constant.PlaceType'
+                                enumConverter = true
+                                includeExpression = '.*\\.place_type'
+                                includeTypes = '.*'
+                            }
+                        }
+                    }
+
+                    // 코드 생성 옵션
+                    generate {
+                        deprecated = false          // deprecated 코드 생성 안 함
+                        records = true              // Record 클래스 생성
+                        immutablePojos = true       // POJOs를 불변으로 생성
+                        fluentSetters = true        // fluent style setter 메서드 생성
+                        javaTimeTypes = true        // java.time 패키지 사용
+                    }
+
+                    // 생성된 코드의 대상 위치 및 패키지 설정
+                    target {
+                        packageName = 'com.uno.getinline'
+                        directory = generatedJooq
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+// incremental build (증분 빌드) - Jooq 오브젝트 생성 퍼포먼스 향상
+tasks.named('generateJooq').configure {
+    allInputsDeclared = true
+    outputs.cacheIf { true }
+}
+
+// java source set 에 Jooq 디렉토리 추가
+sourceSets {
+    main.java.srcDir generatedJooq
+}
+
+// gradle clean 시에 Jooq 디렉토리 삭제 (본래의 Jooq 의도에는 맞지 않는 사용법)
+tasks.named('clean') {
+    dependsOn 'cleanGenerateJooq'
+}

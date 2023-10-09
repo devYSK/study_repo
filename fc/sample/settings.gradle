@@ -1,0 +1,6 @@
+rootProject.name = 'sample'
+
+include('direction')
+include('sns')
+include('corona-jooq')
+include('board')
