@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>공통 스크립트</title>
+</head>
+<body>
+  <script src="/js/plugins/jquery/jquery.min.js"></script>
+  <script src="/js/plugins/jquery-ui/jquery-ui.min.js"></script>
+  <script src="/js/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/adminlte.min.js"></script>
+  <script src="/js/layout-main-table.js"></script>
+  <script src="/js/todolist.js"></script>
+
+  <!-- 채팅용 스크립트 -->
+  <script src="/webjars/sockjs-client/1.0.2/sockjs.min.js"></script>
+  <script src="/webjars/stomp-websocket/2.3.3/stomp.min.js"></script>
+  <script src="/js/app.js"></script>
+
+  <script>
+    $(document).ready(() => {
+      if (sessionStorage.getItem('darkMode') === "true") {
+        $('body').addClass('dark-mode');
+        $('header nav')
+            .addClass('navbar-dark')
+            .removeClass('navbar-light');
+        $('main, footer')
+            .addClass('accent-light')
+            .removeClass('accent-dark');
+        $('.modal-body pre').addClass('text-light');
+        $('#dark-mode-checkbox').prop('checked', true);
+      }
+    })
+    $('#dark-mode-checkbox').on('click', function() {
+      if ($(this).is(':checked')) {
+        $('body').addClass('dark-mode');
+        $('header nav')
+            .addClass('navbar-dark')
+            .removeClass('navbar-light');
+        $('main, footer')
+            .addClass('accent-light')
+            .removeClass('accent-dark');
+        $('.modal-body pre').addClass('text-light');
+        sessionStorage.setItem('darkMode', "true");
+      } else {
+        $('body').removeClass('dark-mode');
+        $('header nav')
+            .addClass('navbar-light')
+            .removeClass('navbar-dark');
+        $('main, footer')
+            .addClass('accent-dark')
+            .removeClass('accent-light');
+        $('.modal-body pre').removeClass('text-light');
+        sessionStorage.setItem('darkMode', "false");
+      }
+    });
+  </script>
+  <script>
+    $(document).ready(() => {
+      const socket = new SockJS('/chat');
+      stompClient = Stomp.over(socket);
+      stompClient.connect({}, function (frame) {
+        console.log('Chat connected: ' + frame);
+        stompClient.subscribe('/topic/chat', function (webSocketMessage) {
+          respondMessage(JSON.parse(webSocketMessage.body).content);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
