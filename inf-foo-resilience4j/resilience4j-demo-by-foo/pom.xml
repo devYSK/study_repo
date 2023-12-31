@@ -43,6 +43,11 @@
             <version>${resilience4jVersion}</version>
         </dependency>
         <!-- resilience4j 사용에 필요한 의존성 끝 -->
+        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>

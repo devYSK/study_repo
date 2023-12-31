@@ -15,7 +15,6 @@ public class CircuitBreakerController {
         this.circuitBreakerService = circuitBreakerService;
     }
 
-
     @GetMapping("/api-call")
     public String apiCall(@RequestParam String param) throws InterruptedException {
         return circuitBreakerService.process(param);

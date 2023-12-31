@@ -34,4 +34,4 @@ public class CircuitBreakerService {
         return param;
     }
 
-};
+}

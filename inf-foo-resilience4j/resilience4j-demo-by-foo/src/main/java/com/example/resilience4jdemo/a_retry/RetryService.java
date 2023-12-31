@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 public class RetryService {
 
     private static final String SIMPLE_RETRY_CONFIG = "simpleRetryConfig";
+    // config의 이름이 중요하다. application.yml에 들어있음
 
     @Retry(name = SIMPLE_RETRY_CONFIG, fallbackMethod = "fallback")
     public String process(String param) {
