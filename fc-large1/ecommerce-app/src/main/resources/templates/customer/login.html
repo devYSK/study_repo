@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default-layout}"
+>
+
+<!-- 페이지 전용 스타일 -->
+<th:block layout:fragment="css">
+  <link rel="stylesheet" href="/css/login/login.css">
+</th:block>
+
+<!-- 페이지 전용 JS -->
+<th:block layout:fragment="script">
+  <script src="/js/login/login.js"></script>
+</th:block>
+
+<!-- 컨텐츠 영역 -->
+<div layout:fragment="content">
+  <div class="container-md">
+    <!-- Content Area -->
+    <div class="container">
+      <div class="row category-product-list-area">
+
+        <!-- 왼쪽 여백 -->
+        <div class="col"></div>
+
+        <!-- 가운데 컨텐츠 영역 -->
+        <div class="col-8 search-result-content">
+          <h1>로그인</h1>
+          <form method="post" action="/customer/login">
+            <div class="mb-3">
+              <label for="inputEmail1" class="form-label">Email address</label>
+              <input type="email" class="form-control" id="inputEmail1" name="email" aria-describedby="emailHelp">
+            </div>
+            <div class="mb-3">
+              <label for="inputPassword1" class="form-label">Password</label>
+              <input type="password" class="form-control" id="inputPassword1" name="password">
+            </div>
+            <div class="mb-3 form-check">
+              <p th:if="${loginFailure}" class="error" th:text="${loginFailureMessage}"></p>
+            </div>
+            <button type="submit" class="btn btn-primary">로그인</button>
+            <button type="button" class="btn btn-secondary btn-signup">회원 가입</button>
+          </form>
+        </div>
+
+        <div class="col"></div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

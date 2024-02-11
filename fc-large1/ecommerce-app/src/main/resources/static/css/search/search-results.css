@@ -1,0 +1,29 @@
+.search-result-content {
+    margin-top: 3rem;
+}
+
+.page-title-area {
+    width: 56rem;
+}
+
+.search-result-list {
+    margin-top: 1rem;
+}
+
+.search-keyword {
+    font-weight: bold;
+}
+
+.pagination-area {
+    margin-top: 2rem;
+}
+
+.product {
+    padding: 0.5rem;
+    margin: 0.5rem;
+}
+
+.product-image {
+    width: 250px;
+    height: 250px;
+}

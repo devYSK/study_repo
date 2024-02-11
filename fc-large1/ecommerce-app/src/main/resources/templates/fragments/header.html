@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<div th:fragment="header">
+
+    <!-- Top Area -->
+    <nav class="navbar navbar-expand-lg bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Simple eCommerce Sample</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${categoryId == null ? 'active' : ''}" href="/">홈</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${categoryId == 100 ? 'active' : ''}" href="/category/products?categoryId=100">전자기기</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${categoryId == 200 ? 'active' : ''}"href="/category/products?categoryId=200">장난감</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${categoryId == 300 ? 'active' : ''}"href="/category/products?categoryId=300">애완용품</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${categoryId == 400 ? 'active' : ''}"href="/category/products?categoryId=400">스포츠</a>
+                    </li>
+                </ul>
+
+                <!-- Search Area -->
+                <form class="d-flex" role="search" method="post" action="/search">
+                    <input class="form-control" type="search" placeholder="찾고 싶은 상품을 입력하세요" aria-label="Search" size="40" name="keyword">
+                    <button class="btn btn-outline-success search-btn" type="submit">검색</button>
+                </form>
+
+                <button type="button" class="btn btn-info bnt-cart-view">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag" viewBox="0 0 16 16">
+                        <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5z"></path>
+                    </svg>
+                    <span class="badge badge-light" th:text="${countCartProduct} ?: '0'"></span>
+                </button>
+
+                <!-- 로그인/로그아웃 Area -->
+                <ul class="navbar-nav login-logout-area">
+                    <li class="nav-item">
+                        <a sec:authorize="isAnonymous()" class="nav-link active" aria-current="page" href="/customer/login">로그인</a>
+                        <a sec:authorize="isAuthenticated()" class="nav-link active" aria-current="page" href="/logout">로그아웃</a>
+<!--                        Logged user: <span sec:authentication="name"></span>-->
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+</html>

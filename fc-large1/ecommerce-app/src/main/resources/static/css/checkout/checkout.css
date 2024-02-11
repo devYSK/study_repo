@@ -1,0 +1,21 @@
+.checkout-navbar {
+    margin-bottom: 1rem;
+}
+
+.checkout-body {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.checkout-td-title {
+    width: 15rem;
+}
+
+.checkout-info-box {
+    margin-top: 3rem;
+}
+
+.purchase-btn {
+    height: 4rem;
+    font-size: xx-large;
+}

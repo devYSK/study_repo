@@ -1,0 +1,21 @@
+type Query {
+    hello(name: String): String!
+    customers(nameFilter: String): [Customer]!
+}
+
+type Mutation {
+    addCustomer(customerInput: CustomerInput): [Customer]
+}
+
+input CustomerInput {
+    name: String
+    age: Int
+}
+
+type Customer {
+    name: String
+    age: Int
+}
+
+
+

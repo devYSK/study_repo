@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default-layout}"
+>
+
+<!-- 페이지 전용 스타일 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 페이지 전용 JS -->
+<th:block layout:fragment="script">
+    <script src="/js/signup/signup.js"></script>
+</th:block>
+
+<!-- 컨텐츠 영역 -->
+<div layout:fragment="content">
+    <main class="flex-shrink-0" style="padding-top: 60px;">
+        <div class="container-md">
+            <!-- Content Area -->
+            <div class="container">
+                <div class="row category-product-list-area">
+
+                    <!-- 왼쪽 여백 -->
+                    <div class="col"></div>
+
+                    <!-- 가운데 컨텐츠 영역 -->
+                    <div class="col-8 search-result-content">
+                        <h1>회원 가입 폼</h1>
+                        <form method="post" action="/customer/signup" id="signupForm">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">이름</label>
+                                <input type="text" class="form-control" id="username" name="username" aria-describedby="usernameHelp">
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">이메일</label>
+                                <input type="text" class="form-control" id="email" name="email" aria-describedby="emailHelp">
+                            </div>
+                            <div class="mb-3">
+                                <label for="phoneNumber" class="form-label">폰번호</label>
+                                <input type="text" class="form-control" id="phoneNumber" name="phoneNumber" aria-describedby="phoneNumberHelp">
+                            </div>
+                            <div class="mb-3">
+                                <label for="address" class="form-label">주소</label>
+                                <input type="text" class="form-control" id="address" name="address" aria-describedby="addressHelp">
+                            </div>
+                            <div class="mb-3">
+                                <label for="age" class="form-label">나이</label>
+                                <input type="number" class="form-control" id="age" name="age" aria-describedby="ageHelp">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password1" class="form-label">비밀번호</label>
+                                <input type="password" class="form-control" id="password1" name="password1">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password2" class="form-label">비밀번호 재입력</label>
+                                <input type="password" class="form-control" id="password2", name="password2">
+                            </div>
+                            <button type="submit" class="btn btn-primary">가입하기</button>
+                        </form>
+                    </div>
+
+                    <div class="col"></div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+</html>

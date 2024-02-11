@@ -1,0 +1,35 @@
+html {
+    position: relative;
+    min-height: 100%;
+    margin: 0;
+}
+body {
+    min-height: 100%;
+}
+.search-btn {
+    width: 6em;
+    margin: 5px;
+}
+
+.header-user-icon {
+    margin-left: 1rem;
+}
+
+.login-logout-area {
+    margin-left: 1rem;
+}
+
+.footer {
+    margin: 0.5rem;
+    height: 2rem;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+}
+
+.content {
+    margin: 50px 100px 100px;
+}

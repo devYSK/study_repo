@@ -1,0 +1,16 @@
+.category-product-list-area {
+    padding-top: 3rem;
+}
+
+.page-title-area {
+    width: 56rem;
+}
+.product {
+    padding: 0.5rem;
+    margin: 0.5rem;
+}
+
+.product-image {
+    width: 250px;
+    height: 250px;
+}

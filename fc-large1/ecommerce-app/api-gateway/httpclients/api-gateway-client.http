@@ -1,0 +1,11 @@
+### Hello
+GET http://localhost:9090/hello
+
+### Microservice Hello
+GET http://localhost:9090/gateway-hello
+
+### Order API
+GET http://localhost:9090/providers/order-api/v1/orders
+
+### Add Header Test
+GET http://localhost:9090/get

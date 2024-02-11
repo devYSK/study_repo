@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default-layout}"
+>
+
+<!-- 페이지 전용 스타일 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 페이지 전용 JS -->
+<th:block layout:fragment="script">
+    <script src="/js/signup/signup.js"></script>
+</th:block>
+
+<!-- 컨텐츠 영역 -->
+<div layout:fragment="content">
+<h1>회원 가입 성공</h1>
+<p>
+    <a type="button" class="btn btn-primary" href="/">홈</a>
+</p>
+</div>
+</html>

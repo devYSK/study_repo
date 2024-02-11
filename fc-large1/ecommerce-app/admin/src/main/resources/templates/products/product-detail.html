@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default-layout}"
+>
+
+<head>
+    <title>이커머스 어드민</title>
+</head>
+
+<!-- 페이지 전용 스타일 -->
+<th:block layout:fragment="css">
+    <link href="/css/product/product-detail.css" rel="stylesheet">
+</th:block>
+
+<!-- 페이지 전용 JS -->
+<th:block layout:fragment="script">
+    <script src="/js/product/product-detail.js"></script>
+</th:block>
+
+<!-- 컨텐츠 Fragment 영역 -->
+<div layout:fragment="content">
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
+
+            <!-- Page Heading -->
+            <h1 class="h3 mb-4 text-gray-800">상품 상세 페이지</h1>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">상품 상세 정보</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tbody>
+                        <tr>
+                            <th scope="row" class="col-sm-2">상품 아이디</th>
+                            <td th:text="${productDetail.getProductId()}"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">상품 이름</th>
+                            <td th:text="${productDetail.getProductName()}"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">상품 금액</th>
+                            <td th:text="${productDetail.getPrice()}"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">재고 수량</th>
+                            <td th:text="${productDetail.getStockQuantity()}"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">판매 업체</th>
+                            <td th:text="${productDetail.getVendorName()}"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">상품 이미지</th>
+                            <td>
+                               <div><a th:href="${productDetail.getImageUrl()}" target="_blank">[상품 이미지 링크]</a></div>
+                                <div><img th:src="${productDetail.getImageUrl()}" class="product-image"/></div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <button type="button" id="back-to-list" class="btn btn-primary">목록으로</button>
+                </div>
+            </div>
+        </div>
+        <!-- /.container-fluid -->
+
+    </div>
+    <!-- End of Content Wrapper -->
+</div>
+<!-- 컨텐츠 Fragment 종료 -->
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default-layout}"
+>
+
+<!-- 페이지 전용 스타일 -->
+<th:block layout:fragment="css">
+    <link rel="stylesheet" href="/css/category/products.css">
+</th:block>
+
+<!-- 페이지 전용 JS -->
+<th:block layout:fragment="script">
+
+</th:block>
+
+<!-- 컨텐츠 영역 -->
+<div layout:fragment="content">
+
+    <!-- 컨텐츠 영역 -->
+    <div class="container-md text-left page-title-area">
+        <h3 th:text="${categoryName}">카테고리 이름</h3>
+    </div>
+    <div class="container-md text-center">
+        <div class="row" th:each="categoryProducts : ${categoryProductPartition}">
+            <div class="d-flex justify-content-center">
+                <div class="card product" style="width: 18rem;" th:each="categoryProduct, stat : ${categoryProducts}">
+                    <a th:href="@{/product/detail(productId=${categoryProduct.productId})}">
+                        <img th:src="${categoryProduct.productImage}" class="product-image">
+                    </a>
+                    <div class="card-body">
+                        <h5 class="card-title text-start" th:text="${categoryProduct.productName}"></h5>
+                        <h5 class="card-title text-start" th:text="|상품가격: ${#numbers.formatInteger(categoryProduct.price, 3, 'COMMA')}원|"></h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</html>

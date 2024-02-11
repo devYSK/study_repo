@@ -1,0 +1,4 @@
+rootProject.name = 'hello-ecommerce-service'
+
+include("admin", "api-gateway", "order-api", "graphql")
+

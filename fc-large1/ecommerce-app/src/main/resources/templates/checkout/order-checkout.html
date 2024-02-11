@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default-layout}"
+>
+
+<!-- 페이지 전용 스타일 -->
+<th:block layout:fragment="css">
+    <link rel="stylesheet" href="/css/category/products.css">
+</th:block>
+
+<!-- 페이지 전용 JS -->
+<th:block layout:fragment="script">
+    <script src="/js/checkout/checkout.js"></script>
+</th:block>
+
+<!-- 컨텐츠 영역 -->
+<div layout:fragment="content">
+    <div class="container-md">
+
+        <!-- 상단 Navi 영역 -->
+        <nav class="navbar navbar-expand-lg bg-light checkout-navbar">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/"><h1>초간단 이커머스</h1></a>
+            </div>
+        </nav>
+
+        <!-- 체크아웃 전체 영역 -->
+        <div class="checkout-body">
+            <form id="checkout-form" method="post" action="/order">
+            <h2>주문 및 결제하기</h2>
+            <hr>
+
+            <!-- 구매할 상품 목록 -->
+            <div class="checkout-info-box">
+                <h3>구매할 상품 목록</h3>
+                <table class="table table-striped table-hover">
+                    <thead>
+                    <tr>
+                        <th>상품이미지</th>
+                        <th>상품정보</th>
+                        <th>상품금액</th>
+                        <th>배송비</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="cartItemProduct : ${cartItemProducts}" class="cart-content">
+                        <td>
+                            <img class="product-thumb"
+                                 th:src="${cartItemProduct.getProductImageUrl()}"
+                                 alt="">
+                        </td>
+                        <td th:text="${cartItemProduct.productName}"></td>
+                        <td th:text="|${#numbers.formatInteger(cartItemProduct.productPrice, 3, 'COMMA')}원|">가격</td>
+                        <td th:text="${cartItemProduct.deliveryType.description}">배송타입</td>
+                    </tr>
+                    </tbody>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- 구매자 정보 -->
+            <div class="checkout-info-box purchase-customer">
+                <h3>구매자 정보</h3>
+                <table class="table">
+                    <tr>
+                        <td class="checkout-td-title table-secondary">이름</td>
+                        <td th:text="${customer.customerName}">고객 이름</td>
+                    </tr>
+                    <tr>
+                        <td class="checkout-td-title table-secondary">이메일</td>
+                        <td th:text="${customer.email}">고객 이메일 주소</td>
+                    </tr>
+                    <tr>
+                        <td class="checkout-td-title table-secondary">휴대폰번호</td>
+                        <td th:text="${customer.phoneNumber}">고객 전화번호</td>
+                    </tr>
+                    <tr>
+                        <td class="checkout-td-title table-secondary">배송주소</td>
+                        <td th:text="${customer.address}">고객 주소</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- 결제 정보 -->
+            <div class="checkout-info-box">
+                <h3>결제 정보</h3>
+                <table class="table">
+                    <tr>
+                        <th class="checkout-td-title table-secondary">결제 수단</th>
+                        <th>
+                            <select class="form-select" aria-label="결제 정보" id="pay-type" name="payType">
+                                <option value="NONE" selected>결제 수단을 선택하세요</option>
+                                <option value="CREDIT_CARD">카드</option>
+                                <option value="CASH">현금</option>
+                            </select>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th class="checkout-td-title table-secondary">최종 결제 금액</th>
+                        <th th:text="|${#numbers.formatInteger(totalAmount, 3, 'COMMA')}원|">총 결제 금액</th>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="d-grid gap-2 col-5 mx-auto checkout-info-box pay-price-action-area">
+                <button class="btn btn-primary purchase-btn" type="submit">결제하기</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+</html>

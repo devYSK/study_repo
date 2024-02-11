@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8" />
+    <title>레이아웃</title>
+    <meta name="viewport" content="width=device-width, maximum-scale=1.0, minimum-scale=1, user-scalable=yes,initial-scale=1.0" />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/common/layout.css">
+    <link rel="stylesheet" href="/css/common/base.css">
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="/vendor/jquery/jquery.min.js"></script>
+    <script src="/js/bootstrap.bundle.min.js" ></script>
+    <script src="/js/layout/base.js"></script>
+
+    <!-- css -->
+    <th:block layout:fragment="css"></th:block>
+
+    <!-- script -->
+    <th:block layout:fragment="script"></th:block>
+</head>
+<body>
+    <!-- header fragment 사용 -->
+    <div th:replace="fragments/header::header"></div>
+
+    <!-- content fragment 사용 -->
+    <div layout:fragment="content" class="content">
+
+    </div>
+
+    <!-- footer fragment 사용 -->
+    <div th:replace="fragments/footer::footer"></div>
+</body>
+</html>

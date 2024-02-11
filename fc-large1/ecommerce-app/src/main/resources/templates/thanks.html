@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default-layout}"
+>
+
+<!-- 페이지 전용 스타일 -->
+<th:block layout:fragment="css">
+    <link rel="stylesheet" href="/css/thanks.css">
+</th:block>
+
+<!-- 페이지 전용 JS -->
+<th:block layout:fragment="script">
+</th:block>
+
+<!-- 컨텐츠 영역 -->
+<div layout:fragment="content">
+    <div class="container-md">
+        <div class="container">
+            <div class="row thank-you-container">
+                <div class="col col-lg-2">
+                </div>
+                <div class="col-md-8 thank-you-content">
+                    <h1 class="order-complete-title">주문 완료.</h1>
+                    <hr>
+                    <div class="row">
+                        <h3 class="order-complete-message text-center">주문 완료되었습니다. 감사합니다.</h3>
+                    </div>
+                    <hr>
+
+                    <!-- 주문 배송 정보 -->
+                    <div class="order-delivery-area">
+                        <h3>상품 배송 정보</h3>
+                        <table class="table">
+                            <tr>
+                                <td>
+                                    <div class="card">
+                                        <div class="card-header" id="headingOne">
+                                            <h5 th:text="| 총 주문 상품 개수는 ${orderSheet.getOrderItemDetails().size()}입니다.|">
+                                            </h5>
+                                        </div>
+
+                                        <div class="card card-body">
+                                            <table class="table table-striped table-hover">
+                                                <thead>
+                                                <tr>
+                                                    <th>상품이미지</th>
+                                                    <th>상품정보</th>
+                                                    <th>상품금액</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr th:each="orderItemDetail : ${orderSheet.getOrderItemDetails()}">
+                                                    <td>
+                                                        <img class="product-thumb"
+                                                             th:src="${orderItemDetail.productImageUrl}"
+                                                             alt="">
+                                                    </td>
+                                                    <td th:text="${orderItemDetail.productName}"></td>
+                                                    <td th:text="|${orderItemDetail.productPrice}원|">가격</td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- 받는 사람 정보 -->
+                    <div class="receiver-info-area">
+                        <h3>받는 사람 정보</h3>
+                        <table class="table">
+                            <tr>
+                                <td class="thank-you-info-label">
+                                    받는 사람
+                                </td>
+                                <td th:text="|${orderSheet.getCustomerDTO().customerName} / ${orderSheet.getCustomerDTO().phoneNumber} |">
+                                    주문자 정보
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="thank-you-info-label">
+                                    받는 주소
+                                </td>
+                                <td th:text="${orderSheet.deliveryAddress}">
+                                    배송지 주소
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="thank-you-info-label">
+                                    배송 요청 사항
+                                </td>
+                                <td>
+                                    문 앞
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- 결제 정보 -->
+                    <div class="order-pay-info">
+                        <h3>결제 정보</h3>
+                        <table class="table">
+                            <tr>
+                                <td class="thank-you-info-label">총 주문금액</td>
+                                <td th:text="|${#numbers.formatInteger(orderSheet.getTotalAmount(), 3, 'COMMA')}원|">총 주문 금액</td>
+                            </tr>
+                            <tr>
+                                <td class="thank-you-info-label">배송비</td>
+                                <td>0원</td>
+                            </tr>
+                            <tr>
+                                <td class="thank-you-info-label">총 결제 금액</td>
+                                <td th:text="|${#numbers.formatInteger(orderSheet.getTotalAmount(), 3, 'COMMA')}|">총 결제 금액</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- 감사페이지 하단 버튼 영역 -->
+                    <div class="row justify-content-center">
+                        <div class="col-8 text-center">
+                            <a type="button" class="btn btn-primary btn-lg keep-shopping-btn" href="/">계속 쇼핑하기</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col col-lg-2">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</html>

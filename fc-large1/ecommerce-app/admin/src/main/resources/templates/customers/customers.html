@@ -1,0 +1,235 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en" xmlns:th="http://www.thymeleaf.org">-->
+<!--<head>-->
+
+<!--    <meta charset="utf-8">-->
+<!--    <meta http-equiv="X-UA-Compatible" content="IE=edge">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">-->
+<!--    <meta name="description" content="">-->
+<!--    <meta name="author" content="">-->
+
+<!--    <title>고객목록</title>-->
+
+<!--    &lt;!&ndash; Custom fonts for this template &ndash;&gt;-->
+<!--    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">-->
+<!--    <link-->
+<!--        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"-->
+<!--        rel="stylesheet">-->
+
+<!--    &lt;!&ndash; Custom styles for this template &ndash;&gt;-->
+<!--    <link href="/css/sb-admin-2.min.css" rel="stylesheet">-->
+
+<!--    &lt;!&ndash; Custom styles for this page &ndash;&gt;-->
+<!--    <link href="/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">-->
+
+<!--</head>-->
+
+<!--<body id="page-top">-->
+
+<!--    &lt;!&ndash; Page Wrapper &ndash;&gt;-->
+<!--    <div id="wrapper">-->
+
+<!--        &lt;!&ndash; Sidebar &ndash;&gt;-->
+<!--        <ul th:replace="/layouts/sidebar.html"></ul>-->
+<!--        &lt;!&ndash; End of Sidebar &ndash;&gt;-->
+
+<!--        &lt;!&ndash; Content Wrapper &ndash;&gt;-->
+<!--        <div id="content-wrapper" class="d-flex flex-column">-->
+
+<!--            &lt;!&ndash; Main Content &ndash;&gt;-->
+<!--            <div id="content">-->
+
+<!--                &lt;!&ndash; Topbar &ndash;&gt;-->
+<!--                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">-->
+
+<!--                    &lt;!&ndash; Sidebar Toggle (Topbar) &ndash;&gt;-->
+<!--                    <form class="form-inline">-->
+<!--                        <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">-->
+<!--                            <i class="fa fa-bars"></i>-->
+<!--                        </button>-->
+<!--                    </form>-->
+
+<!--                    &lt;!&ndash; Topbar Navbar &ndash;&gt;-->
+<!--                    <ul class="navbar-nav ml-auto">-->
+
+<!--                        &lt;!&ndash; Nav Item - Search Dropdown (Visible Only XS) &ndash;&gt;-->
+<!--                        <li class="nav-item dropdown no-arrow d-sm-none">-->
+<!--                            <a class="nav-link dropdown-toggle" href="#" id="searchDropdown" role="button"-->
+<!--                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">-->
+<!--                                <i class="fas fa-search fa-fw"></i>-->
+<!--                            </a>-->
+<!--                            &lt;!&ndash; Dropdown - Messages &ndash;&gt;-->
+<!--                            <div class="dropdown-menu dropdown-menu-right p-3 shadow animated&#45;&#45;grow-in"-->
+<!--                                aria-labelledby="searchDropdown">-->
+<!--                                <form class="form-inline mr-auto w-100 navbar-search">-->
+<!--                                    <div class="input-group">-->
+<!--                                        <input type="text" class="form-control bg-light border-0 small"-->
+<!--                                            placeholder="Search for..." aria-label="Search"-->
+<!--                                            aria-describedby="basic-addon2">-->
+<!--                                        <div class="input-group-append">-->
+<!--                                            <button class="btn btn-primary" type="button">-->
+<!--                                                <i class="fas fa-search fa-sm"></i>-->
+<!--                                            </button>-->
+<!--                                        </div>-->
+<!--                                    </div>-->
+<!--                                </form>-->
+<!--                            </div>-->
+<!--                        </li>-->
+
+<!--                        <div class="topbar-divider d-none d-sm-block"></div>-->
+
+<!--                        &lt;!&ndash; Nav Item - User Information &ndash;&gt;-->
+<!--                        <li th:replace="/components/user-info.html"></li>-->
+
+<!--                    </ul>-->
+
+<!--                </nav>-->
+<!--                &lt;!&ndash; End of Topbar &ndash;&gt;-->
+
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default-layout}"
+>
+
+<head>
+    <title>이커머스 어드민</title>
+</head>
+
+<!-- 페이지 전용 스타일 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 페이지 전용 JS -->
+<th:block layout:fragment="script">
+    <script src="/js/order/order-detail.js"></script>
+</th:block>
+
+<!-- 컨텐츠 Fragment 영역 -->
+<div layout:fragment="content">
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
+
+            <!-- Page Heading -->
+            <h1 class="h3 mb-2 text-gray-800">고객 관리</h1>
+            <p class="mb-4"> 고객을 관리하는 페이지입니다.</p>
+
+            <!-- DataTales Example -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">고객 목록</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>고객 ID</th>
+                                    <th>고객명</th>
+                                    <th>회원등급</th>
+                                    <th>주소</th>
+                                    <th>가입일</th>
+                                    <th>탈퇴일</th>
+                                </tr>
+                            </thead>
+                            <tfoot>
+                            <tr>
+                                <th>고객 ID</th>
+                                <th>고객명</th>
+                                <th>회원등급</th>
+                                <th>주소</th>
+                                <th>가입일</th>
+                                <th>탈퇴일</th>
+                            </tr>
+                            </tfoot>
+                            <tbody>
+                                <!-- 고객 출력 -->
+                                <tr th:each="customer: ${customers}">
+                                    <td>
+                                        <a th:href="@{/customers/customer-detail(customerId=${customer.customerId})}" th:text="${customer.customerId}"></a>
+                                    </td>
+                                    <td th:text="${customer.customerName}"></td>
+                                    <td th:text="${customer.customerGrade}"></td>
+                                    <td th:text="${customer.address}"></td>
+                                    <td th:text="${customer.createdAt}"></td>
+                                    <td th:text="${customer.updatedAt}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- End of Begin Page Content -->
+
+    </div>
+    <!-- End of Content Wrapper -->
+
+</div>
+<!-- 컨텐츠 Fragment 종료 -->
+
+</html>
+
+<!--            </div>-->
+<!--            &lt;!&ndash; End of Main Content &ndash;&gt;-->
+
+<!--            &lt;!&ndash; Footer &ndash;&gt;-->
+<!--            <footer th:replace="/layouts/footer.html"></footer>-->
+<!--            &lt;!&ndash; End of Footer &ndash;&gt;-->
+
+<!--        </div>-->
+<!--        &lt;!&ndash; End of Content Wrapper &ndash;&gt;-->
+
+<!--    </div>-->
+<!--    &lt;!&ndash; End of Page Wrapper &ndash;&gt;-->
+
+<!--    &lt;!&ndash; Scroll to Top Button&ndash;&gt;-->
+<!--    <a class="scroll-to-top rounded" href="#page-top">-->
+<!--        <i class="fas fa-angle-up"></i>-->
+<!--    </a>-->
+
+<!--    &lt;!&ndash; Logout Modal&ndash;&gt;-->
+<!--    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"-->
+<!--        aria-hidden="true">-->
+<!--        <div class="modal-dialog" role="document">-->
+<!--            <div class="modal-content">-->
+<!--                <div class="modal-header">-->
+<!--                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>-->
+<!--                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">-->
+<!--                        <span aria-hidden="true">×</span>-->
+<!--                    </button>-->
+<!--                </div>-->
+<!--                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>-->
+<!--                <div class="modal-footer">-->
+<!--                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>-->
+<!--                    <a class="btn btn-primary" href="login.html">Logout</a>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Bootstrap core JavaScript&ndash;&gt;-->
+<!--    <script src="/vendor/jquery/jquery.min.js"></script>-->
+<!--    <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>-->
+
+<!--    &lt;!&ndash; Core plugin JavaScript&ndash;&gt;-->
+<!--    <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>-->
+
+<!--    &lt;!&ndash; Custom scripts for all pages&ndash;&gt;-->
+<!--    <script src="/js/sb-admin-2.min.js"></script>-->
+
+<!--    &lt;!&ndash; Page level plugins &ndash;&gt;-->
+<!--    <script src="/vendor/datatables/jquery.dataTables.min.js"></script>-->
+<!--    <script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>-->
+
+<!--    &lt;!&ndash; Page level custom scripts &ndash;&gt;-->
+<!--    <script src="/js/demo/datatables-demo.js"></script>-->
+
+<!--</body>-->
+
+<!--</html>-->

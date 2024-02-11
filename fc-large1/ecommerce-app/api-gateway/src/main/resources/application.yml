@@ -1,0 +1,7 @@
+server:
+  port: 9090
+
+route:
+  order-api:
+    v1:
+      base-url: http://localhost:8082/

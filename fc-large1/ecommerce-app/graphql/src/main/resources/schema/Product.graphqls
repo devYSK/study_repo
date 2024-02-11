@@ -1,0 +1,27 @@
+type Query {
+    products(page: Int, size: Int): [Product]
+}
+
+type Product {
+    productId: ID
+    name: String
+    price: BigDecimal
+    vendorId: Int
+    status: ProductStatus
+    imageUrl: String
+    imageDetailUrl: String
+    productDesc: String
+    isExposed: Boolean
+    isDeleted: Boolean
+    createdAt: DateTime
+    createdBy: String
+    updatedAt: DateTime
+    updatedBy: String
+}
+
+enum ProductStatus {
+    READY_TO_SELL
+}
+
+scalar BigDecimal
+scalar DateTime

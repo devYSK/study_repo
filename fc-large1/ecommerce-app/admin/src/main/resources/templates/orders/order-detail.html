@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default-layout}"
+>
+
+<head>
+    <title>이커머스 어드민</title>
+</head>
+
+<!-- 페이지 전용 스타일 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 페이지 전용 JS -->
+<th:block layout:fragment="script">
+    <script src="/js/order/order-detail.js"></script>
+</th:block>
+
+<!-- 컨텐츠 Fragment 영역 -->
+<div layout:fragment="content">
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Begin Page Content -->
+            <div class="container-fluid">
+
+                <!-- Page Heading -->
+                <h1 class="h3 mb-4 text-gray-800">주문 상세 페이지</h1>
+
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">고객 주문 상세 정보</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <tbody>
+                            <tr>
+                                <th scope="row" class="col-sm-2">주문 아이디</th>
+                                <td th:text="${order.getOrderId()}"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">주문 고객</th>
+                                <td th:text="${order.getCustomerName()}"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">주문 금액</th>
+                                <td th:text="${order.getAmount()}"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">결제 수단</th>
+                                <td th:text="${order.payType}"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">주문 상태</th>
+                                <td th:text="${order.orderStatus}"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">주문 일자</th>
+                                <td th:text="${order.orderDate}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <button type="button" id="back-to-list" class="btn btn-primary">목록으로</button>
+                    </div>
+                </div>
+            </div>
+            <!-- End of Begin Page Content -->
+
+    </div>
+    <!-- End of Content Wrapper -->
+
+</div>
+<!-- 컨텐츠 Fragment 종료 -->
+
+</html>

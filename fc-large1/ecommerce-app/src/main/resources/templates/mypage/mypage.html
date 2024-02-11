@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default-layout}"
+>
+
+<!-- 페이지 전용 스타일 -->
+<th:block layout:fragment="css">
+    <link rel="stylesheet" href="/css/my-page/my-page.css">
+</th:block>
+
+<!-- 페이지 전용 JS -->
+<th:block layout:fragment="script">
+    <script src="/js/login/login.js"></script>
+</th:block>
+
+<!-- 컨텐츠 영역 -->
+<div layout:fragment="content">
+
+    <!-- 내 주문목록 상단 영역 -->
+    <div class="row justify-content-center cart-top-area">
+        <div class="col-8">
+            <h1>초간단 이커머스 샘플</h1>
+        </div>
+    </div>
+
+    <!-- 내 주문목록 컨텐츠 영역 -->
+    <div class="row cart-content-area">
+
+        <div class="row justify-content-center">
+            <div class="col-8 text-start">
+                <div class="fs-2 mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-bag" viewBox="0 0 16 16">
+                        <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5z"/>
+                    </svg>
+                    장바구니
+                </div>
+                </p>
+            </div>
+        </div>
+
+        <div class="row cart-content justify-content-center align-top">
+
+            <!-- 주문 목록 -->
+            <div class="col-8">
+                <table class="table table-striped table-hover">
+                    <thead>
+                    <tr>
+                        <th>상품이미지</th>
+                        <th>상품정보</th>
+                        <th>상품금액</th>
+                        <th>배송비</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>
+                            <img
+                                    src="http://thumbnail7.coupangcdn.com/thumbnails/remote/48x48ex/image/retail/images/2022/11/28/10/4/52f40955-0160-40e1-8993-e12d923d8f78.jpg"
+                                    alt="">
+                        </td>
+                        <td>아이시스 8.0 500ml X 40개</td>
+                        <td>20,000원</td>
+                        <td>무료</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <img
+                                    src="http://thumbnail7.coupangcdn.com/thumbnails/remote/48x48ex/image/retail/images/5885963659161255-1e6ecbba-d304-41ae-94e9-6d54220a10fb.png"
+                                    alt="">
+                        </td>
+                        <td>베이직 네추럴 3겹 천연펄프 롤화장지 30m</td>
+                        <td>30,000원</td>
+                        <td>무료</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <img src="http://thumbnail9.coupangcdn.com/thumbnails/remote/48x48ex/image/retail/images/7812189417486711-a9166bbf-2932-4479-91e0-928a2eae1316.jpg"
+                                 alt="">
+                        </td>
+                        <td>닥터지 레드 블레미쉬 시카 수딩 크림</td>
+                        <td>15,000원</td>
+                        <td>무료</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <img src="http://thumbnail7.coupangcdn.com/thumbnails/remote/48x48ex/image/retail/images/187063362359519-4e19d0af-c9f0-4dfe-b566-f5d742c6ee1b.jpg"
+                                 alt="">
+                        </td>
+                        <td>일회용 마스크</td>
+                        <td>20,000원</td>
+                        <td>3,000원</td>
+                    </tr>
+                    </tbody>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</html>

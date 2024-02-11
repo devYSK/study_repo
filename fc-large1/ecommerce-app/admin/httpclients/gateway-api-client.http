@@ -1,0 +1,7 @@
+### GET request with a header
+GET http://localhost:9090/providers/order-api/v1/orders
+Accept: application/json
+
+###
+GET http://localhost:8082/orders/
+Accept: application/json

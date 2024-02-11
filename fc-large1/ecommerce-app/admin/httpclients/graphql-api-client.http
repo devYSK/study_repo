@@ -1,0 +1,9 @@
+### Request to get GraphQL Schema
+GRAPHQL http://localhost:8083/graphql
+
+query {
+    products(page: 0, size: 10) {
+        productId
+        name
+    }
+}

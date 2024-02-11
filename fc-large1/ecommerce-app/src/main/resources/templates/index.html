@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default-layout}"
+>
+
+<!-- 페이지 전용 스타일 -->
+<th:block layout:fragment="css">
+    <link rel="stylesheet" href="/css/home/home.css">
+</th:block>
+
+<!-- 페이지 전용 JS -->
+<th:block layout:fragment="script">
+</th:block>
+
+<!-- 컨텐츠 영역 -->
+<div layout:fragment="content">
+    <div class="container-md text-center">
+
+        <!-- Banner Area -->
+        <div class="row top-banner">
+            <img th:src="${main_image_banner}" alt="배너">
+        </div>
+
+        <!-- Content Area -->
+        <div class="row" th:each="recommend_products : ${recommend_product_partitions}">
+            <div class="d-flex justify-content-center">
+                <div class="card product" style="width: 18rem;" th:each="recommend_product, stat : ${recommend_products}">
+                    <a th:href="@{/product/detail(productId=${recommend_product.getProductId()})}">
+                        <img th:src="${recommend_product.getProductImageUrl()}" class="product-image">
+                    </a>
+                    <div class="card-body">
+                        <h5 class="card-title text-start" th:text="${recommend_product.getProductName()}"></h5>
+                        <h5 class="card-title text-start" th:text="|상품가격: ${#numbers.formatInteger(recommend_product.getProductPrice(), 3, 'COMMA')}원|"></h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</html>

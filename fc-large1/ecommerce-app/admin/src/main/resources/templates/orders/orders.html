@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default-layout}"
+>
+
+<head>
+    <title>이커머스 어드민</title>
+</head>
+
+<!-- 페이지 전용 스타일 -->
+<th:block layout:fragment="css">
+</th:block>
+
+<!-- 페이지 전용 JS -->
+<th:block layout:fragment="script">
+</th:block>
+
+<!-- 컨텐츠 Fragment 영역 -->
+<div layout:fragment="content">
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
+
+            <!-- Page Heading -->
+            <h1 class="h3 mb-2 text-gray-800">주문 관리</h1>
+            <p class="mb-4"> 고객의 주문을 관리하는 페이지입니다.</p>
+
+            <!-- DataTales Example -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">고객 주문 목록</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                            <thead>
+                            <tr>
+                                <th>주문 ID</th>
+                                <th>고객명</th>
+                                <th>주문 가격</th>
+                                <th>주문 상태</th>
+                                <th>결제수단</th>
+                                <th>주문일</th>
+                            </tr>
+                            </thead>
+                            <tfoot>
+                            <tr>
+                                <th>주문 ID</th>
+                                <th>고객명</th>
+                                <th>주문 가격</th>
+                                <th>주문 상태</th>
+                                <th>결제수단</th>
+                                <th>주문일</th>
+                            </tr>
+                            </tfoot>
+                            <tbody>
+                            <!-- 주문 출력 -->
+                            <tr th:each="order: ${orders}">
+                                <td>
+                                    <a th:href="@{/orders/order-detail(orderId=${order.getOrderId()})}" th:text="${order.getOrderId()}"></a>
+                                </td>
+                                <td th:text="${order.customerName}"></td>
+                                <td th:text="${order.getAmount()}"></td>
+                                <td th:text="${order.orderStatus}"></td>
+                                <td th:text="${order.getPayType()}"></td>
+                                <td th:text="${order.createdAt}"></td>
+                            </tr>
+                            <tr th:if="${orders.isEmpty()}">
+                                <td th:colspan="6">
+                                    <span th:text="|조회된 주문 목록이 없습니다.|"></span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- /.container-fluid -->
+
+    </div>
+    <!-- End of Content Wrapper -->
+
+</div>
+<!-- 컨텐츠 Fragment 종료 -->
+</html>

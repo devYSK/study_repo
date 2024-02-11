@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lagn="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default-layout}"
+>
+
+<!-- 페이지 전용 스타일 -->
+<th:block layout:fragment="css">
+    <link rel="stylesheet" href="/css/product/detail.css">
+</th:block>
+
+<!-- 페이지 전용 JS -->
+<th:block layout:fragment="script">
+    <script src="/js/product/detail.js"></script>
+</th:block>
+
+<!-- 컨텐츠 영역 -->
+<div layout:fragment="content">
+    <div class="container-md">
+        <div class="container product-basic-area">
+            <div class="row category-product-list-area">
+                <div class="col"></div>
+                <div class="col-10 justify-content-start">
+                    <div class="row">
+                        <!-- 왼쪽 영역: 상품 이미지 -->
+                        <div class="col">
+                            <img th:src="${product.getImageUrl()}"
+                                 alt="상품 대표 이미지"
+                                 class="product-thumbnail-image"
+                            >
+                        </div>
+
+                        <!-- 오른쪽 영역: 상품 가격 및 액션 -->
+                        <div class="col">
+                            <div class="d-flex justify-content-start">
+                                <h3 th:text="${product.getProductName()}">상품명</h3>
+                            </div>
+                            <div class="d-flex justify-content-start">
+                                <h3 th:text="|${#numbers.formatInteger(product.getPrice(), 3, 'COMMA')}원|">가격</h3>
+                            </div>
+                            <div class="row">
+                                <p th:text="${product.getProductDesc()}">상품설명</p>
+                            </div>
+
+                            <form class="form">
+                                <input type="hidden" name="productId" th:value="${product.getProductId()}">
+                                <button type="button" class="btn btn-outline-primary cart-btn" th:attr="data-product-id=${product.getProductId()}">장바구니</button>
+                                <button class="btn btn-primary purchase-btn" type="button" th:attr="data-product-id=${product.getProductId()}">바로 구매</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- 상품 상세 컨텐츠 영역 -->
+                    <div class="row product-detail-area justify-content-center">
+                        <h1>상품 상세 정보</h1>
+                        <img class="product-main-image" src="https://thumbnail10.coupangcdn.com/thumbnails/remote/q89/image/retail/images/2022/08/03/12/1/b103b3b4-e304-43a7-b063-e7062cb17343.jpg" alt="">
+                    </div>
+                </div>
+                <div class="col"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</html>

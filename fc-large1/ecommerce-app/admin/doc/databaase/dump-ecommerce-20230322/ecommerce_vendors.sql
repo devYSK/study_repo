@@ -1,0 +1,57 @@
+-- MySQL dump 10.13  Distrib 8.0.31, for macos12 (x86_64)
+--
+-- Host: 127.0.0.1    Database: ecommerce
+-- ------------------------------------------------------
+-- Server version	8.0.32
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `vendors`
+--
+
+DROP TABLE IF EXISTS `vendors`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `vendors` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(45) COLLATE utf8mb3_bin NOT NULL,
+  `is_deleted` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `created_by` varchar(45) COLLATE utf8mb3_bin NOT NULL DEFAULT 'system',
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_by` varchar(45) COLLATE utf8mb3_bin NOT NULL DEFAULT 'system',
+  `status` varchar(45) COLLATE utf8mb3_bin NOT NULL DEFAULT 'ENABLED' COMMENT '''ENABLED'', ''DISABLED'', ''EXPIRED''',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `vendors`
+--
+
+LOCK TABLES `vendors` WRITE;
+/*!40000 ALTER TABLE `vendors` DISABLE KEYS */;
+INSERT INTO `vendors` VALUES (1,'미로',0,'2010-11-30 15:00:00.000000','system','2020-12-31 15:00:00.000000','system','ENABLED'),(2,'현도',0,'2011-12-01 15:00:00.000000','system','2021-01-01 15:00:00.000000','system','ENABLED'),(3,'쿠쿠',0,'2012-12-01 15:00:00.000000','system','2021-01-02 15:00:00.000000','system','ENABLED'),(4,'아르망',0,'2013-12-02 15:00:00.000000','system','2021-01-03 15:00:00.000000','system','ENABLED'),(5,'오리온',0,'2014-12-03 15:00:00.000000','system','2021-01-04 15:00:00.000000','system','ENABLED'),(6,'진성',0,'2015-12-04 15:00:00.000000','system','2021-01-05 15:00:00.000000','system','ENABLED'),(7,'한성',0,'2016-12-04 15:00:00.000000','system','2021-01-06 15:00:00.000000','system','ENABLED'),(8,'삼도',0,'2017-12-05 15:00:00.000000','system','2021-01-07 15:00:00.000000','system','ENABLED'),(9,'애니랜드',0,'2018-12-06 15:00:00.000000','system','2021-01-08 15:00:00.000000','system','ENABLED');
+/*!40000 ALTER TABLE `vendors` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2023-03-22 23:44:48
