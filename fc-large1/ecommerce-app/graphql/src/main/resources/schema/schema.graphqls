@@ -1,21 +1,27 @@
 type Query {
-    hello(name: String): String!
-    customers(nameFilter: String): [Customer]!
+    products(page: Int, size: Int): [Product]
 }
 
-type Mutation {
-    addCustomer(customerInput: CustomerInput): [Customer]
-}
-
-input CustomerInput {
+type Product {
+    productId: ID
     name: String
-    age: Int
+    price: BigDecimal
+    vendorId: Int
+    status: ProductStatus
+    imageUrl: String
+    imageDetailUrl: String
+    productDesc: String
+    isExposed: Boolean
+    isDeleted: Boolean
+    createdAt: DateTime
+    createdBy: String
+    updatedAt: DateTime
+    updatedBy: String
 }
 
-type Customer {
-    name: String
-    age: Int
+enum ProductStatus {
+    READY_TO_SELL
 }
 
-
-
+scalar BigDecimal
+scalar DateTime

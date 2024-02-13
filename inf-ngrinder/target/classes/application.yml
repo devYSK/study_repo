@@ -1,0 +1,13 @@
+mybatis:
+  mapper-locations: mybatis/mapper/**/*.xml
+
+logging:
+  level:
+    com.example.performancecache.mapper: TRACE
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/ngrinder
+    username: root
+    password: root
