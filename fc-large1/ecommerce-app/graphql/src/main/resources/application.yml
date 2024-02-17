@@ -23,3 +23,7 @@ spring:
       enabled: true
   thymeleaf:
     cache: false
+
+#graphql:
+#  tools:
+#    schema-location-pattern: "**/*.graphqls"

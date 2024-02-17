@@ -16,4 +16,5 @@ public class OrderDTO {
     private final PayType payType;
     private final OrderStatus orderStatus;
     private final OffsetDateTime orderDate;
+    private final OffsetDateTime createdAt;
 }

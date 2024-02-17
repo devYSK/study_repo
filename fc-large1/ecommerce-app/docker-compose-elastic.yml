@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+#      - xpack.security.enabled=true
+#      - xpack.security.transport.ssl.enabled=true
+#      - xpack.security.transport.ssl.verification_mode=certificate
+#      - xpack.security.transport.ssl.keystore.path=/usr/share/elasticsearch/config/certs/elasticsearch.keystore.p12
+#      - xpack.security.transport.ssl.truststore.path=/usr/share/elasticsearch/config/certs/elasticsearch.truststore.p12
+#      - xpack.security.http.ssl.enabled=true
+#      - xpack.security.http.ssl.keystore.path=/usr/share/elasticsearch/config/certs/elasticsearch.keystore.p12
+#      - xpack.security.http.ssl.truststore.path=/usr/share/elasticsearch/config/certs/elasticsearch.truststore.p12
+
+    ports:
+      - "9200:9200"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - elastic
+    volumes:
+      - /Users/ysk/db/elastic/data:/usr/share/elasticsearch/data
+  kibana:
+    image: kibana:8.6.0
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system # 무조건 이걸로 해야함 바뀜
+      - ELASTICSEARCH_PASSWORD=kibana # 패스워드 설정
+    ports:
+      - "5601:5601"
+    networks:
+      - elastic
+
+networks:
+  elastic:
+    name: elastic_network
+    driver: bridge

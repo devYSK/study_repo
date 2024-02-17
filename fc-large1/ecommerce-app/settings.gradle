@@ -1,4 +1,13 @@
 rootProject.name = 'hello-ecommerce-service'
 
-include("admin", "api-gateway", "order-api", "graphql")
+
+include(
+        "admin",
+        "api-gateway",
+        "order-api",
+        "graphql",
+        "order-consumer",
+        "settlement-for-kafka",
+        "search-api"
+)
 

@@ -6,13 +6,13 @@ import com.netflix.graphql.dgs.InputArgument;
 
 import java.util.Objects;
 
-@DgsComponent
+// @DgsComponent
 public class HelloDataFetcher {
-    @DgsQuery
-    public String hello(@InputArgument String name) {
-        if (Objects.isNull(name)) {
-            name = "Nobody";
-        }
-        return "Hello, " + name;
-    }
+    // @DgsQuery
+    // public String hello(@InputArgument String name) {
+    //     if (Objects.isNull(name)) {
+    //         name = "Nobody";
+    //     }
+    //     return "Hello, " + name;
+    // }
 }
