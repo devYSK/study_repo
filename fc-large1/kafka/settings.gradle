@@ -1,0 +1,3 @@
+rootProject.name = 'checkout'
+
+include("demo1", "demo2", "shipment", "kafkastreams")
