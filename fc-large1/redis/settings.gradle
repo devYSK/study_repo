@@ -1,0 +1,12 @@
+rootProject.name = 'helloworld'
+include("first1",
+        "session-store",
+        "cache-layer",
+        "game-leaderboard",
+        "chatting-pubsub",
+        "NotificationService",
+        "OrderService",
+        "PaymentService",
+        "redis-cluster"
+)
+
