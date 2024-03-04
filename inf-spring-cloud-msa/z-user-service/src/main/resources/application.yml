@@ -1,0 +1,73 @@
+greeting:
+  message: Welcome to the Simple E-commerce.
+
+server:
+  port: 9999
+
+spring:
+  zipkin:
+    base-url: http://127.0.0.1:9411
+    enabled: true
+
+  cloud:
+    config:
+      name: ecommerce, user-service-db
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:prod}
+
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: user
+    password: password
+  application:
+    name: user-service
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+#  datasource:
+#    url: jdbc:mysql://localhost:3306/sc_msa
+#    username: root
+#    password: root
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://127.0.0.1:8761/eureka
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    propagation:
+      consume: B3
+      produce: B3_MULTI
+  zipkin:
+    tracing:
+      endpoint: "http://localhost:9411/api/v2/spans"
+  endpoints:
+    web:
+      exposure:
+        include: refresh, health, beans, busrefresh, info
+
+logging:
+  level:
+    com.ys.userservice.client: DEBUG
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
+
+#gateway:
+#  ip: 127.0.0.1
+#
+#token:
+#  expiration_time: 86400000
+#  secret: ysk-microservice-practice-jwt-secret-key # ysk-microservice-practice-jwt-secret-key
+

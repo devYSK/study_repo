@@ -1,0 +1,119 @@
+
+server:
+  port: 8000
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+spring:
+
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: user
+    password: password
+  application:
+    name: apigateway-service
+  cloud:
+    config:
+      name: ecommerce, user-service-db
+
+    gateway:
+      default-filters:
+        - name: GlobalFilter
+          args:
+            baseMessage: Spring Cloud Gateway Global Filter
+            preLogger: true
+            postLogger: true
+      routes:
+        # USER Route
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/login
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/users
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/actuator/**
+            - Method=GET,POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/**
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
+
+        # Catalog Route
+        - id: catalog-service
+          uri: lb://CATALOG-SERVICE
+          predicates:
+            - Path=/catalog-service/**
+
+        # Order Route
+        - id: order-service
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/order-service/actuator/**
+            - Method=GET,POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/order-service/(?<segment>.*), /$\{segment}
+        - id: order-service
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/order-service/**
+
+
+        # ----------------------------------------
+
+        - id: first-service
+#          uri: http://localhost:8081/
+          uri: lb://MY-FIRST-SERVICE # eureka name server에 등록한 이름
+          predicates:
+            - Path=/first-service/**
+          filters:
+            - CustomFilter # 같음
+
+        - id: second-service
+#          uri: http://localhost:8082/
+          uri: lb://MY-SECOND-SERVICE #  eurekaname server에 등록한 이름
+          predicates:
+            - Path=/second-service/**
+          filters:
+            - name: CustomFilter # 같음
+            - name: LoggingFilter
+              args:
+                baseMessage: Hi, LoggingFilter
+                preLogger: true
+                postLogger: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+#        include: refresh, health, beans, httptrace, busrefresh
+
+#token:
+#  secret: ysk-microservice-practice-jwt-secret-key # ysk-microservice-practice-jwt-secret-key

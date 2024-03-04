@@ -1,0 +1,34 @@
+
+dependencies {
+    // 웹 애플리케이션과 보안을 위한 스프링 부트 스타터
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Eureka를 사용한 서비스 발견, 설정, 회로 차단기 패턴을 위한 스프링 클라우드
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+    // 개발 중 실시간 리로딩을 위한 스프링 부트 DevTools
+    runtimeOnly 'org.springframework.boot:spring-boot-devtools'
+
+    implementation 'jakarta.validation:jakarta.validation-api'
+    implementation 'org.modelmapper:modelmapper:2.3.8'
+    implementation 'org.springframework.hateoas:spring-hateoas'
+
+    // 스프링 부트 테스트 지원
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // 스프링 데이터 JPA와 H2 인메모리 데이터베이스를 사용한 데이터 접근
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    implementation 'org.springframework.kafka:spring-kafka'
+//    implementation 'io.micrometer:micrometer-observation'
+//    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+//    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+//    implementation 'io.github.openfeign:feign-micrometer'
+//    implementation 'org.springframework.cloud:spring-cloud-starter-zipkin:2.2.8.RELEASE'
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

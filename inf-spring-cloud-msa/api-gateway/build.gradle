@@ -1,0 +1,45 @@
+
+
+dependencies {
+    // Spring WebFlux 스타터: 비동기적이고 논블로킹 방식의 웹 애플리케이션 개발을 위한 스타터 패키지
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // Spring Cloud Gateway 스타터: API 게이트웨이 구축을 위한 스타터 패키지
+    implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
+
+    // Eureka 클라이언트 스타터: 서비스 디스커버리를 위해 Eureka 서버와 통신하는 클라이언트 개발을 위한 스타터
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+    // Lombok: 자바 코드에서 보일러플레이트를 줄이기 위한 라이브러리 (옵셔널)
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Spring Boot 테스트 스타터: 스프링 부트 애플리케이션 테스트를 위한 스타터 패키지
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+//
+    // JSON Web Token (JWT) API: JWT를 생성하고 검증하기 위한 라이브러리
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+//
+//    // Reactor 테스트: 리액티브 프로그래밍 테스트를 위한 라이브러리
+//    testImplementation 'io.projectreactor:reactor-test'
+//
+//    // JAXB API: 자바 아키텍처용 XML 바인딩을 위한 API
+//    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+
+    implementation 'org.springframework.cloud:spring-cloud-starter-config'
+    implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
+//    // Spring Boot Actuator 스타터: 애플리케이션의 상태 및 메트릭을 모니터링하기 위한 스타터 패키지
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // 스프링 클라우드 스트림을 사용한 AMQP 지원
+    implementation 'org.springframework.cloud:spring-cloud-starter-bus-amqp'
+
+//    // Prometheus 메트릭 레지스트리: 애플리케이션의 메트릭을 Prometheus로 내보내기 위한 라이브러리
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+//
+//    // SpringFox Swagger: API 문서화를 자동화하기 위한 스타터 패키지와 UI
+//    implementation 'io.springfox:springfox-boot-starter:3.0.0'
+//    implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+}

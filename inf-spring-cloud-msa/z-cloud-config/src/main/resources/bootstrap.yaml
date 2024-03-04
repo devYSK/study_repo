@@ -1,0 +1,8 @@
+  # Config Server 의 bootstrap.yml
+
+encrypt:
+  key: 0123456789abcdefghijklmnopqrstuvwxyz
+#  key-store:
+#    location: file:///Users/ysk/temp/ecommerceEncryptionKey.jks
+#    password: test12
+#    alias: ecommerceEncryptionKey

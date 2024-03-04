@@ -1,0 +1,64 @@
+
+server:
+  port: 10000
+
+spring:
+  application:
+    name: order-service
+#  rabbitmq:
+#    host: 127.0.0.1
+#    port: 5672
+#    username: guest
+#    password: guest
+#  zipkin:
+#    base-url: http://127.0.0.1:9411
+#    enabled: true
+  #  sleuth:
+  #    sampler:
+  #      probability: 1.0
+  h2:
+    console:
+      enabled: true
+      settings:
+        web-allow-others: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQL8Dialect # MySQL ??? ?? Dialect ??
+  datasource:
+    url: jdbc:mysql://localhost:3306/sc_msa_catalog
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://127.0.0.1:8761/eureka
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    propagation:
+      consume: B3
+      produce: B3_MULTI
+  zipkin:
+    tracing:
+      endpoint: "http://localhost:9411/api/v2/spans"
+  endpoints:
+    web:
+      exposure:
+        include: refresh, health, beans, busrefresh, info
+
+logging:
+  level:
+    com.ys.orderservice: DEBUG
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
