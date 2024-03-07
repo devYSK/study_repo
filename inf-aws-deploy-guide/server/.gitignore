@@ -1,0 +1,21 @@
+# Dependencies
+/node_modules
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+
+# IDE files
+.idea/
+
+# Temporary files
+*.tmp
+
+# Build output
+/dist
+/build

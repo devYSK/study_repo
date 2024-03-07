@@ -1,0 +1,13 @@
+version: '3.8'
+
+# docker-compose -f docker-compose.yml up -d
+services:
+  ecs-redis:
+    container_name: ecs-redis
+    environment:
+      - TZ=Asia/Seoul
+    #      - ALLOW_EMPTY_PASSWORD=yes
+    image: redis:latest
+    ports:
+      - "6379:6379"
+#    command: redis-server --requirepass cms --port 6379
