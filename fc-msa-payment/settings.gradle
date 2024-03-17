@@ -1,0 +1,18 @@
+rootProject.name = 'payment'
+
+
+
+include (
+        'membership-service',
+        'common',
+        'banking-service',
+        'money-service',
+        'logging-consumer',
+        'task-consumer',
+        'remittance-service',
+        'payment-service',
+        'utility',
+        'money-aggregation-service',
+        'money-query-service',
+        'settlement-service'
+)

@@ -1,0 +1,7 @@
+dependencies {
+
+     runtimeOnly 'com.mysql:mysql-connector-j'
+    implementation 'org.json:json:20200518'
+}
+
+
