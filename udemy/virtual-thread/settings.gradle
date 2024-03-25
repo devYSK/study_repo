@@ -1,0 +1,7 @@
+rootProject.name = 'virtual-thread'
+
+
+include(
+        '01-virtual-thread-playground',
+        '03-trip-advisor-application'
+)

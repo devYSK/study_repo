@@ -1,0 +1,19 @@
+
+dependencies {
+
+    implementation("ch.qos.logback:logback-classic:1.4.11")
+    implementation 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
+
+    testImplementation 'org.projectlombok:lombok:1.18.20'
+    testAnnotationProcessor('org.projectlombok:lombok:1.18.20')
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += '--enable-preview' // 프리뷰 해야지 구조적 동시성 사용 가능
+//    options.compilerArgs += ["--add-modules", "jdk.incubator.concurrent"]
+    doFirst {
+        options.encoding = 'UTF-8'
+    }
+}
