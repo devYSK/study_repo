@@ -870,11 +870,7 @@ ScopedValue.runWhere(SESSION_TOKEN, token, () -> controller());
 
 
 
-
-
 ### Inheriting Scoped Value (스코프 벨류 상속 )
-
-
 
 범위 지정된 값은 `StructuredTaskScope`를 사용하여 생성된 모든 자식 스레드에 자동으로 상속됩니다. 자식 스레드는 부모 스레드에서 설정된 범위 지정된 값에 대한 바인딩을 사용할 수 있습니다:
 
@@ -909,3 +905,292 @@ ScopedValue.where(Server.LOGGED_IN_USER, null).run(service::extractData);
 ```
 
 하지만, 해당 코드 섹션이 종료되는 즉시 원래 값이 다시 사용 가능해집니다. `run` 메소드의 반환 타입이 void임을 유의해야 합니다. 우리의 서비스가 값을 반환하는 경우, 반환된 값들을 처리할 수 있도록 `call` 메소드를 사용할 수 있습니다.
+
+
+
+# 구조화된 동시성(StructuredConcorrency)
+
+구조화된 동시성(Structured Concurrency)은 동시성 프로그래밍에서의 한 패턴으로, 코드의 복잡성을 줄이고, 버그를 쉽게 찾을 수 있도록 돕는 방식입니다. 이 개념은 동시에 실행되는 작업들을 더 잘 관리하고, 코드의 흐름을 이해하기 쉽게 만드는 데 중점을 둡니다. 주요 목표 중 하나는 프로그램에서 생성된 모든 병렬 작업이 명확하게 구조화되고, 제어될 수 있도록 하는 것입니다.
+
+### 구조화된 동시성의 핵심 원칙:
+
+1. **범위 지정**: 구조화된 동시성에서는 모든 병렬 작업이 명시적인 범위 안에서 생성되어야 합니다. 이는 작업이 시작되고 종료되는 생명주기가 명확히 정의되어 있음을 의미합니다. 범위가 종료될 때까지 범위 안에서 시작된 모든 작업이 완료되어야 합니다.
+2. **자원 관리**: 구조화된 동시성을 사용하면 생성된 자원(예: 스레드, 핸들 등)이 적절히 관리되고 해제됩니다. 이는 메모리 누수나 자원 고갈 같은 문제를 방지하는 데 도움이 됩니다.
+3. **오류 처리**: 오류 발생 시, 오류를 효과적으로 포착하고 처리할 수 있어야 합니다. 구조화된 동시성에서는 범위 내에서 발생한 오류를 범위를 관리하는 상위 코드 블록으로 전파하여 적절히 처리할 수 있습니다.
+4. **가독성과 유지보수성 향상**: 코드의 동시적 부분이 명확하게 구조화되어 있으면, 프로그램의 흐름을 더 쉽게 이해할 수 있습니다. 이는 프로그램의 가독성을 향상시키고, 버그를 더 쉽게 찾아내고 수정할 수 있게 합니다.
+
+
+
+테스크가 여러 작은 작업으로 나뉠때, 스레드마다 서로 다른 결과가 나올 수 있다. 
+
+아래 케이스에 따라 동시성을 성공과 실패로 나누어 예외를 관리할 수 있따. 
+
+| 시나리오      | 설명                                                         |
+| ------------- | ------------------------------------------------------------ |
+| 성공/실패     | 서브태스크들이 다른 스레드에서 실행됩니다. 각각의 성공 또는 실패 상태가 될 수 있습니다. (Executor Service 사용과 유사) |
+| 모두 성공     | 모든 서브태스크가 성공해야 합니다. 어느 하나라도 실패하면, 다른 실행 중인 서브태스크들을 취소합니다. |
+| 첫번째만 성공 | 첫 번째로 성공한 응답을 얻고 나머지는 취소합니다.            |
+
+구조적 동시성이 이러한 다양한 실행 시나리오를 보다 명확하게 관리하고, 효과적으로 실행하기 위한 메커니즘을 제공하기 때문입니다.
+
+
+
+구조적 동시성이 없는 경우, 동시성 프로그래밍에서 다음과 같은 여러 문제가 발생할 수 있습니다:
+
+1. **자원 관리의 어려움**: 개별 스레드나 작업을 수동으로 관리해야 하기 때문에, 사용한 자원을 적절히 해제하지 않으면 메모리 누수나 자원 고갈과 같은 문제가 발생할 수 있습니다. 구조적 동시성은 자동으로 자원을 관리하고 해제하여 이러한 문제를 예방합니다.
+2. **오류 처리 복잡성**: 복수의 스레드나 태스크에서 발생하는 오류를 효율적으로 관리하고 처리하는 것이 어렵습니다. 오류가 발생했을 때, 모든 관련 태스크를 적절히 취소하거나 오류를 상위로 전파하는 로직을 수동으로 구현해야 합니다. 구조적 동시성은 이를 단순화하여 오류 처리를 더 용이하게 만듭니다.
+3. **코드 복잡성 증가**: 개별 스레드의 생명주기를 수동으로 관리하면 코드가 복잡해지고, 이해하기 어려워집니다. 이로 인해 버그가 발생하기 쉬워지고, 유지보수가 어려워집니다. 구조적 동시성은 코드의 구조를 명확하게 하여 이러한 문제를 줄입니다.
+4. **동기화 문제**: 여러 스레드가 공유 자원에 접근할 때 동기화를 적절히 관리하지 못하면, 데이터 무결성 문제나 경쟁 상태(race condition)가 발생할 수 있습니다. 구조적 동시성을 사용하면, 이러한 동기화 문제를 더 쉽게 관리할 수 있는 패턴을 제공합니다.
+5. **작업 취소 및 종료의 어려움**: 복수의 스레드나 태스크가 실행 중일 때, 특정 조건에서 모든 작업을 취소하거나 안전하게 종료시키는 것이 어려울 수 있습니다. 구조적 동시성은 작업의 범위를 명확하게 정의하고, 범위 내의 모든 작업을 쉽게 제어할 수 있는 메커니즘을 제공합니다.
+
+
+
+예시코드
+
+* 구조적 동시성 작업 범위 객체를 정의하고 외부 api 호출을 2개의 가상스레드로 합니다.
+
+```java
+/*
+    구조화된 태스크 스코프를 사용한 스코프드 값 상속
+ */
+public class StructuredTaskScopeWithValue {
+
+    private static final Logger log = LoggerFactory.getLogger(StructuredTaskScopeWithValue.class);
+    private static final ScopedValue<String> SESSION_TOKEN = ScopedValue.newInstance(); // 세션 토큰을 위한 스코프드 값 생성
+
+    public static void main(String[] args) {
+
+        // 세션 토큰에 "token-123" 값을 할당하고 task 메서드를 실행
+        ScopedValue.runWhere(SESSION_TOKEN, "token-123", StructuredTaskScopeWithValue::task);
+
+    }
+
+    private static void task() {
+        try (var taskScope = new StructuredTaskScope<>()) { // 가상 스레드를 생성할 수 있는 스코프 생성.
+
+            log.info("token: {}", SESSION_TOKEN.get()); // 현재 세션 토큰 값 로깅
+
+            // 하위 작업 생성
+            var subtask1 = taskScope.fork(StructuredTaskScopeWithValue::getDeltaAirfare); // 델타 항공 운임 조회 작업
+            var subtask2 = taskScope.fork(StructuredTaskScopeWithValue::getFrontierAirfare); // 프론티어 항공 운임 조회 작업
+
+            taskScope.join(); // 모든 하위 작업이 완료될 때까지 대기
+
+            log.info("subtask1 state: {}", subtask1.state()); // 하위 작업의 상태 (UNAVAILABLE, SUCCESS, FAIL) 반환
+            log.info("subtask2 state: {}", subtask2.state());
+
+            log.info("subtask1 result: {}", subtask1.get()); // 하위 작업의 결과 출력
+            log.info("subtask2 result: {}", subtask2.get());
+
+        } catch (Exception e) {
+            throw new RuntimeException(e); // 예외 발생 시 RuntimeException을 던짐
+        }
+    }
+
+    private static String getDeltaAirfare() {
+        var random = ThreadLocalRandom.current()
+                .nextInt(100, 1000); // 100에서 1000 사이의 임의의 값 생성
+        log.info("delta: {}", random); // 생성된 무작위 값 로깅
+        log.info("token: {}", SESSION_TOKEN.get()); // 현재 세션 토큰 값 로깅
+        CommonUtils.sleep("delta", Duration.ofSeconds(1)); // 1초간 대기
+        return "Delta-$" + random; // 델타 항공 운임 반환
+    }
+
+    private static String getFrontierAirfare() {
+        var random = ThreadLocalRandom.current()
+                .nextInt(100, 1000); // 100에서 1000 사이의 임의의 값 생성
+        log.info("frontier: {}", random); // 생성된 무작위 값 로깅
+        log.info("token: {}", SESSION_TOKEN.get()); // 현재 세션 토큰 값 로깅
+        CommonUtils.sleep("frontier", Duration.ofSeconds(2)); // 2초간 대기
+        failingTask(); // 예외를 발생시키는 작업 실행
+        return "Frontier-$" + random; // 프론티어 항공 운임 반환 (이 코드는 실행되지 않음)
+    }
+
+    private static String failingTask() {
+        throw new RuntimeException("oops"); // RuntimeException 발생
+    }
+
+}
+```
+
+* UNAVIABLE: 아직 시작되지 않았거나 시작상태가 결정되지 않은상태
+* SUCCESS: 테스크 성공, 
+* FAIL : 실패. 호출시 예외 발생 가능. 
+
+결과
+
+```
+22:25:48.904 [main] INFO com.ys.ScopeValueWithStructedScope -- token: token-123
+22:25:48.910 [] INFO com.ys.ScopeValueWithStructedScope -- delta: 949
+22:25:48.910 [] INFO com.ys.ScopeValueWithStructedScope -- frontier: 853
+22:25:48.910 [] INFO com.ys.ScopeValueWithStructedScope -- detal token: token-123
+22:25:48.910 [] INFO com.ys.ScopeValueWithStructedScope -- frontier token: token-123
+22:25:50.918 [main] INFO com.ys.ScopeValueWithStructedScope -- subtask1 state: SUCCESS
+22:25:50.919 [main] INFO com.ys.ScopeValueWithStructedScope -- subtask1 result: Delta-$949
+Exception in thread "main" java.lang.RuntimeException: java.lang.IllegalStateException: Subtask not completed or did not complete successfully
+```
+
+* Frontier 호출시 일부러 예외를 발생시켰습니다. 
+* 그렇게되면, subtask2의 state는 FAIL이 나오며, 하위작업의 결과를 get하는 과정에서 예외가 상위 스콮으로 번져 전체 테스크는 실패하게 됩니다.
+* 그러나 subTask1에는 영향을 미치지 않았습니다. SUCCESS 
+* 결과를 보면, 서브테스크로는 ScopeValue가 상속되는것을 볼 수 있습니다. 즉 StructuredTaskScope 내에서는 같은 변수를 공유하는 것이지요.
+* `StructuredTaskScope`를 사용하면, 개발자는 여러 작업을 동시에 실행하고, 그들이 모두 완료될 때까지 기다릴 수 있는 명확한 구조를 갖게 됩니다.
+
+
+
+### 만약 한 처리가 실패시, 다른 나머지 처리도 실패하고 싶다면?
+
+`taskScope.throwIfFailed` 메소드는 태스크 스코프 내에서 실패한 태스크가 있는 경우, 사용자 정의 예외(`RuntimeException("something went wrong")`)를 발생시키는 방법입니다. 
+
+```java
+try (var taskScope = new StructuredTaskScope.ShutdownOnFailure()) {
+	var subtask1 = taskScope.fork(Lec05CancelOnFailure::getDeltaAirfare);
+	var subtask2 = taskScope.fork(Lec05CancelOnFailure::failingTask);
+	
+  taskScope.join();
+	taskScope.throwIfFailed(ex -> new RuntimeException("something went wrong", ex));
+	
+  log.info("subtask1 state: {}", subtask1.state());
+	log.info("subtask2 state: {}", subtask2.state());
+} catch (Exception e) {
+	throw new RuntimeException(e);
+}
+
+// 결과
+-- delta: 661
+-- delta is cancelled
+Exception in thread "main" java.lang.RuntimeException: java.lang.RuntimeException: something went wrong
+```
+
+이 구조는 한 태스크가 실패하면 모든 태스크가 취소되고 종료되는 방식으로 작동합니다. 
+
+
+
+### 만약 한 처리가 실패하더라도 예외가 상위 스콮으로 던지지 않고, 나머지 테스크를 종료 시키고  성공적으로 끝내게 하려면? 
+
+**`StructuredTaskScope.ShutdownOnSuccess` 사용**: 이 클래스는 여러 태스크를 동시에 실행할 때, 첫 번째 성공적으로 완료된 태스크가 나타나면 나머지 태스크를 자동으로 셧다운하는 기능을 제공합니다. 이는 여러 대안적인 실행 경로가 있고, 그 중 하나만 성공하면 충분한 경우에 유용합니다.
+
+```java
+try (var taskScope = new StructuredTaskScope.ShutdownOnSuccess<>()) {
+	var subtask1 = taskScope.fork(Lec06FirstSuccess::failingTask);
+	var subtask2 = taskScope.fork(Lec06FirstSuccess::getFrontierAirfare);
+	taskScope.join();
+	log.info("subtask1 state: {}", subtask1.state());
+	log.info("subtask2 state: {}", subtask2.state());
+	log.info("subtask result: {}", taskScope.result(ex -> new RuntimeException("all failed", ex)));
+} catch (Exception e) {
+	throw new RuntimeException(e);
+}
+
+// 결과
+-- frontier: 753
+-- subtask1 state: FAILED
+-- subtask2 state: SUCCESS
+-- subtask result: Frontier-$753
+```
+
+두 개의 비동기 태스크를 실행하고, 첫 번째로 성공적으로 완료되는 태스크가 있을 때 나머지 태스크를 셧다운(종료)하는 패턴입니다. 
+
+만약 모든 태스크가 실패하면, 사용자 정의 예외를 던집니다
+
+
+
+
+
+# SpringBoot With Virtual Thread
+
+springboot 3.2부터 virtual thread를 사용할 수 있다.
+
+활성화는 다음 property로할 수 있다.
+
+```yaml
+# virtual thread enabled/disabled
+spring.threads.virtual.enabled=true
+```
+
+
+
+
+
+스레드 모델 조건에 따라 빈을 다르게 생성하기 위한 Condition 어노테이션과 구현체도 추가되었다.
+
+```java
+/**
+ * {@link Conditional @Conditional} that matches when the specified threading is active.
+ *
+ * @author Moritz Halbritter
+ * @since 3.2.0
+ */
+@Target({ ElementType.TYPE, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Conditional(OnThreadingCondition.class)
+public @interface ConditionalOnThreading {
+
+	/**
+	 * The {@link Threading threading} that must be active.
+	 * @return the expected threading
+	 */
+	Threading value();
+
+}
+```
+
+
+
+Virutal Thread Executor 전용 Bean을 선언할 수 있다.
+
+```java
+@Configuration
+public class ExecutorServiceConfig {
+
+    @Bean
+    @ConditionalOnThreading(Threading.VIRTUAL)
+    public ExecutorService virtualThreadExecutor(){
+        return Executors.newVirtualThreadPerTaskExecutor();
+    }
+
+    @Bean
+    @ConditionalOnThreading(Threading.PLATFORM)
+    public ExecutorService platformThreadExecutor(){
+        return Executors.newCachedThreadPool();
+    }
+
+}
+```
+
+만약 버츄얼 스레드 이름을을 지정하고 싶다면?
+
+```java
+ @Bean
+ @ConditionalOnThreading(Threading.VIRTUAL)
+ public ExecutorService virtualThreadExecutor() {
+     ThreadFactory factory = Thread.ofVirtual().name("my-virtual").factory();
+         
+     return Executors.newThreadPerTaskExecutor(factory);
+ }
+```
+
+
+
+spring 3.2에 나온 RestClient에도 다음처럼 사용 가능.
+
+```java
+@Value("${spring.threads.virtual.enabled}")
+private boolean isVirtualThreadEnabled;
+private RestClient buildRestClient(String baseUrl) {
+	log.info("base url: {}", baseUrl);
+	var builder = RestClient.builder()
+		.baseUrl(baseUrl);
+	
+	if (isVirtualThreadEnabled) {
+		builder = builder.requestFactory(new JdkClientHttpRequestFactory(
+			HttpClient.newBuilder()
+				.executor(Executors.newVirtualThreadPerTaskExecutor())
+				.build()
+		));
+	}
+	return builder.build();
+}
+```
+
