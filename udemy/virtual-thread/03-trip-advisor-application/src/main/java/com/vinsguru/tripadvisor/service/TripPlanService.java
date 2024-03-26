@@ -5,6 +5,7 @@ import com.vinsguru.tripadvisor.dto.TripPlan;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -22,6 +23,7 @@ public class TripPlanService {
     private final AccommodationServiceClient accommodationServiceClient;
     private final TransportationServiceClient transportationServiceClient;
     private final LocalRecommendationServiceClient localRecommendationServiceClient;
+    @Qualifier("virtualThreadExecutor")
     private final ExecutorService executor;
 
     public TripPlan getTripPlan(String airportCode){

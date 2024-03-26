@@ -1,0 +1,29 @@
+plugins {
+    id 'org.springframework.boot' version '3.2.4'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id 'java'
+}
+
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    compileOnly('org.projectlombok:lombok:1.18.30')
+    testImplementation 'org.projectlombok:lombok:1.18.30'
+    testAnnotationProcessor('org.projectlombok:lombok:1.18.30')
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += '--enable-preview' // 프리뷰 해야지 구조적 동시성 사용 가능
+//    options.compilerArgs += ["--add-modules", "jdk.incubator.concurrent"]
+    doFirst {
+        options.encoding = 'UTF-8'
+    }
+}

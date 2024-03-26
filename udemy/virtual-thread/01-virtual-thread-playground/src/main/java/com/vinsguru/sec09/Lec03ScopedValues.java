@@ -1,12 +1,13 @@
 package com.vinsguru.sec09;
 
-import com.vinsguru.util.CommonUtils;
+import java.time.Duration;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.UUID;
+import com.vinsguru.util.CommonUtils;
+
 
 /*
     A simple demo of ScopedValues - PREVIEW feature
