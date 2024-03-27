@@ -1,4 +1,413 @@
+#  Java 가상 스레드(Virtual Thread)의 이해: 종류, 설정, 사용법, 그리고 Spring Boot와의 통합
+
+
+
+# 1. Java 가상 스레드(Virtual Thread)  개요 
+
+## 스레드의 종류
+
+스레드 유형: KLT vs. ULT
+
+스레드는 크게 커널 수준 스레드(Kernel-Level Threads, KLT)와 사용자 수준 스레드(User-Level Threads, ULT)로 분류될 수 있습니다.
+
+- **커널 수준 스레드(KLT)**: 스레드의 생성, 스케줄링 및 관리를 직접 OS 커널이 담당하며, 이러한 스레드는 OS에 의존적입니다. KLT는 자원 관리 및 멀티프로세싱 환경에서의 스케줄링 측면에서 장점이 있으나, 스레드 생성 및 컨텍스트 스위칭에 높은 오버헤드가 있을 수 있습니다.
+- **사용자 수준 스레드(ULT)**: 사용자 영역의 라이브러리나 애플리케이션에 의해 관리됩니다. ULT는 운영 체제의 커널로부터 독립적으로 스케줄링되며, 스레드 관리에 필요한 모든 작업을 사용자 영역에서 처리합니다. ULT의 장점은 스레드 생성 및 컨텍스트 스위칭이 빠르다는 점입니다. 그러나, 일부 리소스를 공유하는 작업에서는 커널의 도움이 필요할 수 있으며, 자바 같은 경우 1:1로 매핑이 되기떄문에 이점이 줄어들 수 있습니다.
+
+자바에서 스레드 풀은 `ExecutorService` 인터페이스를 통해 제공됩니다.
+
+JVM 힙 메모리에  여러 유저 레벨 스레드를 구현 및 생성하여  풀에 담아두고,  커널 레벨 스레드(KLT)를 JVM 이 유저 레벨 스레드(ULT)로 1:1로 매핑하여 사용합니다. Thread 객체는 JNI을 호출하여 커널 레벨 스레드에 1:1로 매핑하여 사용합니다. 
+
+자바에서 스레드의 스케줄링은 JVM을 통해 운영 체제의 스레드 스케줄러에 위임(스케쥴 알고리즘!)되어 관리되며, 이 스케줄러가 스레드의 실행 타이밍과 프로세서 할당을 결정합니다.
+
+실제 하드웨어의 CPU와 스레드는 무한정 할 수 없습니다. 결국 운영체제의 스케줄러는 아주 빠르게 각 스레드를 돌아가면서 실행하며 이로 인해 컨텍스트 스위칭이 발생합니다. 
+
+
+
+### 왜 자바 기존 스레드가 문제가 될 수 있을까요?
+
+1. 오버헤드  : 스레드의 생성과 종료 과정이 커널을 통해 이루어지기 때문에, 사용자 수준에서 발생하는 것보다 더 큰 오버헤드가 발생합니다. 때문에 애플리케이션 시작시 미리 만들어두고 사용하는것입니다. 부족하면 새로 생성하는것에 대해 매우 비싼 비용이 발생합니다.
+
+2. 비싼 메모리 :  기존 유저 레벨 스레드는 매우 무겁습니다. (보통 1~2MB, 운영체제에 따라 다름 )
+
+3. 블로킹 : 애플리케이션에서 I/O 작업(네트워크 요청, 파일 입출력 등)을 만나면 해당 스레드는 작업이 완료될 때까지 블로킹(대기) 상태가 됩니다. 이때, 스레드는 CPU 자원을 사용할 수 없으므로 OS에 CPU 자원을 반환하고, 실행할 수 없는 상태가 됩니다. 
+   * 데이터 연산과 입출력은 컴퓨터구조상 담당하는 하드웨어가 다릅니다. 데이터연산은 CPU, 입출력은 I/O장치(NIC, 마우스, 키보드 등)을 담당합니다. 
+     * CPU는 I/O 장치와 직접 상호작용하지 않습니다. 대신, 운영 체제는 I/O 요청을 관리하며, I/O 작업이 필요할 때 DMA(Direct Memory Access)와 같은 메커니즘을 사용하여 CPU의 개입 없이 데이터를 메모리와 I/O 장치 사이에서 직접 전송할 수 있도록 합니다. 
+   * CPU가 수행하는 작업에 비해 I/O (네트워크, 파일 쓰기 및 읽기 요청)은 상대적으로 매우 느리기 때문에 I/O가 발생하면 그시간동안 스레드가 놀고있으면 아까우니, 제어권을 CPU에 반환해서 다른 스레드가 동작하게 되어 실행할 수 없게 됩니다. 
+   * 그러다 I/O 작업이 끝나면 스케쥴러에의해 제어권을 받아 남은 작업을 이어가고, 작업이 끝나고 스레드를 반환합니다 .
+
+이런 문제들로 인해, 자바 애플리케이션에서 처리량을 올리는것에 한계가 생기게 됩니다. 
+
+그리고 이런 단점들을 해결 하기 위해 자바에서는 다른방안을 고민, 버츄얼 스레드를 도입하게 됩니다. 
+
+경량화와 높은 확장성(수만 수백만개 동시 스레드 사용 가능)을 갖게하며 컨텍스트 스위칭과 메모리 사용량을 최소화하면서도 높은 수준의 동시성과 병렬성을 더 쉽게 관리할 수 있게 됩니다.
+
+> 다른 대안으로, 스레드를 공유하고 비동기 - 논 블로킹 방식을 사용하여 처리량을 매우 높이는 반응형 리액티브 기술도 있으나 개발과 디버깅의 어려움이 있다는 단점이 있습니다. 
+
+## 기존 스레드와 버츄얼 스레드의 차이점 -  버츄얼 스레드와 캐리어 스레드 
+
+기존 자바 스레드는 플랫폼 스레드라고도 합니다. 
+
+#### 플랫폼 스레드 (Platform Thread)
+
+* 플랫폼 스레드는 OS가 관리하는 전통적인 자바 스레드 모델에서 사용되는 스레드로, Java 가상 머신(JVM)이 운영 체제의 기능을 활용하여 생성합니다. 
+* 높은 연산량을 요구하는 계산 작업등에  작업에 주로 사용되며 상대적으로 많은 리소스를 소비하며, 스레드의 수는 시스템의 리소스에 의해 제한됩니다.
+
+버츄얼 스레드가 나오게 되면서, 새로운 캐리어 스레드라는 개념이 나왔습니다. 
+
+버츄얼 스레드와 캐리어 스레드에 대한 정의를 보겠습니다. 
+
+#### 버추얼 스레드
+
+* 경량 스레드로 JVM 위에서 생성 및 실행되며플랫폼 스레드보다 훨신 가볍고 더 적은 리소스를 사용합니다. 
+
+* 캐리어 스레드 위에서 캐리어 스레드에 의해 관리 및 실행됩니다.
+
+* 플랫폼 스레드의 크기는 1MB ~ 2MB 이고 스택사이즈가 고정되어있지만, 
+
+  버츄얼 스레드는 상대적으로 훨씬 작으며, 고정된 스택 사이즈가 없습니다. 즉  사용량에 따라 크기가 커질수도 작을수도 있습니다. (Stack Chunk Object)
+
+  * 크기에 대한 실험이 궁금하다면 다음  블로그를 참고하세요.(https://blog.ycrash.io/is-java-virtual-threads-lightweight/)
+
+#### 캐리어 스레드 (Carrier Thread, 플랫폼 스레드라고도 할 수 있다.)
+
+* 캐리어 스레드는 Project Loom의 일부로 도입된 개념으로, Virtual Thread를 실행하기 위한 운반체(Carrier) 역할을 합니다. 기존의 OS 수준의 스레드(플랫폼 스레드)를 기반으로 합니다. 버츄얼 스레드가 수행되는 동안 실제로 CPU의 실행 시간을 제공하는 스레드입니다.
+
+* 여러 버츄얼 스레드를 효율적으로 관리하고 실행하기 위해 사용되며, 한 캐리어 스레드는 동시에 여러 버츄얼 스레드의 작업을 처리할 수 있습니다. 즉 여러 버츄얼 스레드를 캐리어 스레드 위에서 시분할 방식으로 실행시킵니다. 
+* 이 캐리어 스레드의 모적은 다수의 경량 모델인 버추얼 스레드를 효율저으로 스케줄링하고 실행하는 목적입니다. 
+* 캐리어스레드로 인해 애플리케이션은 OS 스레드의 제한(리소스 등)없이 사용할 수 있게 됩니다.
+
+> 즉 하나의 캐리어 스레드가, 여러 버추얼 스레드를 돌아가면서 실행, 관리하는  1:N라고 볼 수 있고, 여러 캐리어 스레드가 존재해요.
+>
+> 이 캐리어 스레드의 갯수를 조절할 수 있는데, 이건 뒤에서 살펴볼게요 (웬만해서는 건드릴 필요 없는 설정이에요.)
+
+
+
+#### 버추얼 스레드 내부의 캐리어 스레드
+
+ 모든 버츄얼 스레드는 코드에서도 플랫폼 스레드(캐리어 스레드)를 참조하고 있어요
+
+```java
+/**
+ * A thread that is scheduled by the Java virtual machine rather than the operating
+ * system.
+ */
+final class VirtualThread extends BaseVirtualThread {
+  
+  ...// 버추얼 스레드의 실행상태들  
+        // carrier thread when mounted, accessed by VM
+    private volatile Thread carrierThread;
+  ...
+}
+```
+
+버추얼 스레드의 실행 상태가 있는데, 상태에 따라 Virtual Thread의 상태에 따라 플랫폼 스레드에 마운트/언마운트해 실행을 관리합니다.
+
+*  '마운트'된다는 것은 버추얼 스레드가 플랫폼 스레드에 할당되어 실행되기 시작했다는 것을 의미해요. 즉 버추얼 스레드의 실행 상태가 실제 CPU에서 처리될 수 있도록 플랫폼 스레드가 이를 "운반(캐리어)"하죠.
+* '언마운트'란 반대로, 버추얼 스레드가 실행을 마치거나 대기 상태로 전환될 때 플랫폼 스레드에서 언마운트하게 해서, 현재 CPU 할당을 중지하고 다른 버추얼 스레드가 해당 플랫폼 스레드에 의해 실행될 수 있게끔 되는것을 의미해요 
+
+캐리어 스레드가 버추얼 스레드의 실행과 스케줄링을 담당하고 있는데, 실제 코드로도 그렇게 되어있어요.
+
+```java
+private void mount() {
+...
+  carrier.setCurrentThread(this); // 플랫폼(캐리어) 스레드에 실행할 Virtual Thread 객체 this 할당 
+... 
+}
+
+private void unmount() {
+
+  Thread carrier = this.carrierThread;
+  carrier.setCurrentThread(carrier);
+
+  synchronized (interruptLock) {
+    setCarrierThread(null); // 플랫폼(캐리어) 스레드에서 Virtual Thread 제거
+   }
+   carrier.clearInterrupt();
+}
+```
+
+이 메소드들은 JVM 내부의 스레드 스케줄러에 의해 자동으로 호출됩니다. 
+
+관련해서, 추가로 보면 좋을 내용은 아래 첨부할게요.
+
+* [네이버 D2](https://d2.naver.com/helloworld/1203723)
+* [우아한 형제들 기술블로그](https://techblog.woowahan.com/15398/)
+
+
+
+# 버추얼 스레드의 사용
+
+Virtual Thread를 사용하려면 인텔리제이와 gradle 프로젝트에서의 설정이 필요합니다.
+
+먼저 인텔리제이에서 project structr의 sdk와 gradle jvm을 java 21로 맞춰 주셔야해요.  
+
+이후 builg.gradle에서 다음 설정을 추가해주셔야 해요 
+
+```groovy
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += '--enable-preview' // 프리뷰 해야 structured concurrency 사용 가능
+}
+```
+
+
+
+
+
+다음으론, 버추얼 스레드를 사용할 수 있는 다양한 API가 나왔어요. 
+
+* Thread.startVirtualThread(Runnable task);
+
+* Thread.ofVirtual.start(Runnable task);
+* ExecutorService.submit(() -> { })
+
+```java
+public class SimpleVirtualThreadExample {
+  /**
+  기본적인 버추얼 스레드 생성
+  버추얼 스레드를 생성하고 시작하는 기본적인 방법입니다.
+  */
+  void createVirtualThreadWithLambda() {
+    Thread.startVirtualThread(() -> { // public static Thread startVirtualThread(Runnable task) {}
+    	System.out.println("Hello, Virtual Thread!");
+		});
+  }
+  
+  void createVirtualThreadWithRunnable() {        
+    Runnable runnable = () -> log.info("Hello");
+
+    Thread virtualThread = Thread.ofVirtual()     
+      .name("my-virtual1", 1) 
+      .unstarted(runnable);
+
+    virtualThread.start();
+  }
+  
+  /*
+		Thread.Builder를 사용하여 가상 스레드를 생성하기
+		- 가상 스레드는 기본적으로 데몬 스레드입니다.
+		- 가상 스레드는 기본적으로 이름이 지정되어 있지 않지만, name으로 지정이 가능하며, name 다음인수로 넘버링 해요
+	*/
+    void virtualThreadDemo() throws InterruptedException {
+        Thread virtualBuilder = Thread.ofVirtual().name("virtual-", 1);
+        virtualBuilder.unstarted(() -> { 실행시킬내용 }); // Thread unstarted(Runnable task);
+        virtualBuilder.start():
+    }
+  
+  /**
+	   ExecutorService를 사용하여 버추얼 스레드 생성하고 작업
+	*/
+	
+  	void startVirtualThread() {
+  	  	ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+					executor.submit(() -> {
+    				System.out.println("Task running in virtual thread");
+					});
+				executor.shutdown();	
+  	}
+  
+}
+```
+
+Fucture와 CompletableFuture와도 같이 사용할 수 있어요.
+
+```java
+
+String futureWithVirtual() {
+  ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+	Future<String> future = executor.submit(() -> {
+    Thread.sleep(100); // 비동기 작업 시뮬레이션
+    return "Result from Future";
+	});
+  
+  return future.get();
+}
+
+//
+
+String completableFutureWithVirtual() {
+
+  var cf = CompletableFuture
+    .supplyAsync(() -> "Hello", Executors.newVirtualThreadPerTaskExecutor());
+
+  try {
+    return cf.get();
+  } catch (InterruptedException | ExecutionException e) {
+    throw new RuntimeException(e);  
+  } 
+}
+// thenAccept, thenRun, exceptionally와도 사용 가능. 
+String completableFutureWithVirtual() {
+    var cf = CompletableFuture
+        .supplyAsync(() -> "Hello", Executors.newVirtualThreadPerTaskExecutor())
+        .thenApply((s) -> s + " World")
+        .exceptionally(ex -> {
+            log.info("error - {}", ex.getMessage());
+            return null;
+        });
+    try {
+        return cf.get();
+    } catch (InterruptedException | ExecutionException e) {
+        throw new RuntimeException(e);
+    }
+}
+```
+
+특정 스레드가 가상 스레드인지 확인하는 메서드도 제공해요. 
+
+```java
+boolean isVirtualThread = Thread.isVirtual();
+```
+
+## 캐리어 스레드 설정 - JDK  가상 스레드 스케줄러를 구성하기 위해 사용할 수 있는 시스템 속성
+
+버추얼 스레드는 캐리어 스레드에 의해 관리 및 실행됩니다. 
+
+이 캐리어 스레드는 기본적으로 우리가 알던 플랫폼 스레드와 동일합니다. 
+
+이 캐리어 스레드의 수를 설정할 수 있습니다(일반적으로, 우리가 따로 관리해야 할 필요는 없어요. )
+
+* 아래 Java `java.lang.Thread`의 공식 문서도 읽어보세요
+
+* https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Thread.html
+
+### 시스템 속성
+
+| 시스템 속성                              | 설명                                                         |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| `jdk.virtualThreadScheduler.parallelism` | 가상 스레드를 스케줄링하기 위해 사용할 수 있는 플랫폼 스레드의 수입니다. 기본값은 사용 가능한 프로세서의 수입니다. |
+| `jdk.virtualThreadScheduler.maxPoolSize` | 스케줄러에 사용할 수 있는 플랫폼 스레드의 최대 수입니다. 기본값은 256입니다. |
+
+이는 응용 프로그램을 시작할 때 최대 풀 크기를 변경할 수 있음을 의미해요.
+
+```
+java -Djdk.virtualThreadScheduler.maxPoolSize=512 <다른 인수들...>
+```
+
+동시에 실행되는 캐리어 스레드의 수를 제한하고 싶은 경우 다음 두 속성을 이용할 수 있어요. 
+
+#### 캐리어 스레드의 수 제한 
+
+첫 번째 속성을 사용하면 가상 스레드가 사용할 캐리어 스레드의 생성 수를 설정할 수 있습니다. 
+
+기본적으로 캐리어 스레드의 수는 사용 가능한 cpu 코어의 수와 동일합니다. 
+
+생성되는 캐리어 스레드의 수를 설정하려면 다음 속성을 사용할 수 있습니다.
+
+```
+ jdk.virtualThreadScheduler.parallelism=5
+```
+
+### 캐리어 스레드의 최대 수 
+
+제한 병렬성 값에 의해 설정된 수를 초과하는 캐리어 스레드 수는 가상 스레드가 차단될 때 발생할 수 있습니다. 이러한 새로운 캐리어 스레드는 차단된 가상 스레드와 캐리어 스레드를 수용하기 위해 일시적으로 생성됩니다. 생성될 수 있는 캐리어 스레드의 최대 양을 설정하려면 다음 시스템 속성을 사용하십시오:
+
+```
+jdk.virtualThreadScheduler.maxPoolSize=10 
+```
+
+* 기본값은 256입니다. 
+
+이 속성을 통해 버추얼 스레드를 실행할 캐리어 스레드의 최대 풀 크기를 설정할 수 있습니다.
+
+`그러나 다시말하지만 일반적으로, 우리가 따로 관리해야 할 필요는 없어요. `
+
+### 설정 방법
+
+설정하는 방법은 주로 Java 애플리케이션을 시작할 때 JVM(Java Virtual Machine)에 전달하는 인수를 통해 이루어집니다. 
+
+### 1. 커맨드 라인을 통한 설정
+
+애플리케이션을 시작할 때, JVM에 전달하는 커맨드 라인 인수에 `-D키=값` 형식을 사용하여 속성을 설정할 수 있습니다. 
+
+예를 들어, 캐리어 스레드의 수를 5로 제한하고, 최대 캐리어 스레드 수를 10으로 설정하려면 다음과 같이 할 수 있습니다:
+
+```sh
+java -Djdk.virtualThreadScheduler.parallelism=5 -Djdk.virtualThreadScheduler.maxPoolSize=10 -jar your-application.jar
+```
+
+이 명령은 `your-application.jar`라는 Java 애플리케이션을 시작하면서 캐리어 스레드의 병렬성을 5로, 최대 풀 크기를 10으로 설정합니다.
+
+### 2. 프로그램 내에서 설정
+
+시스템 속성은 Java 코드 내에서도 `System.setProperty()` 메서드를 사용하여 설정할 수 있습니다. 이 방법은 애플리케이션의 초기화 단계나 설정이 필요한 특정 시점에서 사용할 수 있습니다. 예를 들어:
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        System.setProperty("jdk.virtualThreadScheduler.parallelism", "5");
+        System.setProperty("jdk.virtualThreadScheduler.maxPoolSize", "10");
+
+    }
+}
+
+//or
+
+static {
+    System.setProperty("jdk.virtualThreadScheduler.parallelism", "5");
+    System.setProperty("jdk.virtualThreadScheduler.maxPoolSize", "10");
+}
+```
+
+
+
+
+
+## 2. 가상 스레드 설정 방법
+
+- ### 커맨드 라인을 통한 설정
+
+- ### 프로그램 내에서의 설정
+
+## 3. 가상 스레드 스케줄링과 스레드 양보
+
+- ### 가상 스레드 스케줄링의 이해
+
+- ### 스레드 양보 방법과 주의사항
+
+- ### Pinning Thread(고정된 스레드): `synchronized` 사용 주의
+
+## 4. 가상 스레드와 동기화 메커니즘
+
+- ### `synchronized` 대안: 경쟁 방지법과 `ReentrantLock`
+
+- ### 가상 스레드와 라이브러리 호환성: Pinning 예방 및 탐지 방법
+
+## 5. 가상 스레드 활용
+
+- ### 스레드 팩토리: 자식 가상 스레드 생성
+
+- ### 유용한 가상 스레드 메소드
+
+- ### 다양한 ThreadPool Executor와 가상 스레드 통합
+
+## 6. 가상 스레드와 스레드 로컬
+
+- ### Scope Values: 스코프 값의 바인딩 및 상속 문제
+
+- ### 범위 지정된 값의 재바인딩
+
+## 7. 구조화된 동시성(Structured Concurrency)
+
+- ### 구조화된 동시성의 핵심 원칙
+
+- ### 처리 실패 시나리오: 예외 처리와 태스크 관리 전략
+
+## 8. Spring Boot와 가상 스레드의 통합
+
+- ### Spring Boot에서 가상 스레드 사용하기
+
+- ### 가상 스레드를 활용한 효율적인 비동기 처리 전략
+
+
+
 # Java Virtual Thread
+
+
+
+[toc]
+
+
 
 * https://mangkyu.tistory.com/309
 * https://mangkyu.tistory.com/317
@@ -139,9 +548,15 @@ Thread.Builder
 
 # 버츄얼 스레드 스케줄링
 
+버추얼 스레드 설정 
+
+
+
 * https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Thread.html
 
-Java `java.lang.Thread`의 공식 문서를 읽는 것이 도움이 됩니다. 다음은 JDK 참조 구현에서 가상 스레드 스케줄러를 구성하기 위해 사용할 수 있는 시스템 속성에 대한 설명입니다:
+Java `java.lang.Thread`의 공식 문서를 읽는 것이 도움이 됩니다. 
+
+JDK  가상 스레드 스케줄러를 구성하기 위해 사용할 수 있는 시스템 속성에 대한 설명입니다.
 
 ### 시스템 속성
 
@@ -150,29 +565,39 @@ Java `java.lang.Thread`의 공식 문서를 읽는 것이 도움이 됩니다. �
 | `jdk.virtualThreadScheduler.parallelism` | 가상 스레드를 스케줄링하기 위해 사용할 수 있는 플랫폼 스레드의 수입니다. 기본값은 사용 가능한 프로세서의 수입니다. |
 | `jdk.virtualThreadScheduler.maxPoolSize` | 스케줄러에 사용할 수 있는 플랫폼 스레드의 최대 수입니다. 기본값은 256입니다. |
 
-이는 응용 프로그램을 시작할 때 최대 풀 크기를 변경할 수 있음을 의미합니다:
+이는 응용 프로그램을 시작할 때 최대 풀 크기를 변경할 수 있음을 의미해요.
 
 ```
 java -Djdk.virtualThreadScheduler.maxPoolSize=512 <다른 인수들...>
 ```
 
-동시에 실행되는 캐리어 스레드의 수를 제한하고 싶은 경우가 있습니다. 이 포스트는 이를 달성하기 위해 설정할 수 있는 두 가지 시스템 속성에 대해 살펴봅니다.
+동시에 실행되는 캐리어 스레드의 수를 제한하고 싶은 경우 다음 두 속성을 이용할 수 있어요. 
 
-캐리어 스레드의 수 제한 첫 번째 속성을 사용하면 가상 스레드가 사용할 캐리어 스레드의 생성 수를 설정할 수 있습니다. 기본적으로 캐리어 스레드의 수는 사용 가능한 코어의 수와 동일합니다. 생성되는 캐리어 스레드의 수를 설정하려면 다음 속성을 사용할 수 있습니다:
+#### 캐리어 스레드의 수 제한 
+
+첫 번째 속성을 사용하면 가상 스레드가 사용할 캐리어 스레드의 생성 수를 설정할 수 있습니다. 
+
+기본적으로 캐리어 스레드의 수는 사용 가능한 cpu 코어의 수와 동일합니다. 
+
+생성되는 캐리어 스레드의 수를 설정하려면 다음 속성을 사용할 수 있습니다.
 
 ```
  jdk.virtualThreadScheduler.parallelism=5
 ```
 
- 캐리어 스레드의 최대 수 제한 병렬성 값에 의해 설정된 수를 초과하는 캐리어 스레드 수는 가상 스레드가 차단될 때 발생할 수 있습니다. 이러한 새로운 캐리어 스레드는 차단된 가상 스레드와 캐리어 스레드를 수용하기 위해 일시적으로 생성됩니다. 생성될 수 있는 캐리어 스레드의 최대 양을 설정하려면 다음 시스템 속성을 사용하십시오:
+### 캐리어 스레드의 최대 수 
+
+제한 병렬성 값에 의해 설정된 수를 초과하는 캐리어 스레드 수는 가상 스레드가 차단될 때 발생할 수 있습니다. 이러한 새로운 캐리어 스레드는 차단된 가상 스레드와 캐리어 스레드를 수용하기 위해 일시적으로 생성됩니다. 생성될 수 있는 캐리어 스레드의 최대 양을 설정하려면 다음 시스템 속성을 사용하십시오:
 
 ```
 jdk.virtualThreadScheduler.maxPoolSize=10 
 ```
 
+* 기본값은 256입니다. 
+
+이 속성을 통해 버추얼 스레드를 실행할 캐리어 스레드의 최대 풀 크기를 설정할 수 있습니다.
 
 
-최대 풀 크기의 기본값은 256입니다. 이 속성을 통해 캐리어 스레드의 최대 풀 크기를 설정할 수 있습니다.
 
 결론 결론적으로, 동시에 실행되는 캐리어 스레드의 수를 제한하는 것은 Java에서 두 가지 시스템 속성을 사용함으로써 달성될 수 있습니다. jdk.virtualThreadScheduler.parallelism 속성을 설정하여 가상 스레드가 사용할 캐리어 스레드의 생성 수를 정의할 수 있고, jdk.virtualThreadScheduler.maxPoolSize 속성을 설정하여 차단된 가상 스레드를 수용하기 위해 일시적으로 생성될 수 있는 캐리어 스레드의 최대 수를 정의할 수 있습니다.
 
