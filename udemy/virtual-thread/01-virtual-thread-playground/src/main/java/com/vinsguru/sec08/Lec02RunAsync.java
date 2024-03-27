@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 /*
@@ -27,8 +28,39 @@ public class Lec02RunAsync {
                      return null;
                  });
 
+
+
         log.info("main ends");
         CommonUtils.sleep(Duration.ofSeconds(2));
+    }
+
+    String completableFutureWithVirtual() {
+
+        var cf = CompletableFuture
+            .supplyAsync(() -> "Hello", Executors.newVirtualThreadPerTaskExecutor())
+            .thenApply((s) -> s + " World")
+            .exceptionally(ex -> {
+                log.info("error - {}", ex.getMessage());
+                return null;
+            });
+
+        try {
+            return cf.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static String runAsync2() {
+
+        var cf = CompletableFuture
+            .supplyAsync(() -> "Hello", Executors.newVirtualThreadPerTaskExecutor());
+
+        try {
+            return cf.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static CompletableFuture<Void> runAsync(){

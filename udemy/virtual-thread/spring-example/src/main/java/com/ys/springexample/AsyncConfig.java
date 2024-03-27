@@ -9,6 +9,8 @@ import java.util.concurrent.ThreadFactory;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.support.TaskExecutorAdapter;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 
@@ -25,6 +27,11 @@ public class AsyncConfig implements AsyncConfigurer {
 			.factory(); // 1은 시작 넘버
 
 		return Executors.newThreadPerTaskExecutor(factory);
+	}
+
+	@Bean
+	public AsyncTaskExecutor applicationTaskExecutor() {
+		return new TaskExecutorAdapter(getAsyncExecutor());
 	}
 
 	@Override
