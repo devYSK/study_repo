@@ -1,0 +1,19 @@
+
+ext {
+    redissonSpringVersion = '3.24.3'
+}
+
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+    implementation ("org.redisson:redisson-spring-boot-starter:${redissonSpringVersion}") {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-web'
+    }
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'org.postgresql:r2dbc-postgresql'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+}
