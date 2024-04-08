@@ -39,7 +39,7 @@ public class SimpleTest {
 
     @Test
     void insertScore() {
-        for(int i=0; i<1000000; i++) {
+        for (int i = 0; i < 1000000; i++) {
             int score = (int)(Math.random() * 1000000); // 0 ~ 999999
             String userId = "user_" + i;
 
@@ -50,7 +50,7 @@ public class SimpleTest {
     @Test
     void inMemorySortPerformance() {
         ArrayList<Integer> list = new ArrayList<>();
-        for(int i=0; i<1000000; i++) {
+        for (int i = 0; i < 1000000; i++) {
             int score = (int)(Math.random() * 1000000); // 0 ~ 999999
             list.add(score);
         }
