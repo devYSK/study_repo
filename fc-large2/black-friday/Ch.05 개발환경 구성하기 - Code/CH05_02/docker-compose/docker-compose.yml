@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  app-1:
+    image: my-hello-world
+    ports:
+      - "8080:8080"
+
+  app-2:
+    image: my-hello-world
+    ports:
+      - "8050:8080"
