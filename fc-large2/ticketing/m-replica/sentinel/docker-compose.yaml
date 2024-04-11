@@ -1,0 +1,71 @@
+version: '3.8'
+networks:
+  replica:
+    driver: bridge
+
+services:
+  redis:
+    container_name: redis
+    image: redis:6.2
+    ports:
+      - 6379:6379
+    networks:
+      - replica
+    volumes:
+      - ./conf:/usr/local/etc/redis/
+    restart: always
+
+  replica:
+    container_name: replica
+    image: redis:6.2
+    ports:
+      - 6378:6379
+    networks:
+      - replica
+    volumes:
+      - ./conf:/usr/local/etc/redis/
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: always
+
+  replica2:
+    container_name: replica2
+    image: redis:6.2
+    ports:
+      - 6377:6379
+    networks:
+      - replica
+    volumes:
+      - ./conf:/usr/local/etc/redis/
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: always
+
+  sentinel:
+    container_name: sentinel
+    image: redis:6.2
+    networks:
+      - replica
+    volumes:
+      - ./conf:/usr/local/etc/redis/
+    command: redis-sentinel /usr/local/etc/redis/sentinel.conf
+    restart: always
+
+  sentinel2:
+    container_name: sentinel2
+    image: redis:6.2
+    networks:
+      - replica
+    volumes:
+      - ./conf:/usr/local/etc/redis/
+    command: redis-sentinel /usr/local/etc/redis/sentinel2.conf
+    restart: always
+
+  sentinel3:
+    container_name: sentinel3
+    image: redis:6.2
+    networks:
+      - replica
+    volumes:
+      - ./conf:/usr/local/etc/redis/
+    command: redis-sentinel /usr/local/etc/redis/sentinel3.conf
+    restart: always
+

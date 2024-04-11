@@ -1,0 +1,15 @@
+rootProject.name = 'ticketing'
+include("a-practice",
+        "b-jedis",
+        "c-spring-cache",
+        "aa-reactor-practice",
+        "h-blockhound",
+        "g-mvc-vs-webflux",
+        "z-reactive-r2dbc-redis",
+        "d-webflux-practice",
+        "ticket-server:flow",
+        "ticket-server:website"
+
+)
+include 'aa-reactor-practice'
+
