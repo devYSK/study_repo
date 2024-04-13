@@ -49,6 +49,11 @@ public class SimpleService {
 			if (i % 2 == 0) {
 				throw new RuntimeException("Random exception");
 			}
+
+			Thread.ofVirtual().unstarted(() -> System.out.println("Virtual thread"))
+					.setUncaughtExceptionHandler((t, e) -> System.err.println("Uncaught exception in thread " + t.getName() + ": " + e.getMessage()));
+
+
 			log.info("Executing async task on thread: {}", Thread.currentThread().getName());
 		}
 

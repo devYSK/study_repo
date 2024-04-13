@@ -23,6 +23,7 @@ public class TripPlanService {
     private final AccommodationServiceClient accommodationServiceClient;
     private final TransportationServiceClient transportationServiceClient;
     private final LocalRecommendationServiceClient localRecommendationServiceClient;
+
     @Qualifier("virtualThreadExecutor")
     private final ExecutorService executor;
 

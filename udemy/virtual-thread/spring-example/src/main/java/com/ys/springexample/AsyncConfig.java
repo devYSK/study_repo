@@ -1,7 +1,6 @@
 package com.ys.springexample;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -52,21 +51,12 @@ public class AsyncConfig implements AsyncConfigurer {
 				System.err.println("Parameter value - " + param);
 			}
 
-			Parameter[] parameters = method.getParameters(); // 메서드 파라미터 정보를 가져옴
-
-			for (int i = 0; i < params.length; i++) {
-				String paramName = parameters[i].getName(); // 파라미터 이름
-				Object paramValue = params[i]; // 파라미터 값
-				System.err.println("Parameter name - " + paramName + ", value - " + paramValue);
-			}
-
 			try {
 				throw (Exception) throwable;
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
-			// 여기에서 추가적인 예외 처리 로직을 구현할 수 있습니다.
-			// 예를 들어, 애플리케이션 이벤트를 발행하거나, 알림을 전송할 수 있습니다.
+			//  추가적인 예외 처리 로직을 구현할 수 있습니다. 예를 들어, 애플리케이션 이벤트를 발행하거나, 알림을 전송할 수 있습니다.
 			// eventPublisher.publishEvent(new AsyncErrorEvent(throwable));
 		}
 	}
