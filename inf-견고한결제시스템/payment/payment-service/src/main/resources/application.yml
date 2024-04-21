@@ -1,0 +1,89 @@
+
+spring:
+  application:
+    name: payment-service
+  r2dbc:
+    url: r2dbc:mysql://localhost:3306/payment
+    username: root
+    password: root
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  thymeleaf:
+    cache: false
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: pkc-e82om.ap-northeast-2.aws.confluent.cloud:9092
+          configuration:
+            security:
+              protocol: SASL_SSL
+            sasl:
+              jaas: # ssl 설정.
+                config: org.apache.kafka.common.security.plain.PlainLoginModule required username='abcd' password='abcd';
+              mechanism: PLAIN
+            client:
+              dns:
+                lookup: use_all_dns_ips
+
+          required-acks: all
+          auto-create-topics: true
+
+        bindings:
+          send-out-0:
+            producer:
+              record-metadata-channel: payment-result
+
+#          wallet-in-0:
+#            consumer:
+#              configuration:
+#                isolation:
+#                  level: read_committed
+#              enable-dlq: true
+#              dlq-name: wallet_payment_dlq
+#
+#          ledger-in-0:
+#            consumer:
+#              configuration:
+#                isolation:
+#                  level: read_committed
+#              enable-dlq: true
+#              dlq-name: ledger_payment_dlq
+
+      bindings:
+        send-out-0:
+          destination: payment
+          group: payment-service
+
+#        wallet-in-0:
+#          destination: wallet
+#          group: payment-service
+#
+#        ledger-in-0:
+#          destination: ledger
+#          group: payment-service
+
+    function:
+      definition: send #;wallet;ledger
+
+logging:
+  level:
+    org:
+      springframework:
+        web: DEBUG
+        r2dbc: DEBUG
+        transaction: DEBUG
+
+
+PSP:
+  toss:
+    secretKey: test_sk_eqRGgYO1r5404eGj1eRnVQnN2Eya
+    url: https://api.tosspayments.com
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: bindings

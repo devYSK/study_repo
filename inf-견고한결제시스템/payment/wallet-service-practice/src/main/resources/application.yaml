@@ -1,0 +1,69 @@
+server:
+  port: 8081
+
+spring:
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+
+  datasource:
+    hikari:
+      jdbc-url: jdbc:mysql://localhost:3306/test
+      username: root
+      password: 1234
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/test
+
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: pkc-gq2xn.asia-northeast3.gcp.confluent.cloud:9092
+          configuration:
+            security:
+              protocol: SASL_SSL
+            sasl:
+              jaas:
+                config: org.apache.kafka.common.security.plain.PlainLoginModule required username='2VLYZNOZZXP77H2Q' password='5icwWkLVF9uRMPX73ren9J75XETdw2lqloqEqk3Ih9ue/TBF3HPVypHqBRWUzy7K';
+              mechanism: PLAIN
+            client:
+              dns:
+                lookup: use_all_dns_ips
+
+          required-acks: all
+          auto-create-topics: false
+          transaction:
+            transaction-id-prefix: wallet-
+            producer:
+              configuration:
+                transaction:
+                  timeout:
+                    ms: 30000
+        bindings:
+          consume-in-0:
+            consumer:
+              enable-dlq: true
+              dlq-name: payment_wallet_dlq
+
+      bindings:
+        consume-in-0:
+          destination: payment
+          group: wallet-service
+          consumer:
+            max-attempts: 5
+
+logging:
+  level:
+    org:
+      springframework:
+        transaction: TRACE
+        orm:
+          jpa: DEBUG
+        kafka: TRACE
