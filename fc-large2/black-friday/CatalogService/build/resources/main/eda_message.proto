@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package blackfriday.protobuf;
+
+message ProductTags {
+  int64 product_id = 1;
+  repeated string tags = 2;
+}

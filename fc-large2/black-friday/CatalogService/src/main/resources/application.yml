@@ -1,0 +1,31 @@
+
+spring:
+  cassandra:
+    keyspace-name: catalog
+    port: 9042
+    contact-points: cassandra-node-0
+    local-datacenter: dc1
+    schema-action: create-if-not-exists
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/fc_black_fryday?useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+
+  kafka:
+    bootstrap-servers:
+      - kafka1:9092
+      - kafka2:9092
+      - kafka3:9092
+    consumer:
+      group-id: testgroup
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer

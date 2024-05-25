@@ -1,0 +1,159 @@
+{
+	"info": {
+		"_postman_id": "0cf9184e-869b-4367-b6a1-792a3cb223aa",
+		"name": "OrderService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "startOrder",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"userId\": 1,\n\t\"productId\": 7,\n\t\"count\": 3\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8086/order/start-order",
+					"host": [
+						"localhost"
+					],
+					"port": "8086",
+					"path": [
+						"order",
+						"start-order"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "finishOrder",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"orderId\": 2,\n\t\"paymentMethodId\": 1,\n\t\"addressId\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8086/order/finish-order",
+					"host": [
+						"localhost"
+					],
+					"port": "8086",
+					"path": [
+						"order",
+						"finish-order"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getUserOrders",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8086/order/users/1/orders",
+					"host": [
+						"localhost"
+					],
+					"port": "8086",
+					"path": [
+						"order",
+						"users",
+						"1",
+						"orders"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getOrderDetail",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8086/order/orders/2",
+					"host": [
+						"localhost"
+					],
+					"port": "8086",
+					"path": [
+						"order",
+						"orders",
+						"2"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

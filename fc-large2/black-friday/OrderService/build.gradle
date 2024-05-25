@@ -1,0 +1,73 @@
+plugins {
+	id 'com.google.protobuf' version '0.9.4' // protobuf 플러그인 추가
+	id 'jacoco'
+}
+ext {
+	set('springCloudVersion', "2023.0.0")
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+	implementation 'org.springframework.kafka:spring-kafka'
+	implementation 'com.google.protobuf:protobuf-java:3.25.2' // protobuf 라이브러리 추가
+
+	runtimeOnly 'com.mysql:mysql-connector-j'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.25.3'
+	}
+}
+
+// jacocoTestReport 대상에서 제외시킬 경로 지정
+private excludedClassFilesForReport(classDirectories) {
+	classDirectories.setFrom(
+			files(classDirectories.files.collect {
+				fileTree(dir: it, exclude: [
+						"**/protobuf/**",
+						"**/*Application*",
+						"**/*Config*"
+				])
+			})
+	)
+}
+
+jacocoTestReport {
+	dependsOn test	// 이 태스크 실행 전에 test 실행
+	finalizedBy jacocoTestCoverageVerification	// 이 태스크 실행 후에 jacocoTestCoverageVerification 실행
+
+	excludedClassFilesForReport(classDirectories)	// 제외 경로 설정
+}
+
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			element = 'BUNDLE'	// 프로젝트 단위로
+
+			limit {
+				counter = 'LINE'		// 라인을 기준으로
+				value = 'COVEREDRATIO'	// 비율
+				minimum = 0.89			// 커버리지 89%를 최소 기준으로 잡음
+			}
+
+			includes = [	// 검증에 포함시킬 경로들
+							'com.example.OrderService.service.**',
+			]
+		}
+	}
+}

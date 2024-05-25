@@ -1,0 +1,120 @@
+{
+	"info": {
+		"_postman_id": "02ec72a2-1840-43c1-859e-30d7bab48620",
+		"name": "SearchService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "addTagCache",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"tags\": [\"tv\", \"monitor\"],\n\t\"productId\": 1001\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8084/search/addTagCache",
+					"host": [
+						"localhost"
+					],
+					"port": "8084",
+					"path": [
+						"search",
+						"addTagCache"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "removeTagCache",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"tags\": [\"monitor\"],\n\t\"productId\": 1001\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8084/search/removeTagCache",
+					"host": [
+						"localhost"
+					],
+					"port": "8084",
+					"path": [
+						"search",
+						"removeTagCache"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getTagProductIds",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8084/search/tags/tv/productIds",
+					"host": [
+						"localhost"
+					],
+					"port": "8084",
+					"path": [
+						"search",
+						"tags",
+						"tv",
+						"productIds"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

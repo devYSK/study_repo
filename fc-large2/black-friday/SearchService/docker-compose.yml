@@ -1,0 +1,19 @@
+# Cassandra for local test
+
+version: "3.8"
+
+services:
+  redis-node-0:
+    image: redis
+#    environment:
+#      - CASSANDRA_SEEDS=cassandra-node-0
+#      - CASSANDRA_CLUSTER_NAME=MyCluster
+#      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+#      - CASSANDRA_DC=dc1
+    ports:
+      - "6379:6379"
+
+    
+
+
+

@@ -1,0 +1,14 @@
+
+# MySQL에 접속해 database 생성
+docker exec -it blackfriday-localhost-1 mysql -u root -p
+=> create database fc_black_fryday;
+
+
+# Cassandra 노드에 cqlsh를 사용해 접속해 keyspace 생성
+docker exec -it blackfriday-cassandra-node-0-1 cqlsh
+=> create keyspace catalog with replication = { 'class': 'SimpleStrategy', 'replication_factor':2};
+
+
+# 기타
+- (Mac의 경우) 7000번 포트가 AirPlay 기능에 의해 점유되어 있을 수 있음. '시스템 설정'에서 AirPlay로 검색해 'AirPlay 수신 모드'를 OFF
+

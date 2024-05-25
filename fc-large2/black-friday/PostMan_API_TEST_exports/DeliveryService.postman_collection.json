@@ -1,0 +1,198 @@
+{
+	"info": {
+		"_postman_id": "ca988d09-ffd9-4907-8362-9dcc0e4aaf2c",
+		"name": "DeliveryService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "registerAddress",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"userId\": \"1\",\n\t\"address\": \"서울 강서구 럭키아파트\",\n\t\"alias\": \"집 주소\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8083/delivery/addresses",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"delivery",
+						"addresses"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "processDelivery",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"orderId\": 500,\n\t\"productName\": \"product_01\",\n\t\"productCount\": 2,\n\t\"address\": \"서울 강서구 럭키아파트\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8083/delivery/process-delivery",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"delivery",
+						"process-delivery"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getUserAddress",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8083/delivery/users/4/first-address",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"delivery",
+						"users",
+						"4",
+						"first-address"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getAddress",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8083/delivery/address/1",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"delivery",
+						"address",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getDelivery",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8083/delivery/deliveries/7",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"delivery",
+						"deliveries",
+						"7"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

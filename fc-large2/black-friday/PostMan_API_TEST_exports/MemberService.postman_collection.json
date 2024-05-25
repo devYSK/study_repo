@@ -1,0 +1,120 @@
+{
+	"info": {
+		"_postman_id": "3a58411a-aa3d-43ed-99ce-3a319ae59689",
+		"name": "MemberService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "registerUser",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"loginId\": \"user01\",\n\t\"userName\": \"user01_name\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8081/member/users/registration",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"member",
+						"users",
+						"registration"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8081/member/users/user01/login",
+					"host": [
+						"localhost"
+					],
+					"port": "8081",
+					"path": [
+						"member",
+						"users",
+						"user01",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "modifyUser",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"userName\": \"user01_new_name\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/member/users/1/modify",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"member",
+						"users",
+						"1",
+						"modify"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

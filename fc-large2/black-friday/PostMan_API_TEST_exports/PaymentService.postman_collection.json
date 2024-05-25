@@ -1,0 +1,159 @@
+{
+	"info": {
+		"_postman_id": "6b98dd1b-6b16-41f7-8d47-f725a6d371c7",
+		"name": "PaymentService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "registerPaymentMethod",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"userId\": 1,\n\t\"paymentMethodType\": \"CREDIT_CARD\",\n\t\"creditCardNumber\": \"9999-9999-9999-9999\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8082/payment/methods",
+					"host": [
+						"localhost"
+					],
+					"port": "8082",
+					"path": [
+						"payment",
+						"methods"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getPaymentMethod",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8082/payment/users/1/first-method",
+					"host": [
+						"localhost"
+					],
+					"port": "8082",
+					"path": [
+						"payment",
+						"users",
+						"1",
+						"first-method"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "processPayment",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"userId\": 1,\n\t\"orderId\": 11111,\n\t\"amountKRW\": 5000,\n\t\"paymentMethodId\": 2\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8082/payment/process-payment",
+					"host": [
+						"localhost"
+					],
+					"port": "8082",
+					"path": [
+						"payment",
+						"process-payment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getPayment",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8082/payment/payments/3",
+					"host": [
+						"localhost"
+					],
+					"port": "8082",
+					"path": [
+						"payment",
+						"payments",
+						"3"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

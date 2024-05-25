@@ -1,0 +1,160 @@
+{
+	"info": {
+		"_postman_id": "7e6a810a-88b8-4453-8877-828ecaaba33d",
+		"name": "CatalogService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "registerProduct",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"sellerId\": 150,\n\t\"name\": \"product01\",\n\t\"description\": \"product01_description\",\n\t\"price\": 2000,\n\t\"stockCount\": 100,\n\t\"tags\": [\"tv\", \"monitor\"]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8085/catalog/products",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"catalog",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getProductsBySellerId",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8085/catalog/sellers/150/products",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"catalog",
+						"sellers",
+						"150",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getProductById",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8085/catalog/products/7",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"catalog",
+						"products",
+						"7"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "deleteProduct",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8085/catalog/products/14",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"catalog",
+						"products",
+						"14"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

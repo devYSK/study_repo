@@ -1,7 +1,13 @@
 rootProject.name = 'black-friday'
 
 
-include (
-        "demo-cassandra",
-        "demo-kafka"
+include(
+        "a-demo-cassandra",
+        "a-demo-kafka",
+        "SearchService",
+        "PaymentService",
+        "MemberService",
+        "OrderService",
+        "DeliveryService",
+        "CatalogService"
 )

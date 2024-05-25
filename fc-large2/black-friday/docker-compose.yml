@@ -1,50 +1,122 @@
 version: "3.8"
 
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+  # Infra services
+  cassandra-node-0:
+    image: cassandra
     environment:
-      ZOOKEEPER_SERVER_ID: 1
-      ZOOKEEPER_CLIENT_PORT: 2181
+      - CASSANDRA_SEEDS=cassandra-node-0,cassandra-node-1,cassandra-node-2
+      - CASSANDRA_CLUSTER_NAME=MyCluster
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_DC=dc1
+      - HEAP_NEWSIZE=128M
+      - MAX_HEAP_SIZE=1024M
     ports:
-      - "22181:2181"
+      - "7000:7000"   # 노드간 클러스터 내부 통신
+      - "7001:7001"   # 노드간 보안 통신에 사용
+      - "9042:9042"   # CQL 클라이언트와 통신
+    healthcheck:
+      test: [ "CMD", "cqlsh", "-e", "describe keyspaces" ]
+      interval: 10s
+      timeout: 10s
+      retries: 50
+  
+  cassandra-node-1:
+    image: cassandra
+    environment:
+      - CASSANDRA_SEEDS=cassandra-node-0,cassandra-node-1,cassandra-node-2
+      - CASSANDRA_CLUSTER_NAME=MyCluster
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_DC=dc1
+      - HEAP_NEWSIZE=128M
+      - MAX_HEAP_SIZE=1024M
+    ports:
+      - "17000:7000"
+      - "17001:7001"
+      - "19042:9042"
+    healthcheck:
+      test: [ "CMD", "cqlsh", "-e", "describe keyspaces" ]
+      interval: 10s
+      timeout: 10s
+      retries: 50
 
-  kafka1:
-    image: confluentinc/cp-kafka:latest
+  cassandra-node-2:
+    image: cassandra
+    environment:
+      - CASSANDRA_SEEDS=cassandra-node-0,cassandra-node-1,cassandra-node-2
+      - CASSANDRA_CLUSTER_NAME=MyCluster
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_DC=dc1
+      - HEAP_NEWSIZE=128M
+      - MAX_HEAP_SIZE=1024M
+    ports:
+      - "27000:7000"
+      - "27001:7001"
+      - "29042:9042"
+    healthcheck:
+      test: [ "CMD", "cqlsh", "-e", "describe keyspaces" ]
+      interval: 10s
+      timeout: 10s
+      retries: 50
+
+  myredis:
+    image: redis
+    hostname: myredis
+    ports:
+      - "6379:6379"
     depends_on:
-      - zookeeper
-    ports:
-      - "19092:19092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:9092,EXTERNAL://localhost:19092
-      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      cassandra-node-0:
+        condition: service_healthy
+      cassandra-node-1:
+        condition: service_healthy
+      cassandra-node-2:
+        condition: service_healthy
 
-  kafka2:
-    image: confluentinc/cp-kafka:latest
-    depends_on:
-      - zookeeper
-    ports:
-      - "19093:19093"
-    environment:
-      KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka2:9093,EXTERNAL://localhost:19093
-      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+  #  mysql-server:
+  #    image: mysql
+  #    environment:
+  #      - MYSQL_ROOT_PASSWORD=1234
+  #    ports:
+  #      - "3306:3306"
+  #    depends_on:
+  #      - myredis
 
 
-  kafka3:
-    image: confluentinc/cp-kafka:latest
-    depends_on:
-      - zookeeper
+  # Domain Services
+  member-service:
+    image: member-service
     ports:
-      - "19094:19094"
-    environment:
-      KAFKA_BROKER_ID: 3
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka3:9094,EXTERNAL://localhost:19094
-      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      - "8081:8080"
+
+
+
+  payment-service:
+    image: payment-service
+    ports:
+      - "8082:8080"
+
+
+
+  delivery-service:
+    image: delivery-service
+    ports:
+      - "8083:8080"
+
+
+
+  search-service:
+    image: search-service
+    ports:
+      - "8084:8080"
+
+
+  catalog-service:
+    image: catalog-service
+    ports:
+      - "8085:8080"
+
+
+  order-service:
+    image: order-service
+    ports:
+      - "8086:8080"

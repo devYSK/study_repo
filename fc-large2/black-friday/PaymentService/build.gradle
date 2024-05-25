@@ -1,0 +1,26 @@
+plugins {
+	id 'com.google.protobuf' version '0.9.4' // protobuf 플러그인 추가
+}
+
+
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	runtimeOnly 'com.mysql:mysql-connector-j'
+
+	implementation 'org.springframework.kafka:spring-kafka'
+	implementation 'com.google.protobuf:protobuf-java:3.25.2' // protobuf 라이브러리 추가
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.25.3'
+	}
+}
