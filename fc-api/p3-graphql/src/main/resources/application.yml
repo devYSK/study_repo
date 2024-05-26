@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: demo-grapqhl
+
+  graphql:
+    graphiql:
+      enabled: true
+      path: /graphiql
+    schema:
+      inspection:
+         enabled: true
+
+  sql:
+    init:
+      data-locations: classpath:sql/data.sql
+
+  jpa:
+    defer-datasource-initialization: true
+    show-sql: false
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true

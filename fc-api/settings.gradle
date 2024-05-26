@@ -1,0 +1,13 @@
+rootProject.name = 'api'
+
+
+include(
+        'p1-rest-api',
+        'p2-grpc-client',
+        'p2-grpc-server',
+        'p3-graphql',
+        'p4-api-gateway:api-gateway',
+        'p4-api-gateway:book-api',
+        'p4-api-gateway:payment-api',
+        'p4-api-gateway:service-discovery'
+)
