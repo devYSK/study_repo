@@ -26,7 +26,7 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity getBookById(@PathVariable Long id) throws IOException {
+    public ResponseEntity getBookById(@PathVariable Long id) {
         Bookstore.Book book = bookGrpcClient.findById(id);
         return ResponseEntity.ok().body(JsonConverter.toJson(book));
     }

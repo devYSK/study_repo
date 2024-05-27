@@ -11,15 +11,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JsonConverter {
-    public static String toJson(MessageOrBuilder messageOrBuilder) throws IOException {
-        return JsonFormat.printer().print(messageOrBuilder);
+    public static String toJson(MessageOrBuilder messageOrBuilder) {
+        try {
+            return JsonFormat.printer().print(messageOrBuilder);
+        } catch (InvalidProtocolBufferException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static <T extends Message> String toJsonList(List<T> responseList) throws InvalidProtocolBufferException {
+    public static <T extends Message> String toJsonList(List<T> responseList) {
         List<String> jsonList = new ArrayList<>();
 
         for (MessageOrBuilder response : responseList) {
-            String json = JsonFormat.printer().print(response);
+            String json = null;
+
+            try {
+                json = JsonFormat.printer().print(response);
+            } catch (InvalidProtocolBufferException e) {
+                throw new RuntimeException(e);
+            }
+
             jsonList.add(json);
         }
 

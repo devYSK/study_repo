@@ -22,9 +22,10 @@ public class PerformanceMonitoringInstrumentation extends SimplePerformantInstru
     public InstrumentationContext<ExecutionResult> beginExecuteOperation(InstrumentationExecuteOperationParameters parameters, InstrumentationState state) {
         Instant start = clock.instant();
         return new InstrumentationContext<>() {
+
             @Override
-            public void onDispatched(CompletableFuture<ExecutionResult> result) {
-                // No action taken on dispatch
+            public void onDispatched() {
+
             }
 
             @Override
