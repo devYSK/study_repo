@@ -1,0 +1,180 @@
+import org.jooq.meta.jaxb.ForcedType
+import org.jooq.meta.jaxb.Generate
+import org.jooq.meta.jaxb.Strategy
+
+buildscript {
+    ext {
+        jooqVersion = '3.19.5'
+    }
+}
+
+plugins {
+//    id 'nu.studer.jooq' version '9.0'
+    id 'dev.monosoul.jooq-docker' version '6.0.14'
+}
+
+
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src/main/java", "src/generated"]
+        }
+    }
+}
+
+dependencies {
+    implementation "org.jooq:jooq:${jooqVersion}"
+
+    jooqCodegen project(':a-total:jooq-custom')
+    jooqCodegen "org.jooq:jooq:${jooqVersion}"
+    jooqCodegen "org.jooq:jooq-meta:${jooqVersion}"
+    jooqCodegen "org.jooq:jooq-codegen:${jooqVersion}"
+
+    jooqCodegen 'org.flywaydb:flyway-core:10.8.1'
+    jooqCodegen 'org.flywaydb:flyway-mysql:10.8.1'
+
+    // flyway 넣으면서 주석처리
+//    jooqGenerator "org.jooq:jooq-meta:${jooqVersion}"
+//    jooqGenerator project(':a-total:jooq-custom')
+//    jooqGenerator "org.jooq:jooq:${jooqVersion}"
+
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation ('org.springframework.boot:spring-boot-starter-jooq') {
+        exclude group: 'org.jooq'
+    }
+
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+String dbUser   = System.properties["db-user"]   ?: "root"
+String dbPasswd = System.properties["db-passwd"] ?: "root"
+
+jooq {
+    version = "${jooqVersion}"
+    withContainer {
+        image {
+            name = "mysql:8.0.29"
+            envVars = [
+                    MYSQL_ROOT_PASSWORD: "root",
+                    MYSQL_DATABASE     : "sakila"
+            ]
+        }
+
+        db {
+            username = "root"
+            password = "root"
+            name = "sakila"
+            port = 3306
+            jdbc {
+                schema = "jdbc:mysql"
+                driverClassName = "com.mysql.cj.jdbc.Driver"
+            }
+        }
+    }
+}
+
+tasks {
+    generateJooqClasses {
+        schemas.set(["sakila"])
+        outputDirectory.set(project.layout.projectDirectory.dir("src/generated"))
+        includeFlywayTable.set(false)
+
+        usingJavaConfig {
+            generate = new Generate()
+                    .withJavaTimeTypes(true)
+                    .withDeprecated(false)
+                    .withDaos(true)
+                    .withFluentSetters(true)
+                    .withRecords(true)
+
+            withStrategy(
+                    new Strategy().withName("jooq.custom.generator.JPrefixGeneratorStrategy")
+            )
+
+            database.withForcedTypes(
+                    new ForcedType()
+                            .withUserType("java.lang.Long")
+                            .withTypes("int unsigned"),
+                    new ForcedType()
+                            .withUserType("java.lang.Integer")
+                            .withTypes("tinyint unsigned"),
+                    new ForcedType()
+                            .withUserType("java.lang.Integer")
+                            .withTypes("smallint unsigned")
+            )
+        }
+    }
+}
+
+//jooq {
+//    version = "${jooqVersion}"
+//    configurations {
+//        sakilaDB {
+//            generationTool {
+//                jdbc {
+//                    driver = 'com.mysql.cj.jdbc.Driver'
+//                    url = 'jdbc:mysql://localhost:3306'
+//                    user = "${dbUser}"
+//                    password = "${dbPasswd}"
+//                }
+//
+//                generator {
+//                    name = 'org.jooq.codegen.DefaultGenerator'
+//
+//                    database {
+//                        name = 'org.jooq.meta.mysql.MySQLDatabase'
+//                        unsignedTypes = true
+//                        schemata {
+//                            schema {
+//                                inputSchema = 'sakila'
+//                            }
+//                        }
+//                        forcedTypes {
+//                            forcedType {
+//                                userType = 'java.lang.Long'
+//                                includeTypes = 'int unsigned'
+//                            }
+//
+//                            forcedType {
+//                                userType = 'java.lang.Integer'
+//                                includeTypes = 'tinyint unsigned'
+//                            }
+//
+//                            forcedType {
+//                                userType = 'java.lang.Integer'
+//                                includeTypes = 'smallint unsigned'
+//                            }
+//                        }
+//                    }
+//
+//                    generate {
+//                        daos = true
+//                        records = true
+//                        fluentSetters = true
+//                        javaTimeTypes = true
+//                        deprecated = false
+//                    }
+//
+//                    target {
+//                        directory = 'src/generated'
+//                    }
+//
+//
+//                    // jooq-custom 내부의 설정
+//                    strategy.name = 'jooq.custom.generator.JPrefixGeneratorStrategy'
+//                }
+//            }
+//        }
+//    }
+//}

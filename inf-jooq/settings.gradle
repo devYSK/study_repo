@@ -1,0 +1,36 @@
+rootProject.name = 'jooq'
+
+include(
+        'a-total',
+        'a-total:jooq-custom',
+        '2.0_jOOQ-start-select',
+        '2.0_jOOQ-start-select:jooq-custom',
+        '2.2_jOOQ-start-dao',
+        '2.2_jOOQ-start-dao:jooq-custom',
+        '2.3_jOOQ-start-condition',
+        '2.3_jOOQ-start-condition:jooq-custom',
+        '2.4_jOOQ-start-subquery',
+        '2.4_jOOQ-start-subquery:jooq-custom',
+        '2.5_jOOQ-start-subquery_using_enum_converter',
+        '3.0_jOOQ-start-insert',
+        '3.1_jOOQ-start-update-delete',
+        '3.2_jOOQ-start-active-record',
+        '4.1_jOOQ-codegen-with-jpa',
+        '4.1_jOOQ-codegen-with-jpa:entity',
+        '4.2_jOOQ-codegen-with-testcontainers-and-flyway',
+        '4.2_jOOQ-codegen-with-testcontainers-and-flyway-separate-ddl',
+        '5.0_jOOQ-slow-query-detection',
+        '5.1_jOOQ-implicit-join-and-explicit-join',
+        '5.3_jOOQ-nested-one-to-many',
+        ':2.5_jOOQ-start-subquery_using_enum_converter:jooq-custom',
+        ':3.0_jOOQ-start-insert:jooq-custom',
+        ':3.1_jOOQ-start-update-delete:jooq-custom',
+        ':3.2_jOOQ-start-active-record:jooq-custom',
+        ':4.1_jOOQ-codegen-with-jpa:jooq-custom',
+        ':4.2_jOOQ-codegen-with-testcontainers-and-flyway:jooq-custom',
+        ':4.2_jOOQ-codegen-with-testcontainers-and-flyway-separate-ddl:jooq-custom',
+        ':5.0_jOOQ-slow-query-detection:jooq-custom',
+        ':5.1_jOOQ-implicit-join-and-explicit-join:jooq-custom',
+        ':5.3_jOOQ-nested-one-to-many:jooq-custom'
+
+)
