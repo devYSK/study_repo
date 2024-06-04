@@ -10,7 +10,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data
+      - ./redis-data:/data
     command: redis-server --appendonly yes
   zipkin:
     image: ghcr.io/openzipkin/zipkin-slim:${TAG:-latest}
@@ -29,7 +29,7 @@ services:
     image: prom/prometheus:latest
     volumes:
       - ./prometheus/:/etc/prometheus/
-      - prometheus_data:/prometheus
+      - ./prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -38,11 +38,11 @@ services:
     ports:
       - 9090:9090
     links:
-      - cadvisor:cadvisor
+#      - ./cadvisor:cadvisor
       - alertmanager:alertmanager
     #      - pushgateway:pushgateway
-    depends_on:
-      - cadvisor
+#    depends_on:
+#      - cadvisor
     #      - pushgateway
     networks:
       - back-tier
@@ -59,46 +59,47 @@ services:
     command:
       - '--config.file=/etc/alertmanager/config.yml'
       - '--storage.path=/alertmanager'
-  node-exporter:
-    image: quay.io/prometheus/node-exporter:latest
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-      - /:/host:ro,rslave
-    command:
-      - '--path.rootfs=/host'
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - --collector.filesystem.ignored-mount-points
-      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
-    ports:
-      - 9100:9100
-    networks:
-      - back-tier
-    restart: always
-    deploy:
-      mode: global
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.45.0
-    container_name: cadvisor
-    privileged: true
-    devices:
-      - /dev/kmsg:/dev/kmsg
-    volumes:
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /etc/machine-id:/etc/machine-id:ro
-      - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
-    restart: unless-stopped
-    expose:
-      - 8080
-    networks:
-      - back-tier
-    labels:
-      org.label-schema.group: "monitoring"
+#  node-exporter:
+#    image: quay.io/prometheus/node-exporter:latest
+#    user: "root"
+#    volumes:
+#      - /proc:/host/proc:ro
+#      - /sys:/host/sys:ro
+#      - /:/rootfs:ro
+#      - /:/host:ro,rslave
+#    command:
+#      - '--path.rootfs=/host'
+#      - '--path.procfs=/host/proc'
+#      - '--path.sysfs=/host/sys'
+#      - --collector.filesystem.ignored-mount-points
+#      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+#    ports:
+#      - 9100:9100
+#    networks:
+#      - back-tier
+#    restart: always
+#    deploy:
+#      mode: global
+#  cadvisor:
+#    image: gcr.io/cadvisor/cadvisor:v0.45.0
+#    container_name: cadvisor
+#    privileged: true
+#    devices:
+#      - /dev/kmsg:/dev/kmsg
+#    volumes:
+#      - /var/run:/var/run:ro
+#      - /sys:/sys:ro
+#      - /var/lib/docker/:/var/lib/docker:ro
+#      - /var/run/docker.sock:/var/run/docker.sock:ro
+#      - /etc/machine-id:/etc/machine-id:ro
+#      - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro
+#    restart: unless-stopped
+#    expose:
+#      - 8080
+#    networks:
+#      - back-tier
+#    labels:
+#      org.label-schema.group: "monitoring"
   grafana:
     image: grafana/grafana
     user: "472"
@@ -107,8 +108,9 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - grafana_data:/var/lib/grafana
+      - ./grafana_data:/var/lib/grafana
       - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - ./grafana/config.monitoring
     networks:
