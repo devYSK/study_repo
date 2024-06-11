@@ -1,23 +1,23 @@
 dependencies {
-    // javax.inject
-    implementation("javax.inject:javax.inject:_")
+    // jakarta.inject
+    implementation("jakarta.inject:jakarta.inject-api:2.0.1")
 
     // nullable
-    implementation("com.google.code.findbugs:jsr305:_")
+    implementation("com.github.spotbugs:spotbugs-annotations:4.8.5")
 
     // reactor
-    implementation("io.projectreactor:reactor-core:_")
+    implementation("io.projectreactor:reactor-core:3.6.6")
 
     /* test */
 
     // mockito
-    testImplementation("org.mockito:mockito-core:_")
-    testImplementation("org.mockito:mockito-junit-jupiter:_")
+    testImplementation("org.mockito:mockito-core")
+    testImplementation("org.mockito:mockito-junit-jupiter")
 
     // reactor
-    testImplementation("io.projectreactor:reactor-test:_")
+    testImplementation("io.projectreactor:reactor-test")
 
     // lombok
-    testAnnotationProcessor("org.projectlombok:lombok:_")
-    testCompileOnly("org.projectlombok:lombok:_")
+    testAnnotationProcessor("org.projectlombok:lombok")
+    testCompileOnly("org.projectlombok:lombok")
 }

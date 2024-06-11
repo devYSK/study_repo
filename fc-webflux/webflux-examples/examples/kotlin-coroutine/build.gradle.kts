@@ -14,19 +14,19 @@ repositories {
 
 dependencies {
     // coroutine
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:_")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:_")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-rx3:_")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-rx3")
 
     // reactor
-    implementation("io.projectreactor:reactor-core:_")
+    implementation("io.projectreactor:reactor-core:3.6.6")
 
     // rxjava3
-    implementation("io.reactivex.rxjava3:rxjava:_")
+    implementation("io.reactivex.rxjava3:rxjava")
 
     // mutiny
-    implementation("io.smallrye.reactive:mutiny:_")
-    implementation("io.smallrye.reactive:mutiny-kotlin:_")
+    implementation("io.smallrye.reactive:mutiny")
+    implementation("io.smallrye.reactive:mutiny-kotlin")
 }
 
 tasks.withType<KotlinCompile> {

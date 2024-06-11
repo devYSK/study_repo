@@ -13,19 +13,19 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
     
     // coroutine
-    implementation("org.jetbrains.kotlin:kotlin-reflect:_")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:_")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:_")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-rx3:_")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-rx3")
 
     // reactor tool
     implementation("io.projectreactor:reactor-tools")
 
     // rxjava
-    implementation("io.reactivex.rxjava3:rxjava:_")
+    implementation("io.reactivex.rxjava3:rxjava")
 
     if (System.getProperty("os.arch") == "aarch64" && System.getProperty("os.name") == "Mac OS X") {
-        runtimeOnly("io.netty:netty-resolver-dns-native-macos:_:osx-aarch_64")
+        runtimeOnly("io.netty:netty-resolver-dns-native-macos:osx-aarch_64")
     }
 
     /* test */

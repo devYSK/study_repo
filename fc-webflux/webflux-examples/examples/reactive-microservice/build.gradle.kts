@@ -22,17 +22,17 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     // lombok
-    testAnnotationProcessor("org.projectlombok:lombok:_")
-    testCompileOnly("org.projectlombok:lombok:_")
+    testAnnotationProcessor("org.projectlombok:lombok")
+    testCompileOnly("org.projectlombok:lombok")
 
     // mockito
-    testImplementation("org.mockito:mockito-core:_")
+    testImplementation("org.mockito:mockito-core")
 
     // reactor test
-    testImplementation("io.projectreactor:reactor-test:_")
+    testImplementation("io.projectreactor:reactor-test")
 
     // mockWebServer
-    testImplementation("com.squareup.okhttp3:mockwebserver:_")
+    testImplementation("com.squareup.okhttp3:mockwebserver")
 
     // spring-cloud-stream
     testImplementation("org.springframework.cloud:spring-cloud-stream") {

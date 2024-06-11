@@ -1,24 +1,29 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.1.4'
-    id 'io.spring.dependency-management' version '1.1.3'
+    id 'org.springframework.boot' version '3.3.0'
+    id 'io.spring.dependency-management' version '1.1.5'
 }
 
-
-allprojects {
-    group = "com.ys.webflux"
-    version = "0.0.1"
-    sourceCompatibility = JavaVersion.VERSION_17
-
-    repositories {
-        mavenCentral()
-    }
-}
-
+//
+//allprojects {
+//    group = "com.ys.webflux"
+//    version = "0.0.1"
+//    sourceCompatibility = JavaVersion.VERSION_17
+//
+//    repositories {
+//        mavenCentral()
+//    }
+//
+//}
+//
 
 subprojects {
 
-    apply plugin: 'java-library'
+    compileJava.options.encoding = 'UTF-8'
+
+    apply plugin: 'java-library' //하위 모듈이 상위 모듈의 라이브러리를 의존할 수 있게 하는 플러그인
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'org.springframework.boot'
 
     repositories {
         mavenCentral()
@@ -29,16 +34,27 @@ subprojects {
     }
 
     dependencies {
-        // lombok
-        annotationProcessor("org.projectlombok:lombok:1.18.24")
-        compileOnly("org.projectlombok:lombok:1.18.24")
+        // Lombok
+        compileOnly 'org.projectlombok:lombok:1.18.32'
+        annotationProcessor 'org.projectlombok:lombok:1.18.32'
+        testAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
+        testCompileOnly 'org.projectlombok:lombok:1.18.32'
         // SLF4J API
-        implementation 'org.slf4j:slf4j-api:1.7.32'  // 버전은 확인 후 최신 버전으로 교체 가능
-        implementation 'ch.qos.logback:logback-classic:1.2.6'  // 버전은 확인 후 최신 버전으로 교체 가능
+        implementation("org.slf4j:slf4j-api:2.0.13") // 버전은 확인 후 최신 버전으로 교체 가능
+//        implementation 'ch.qos.logback:logback-classic'  // 버전은 확인 후 최신 버전으로 교체 가능
+
+        testImplementation("org.springframework.boot:spring-boot-starter-test")
+        testImplementation("io.projectreactor:reactor-test")
+        implementation("io.netty:netty-resolver-dns-native-macos:4.1.75.Final:osx-aarch_64")
 
         // test
 //        testImplementation("org.junit.jupiter:junit-jupiter-api")
 //        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    }
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
     }
 }
 

@@ -13,7 +13,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
 
     // reactor
-    implementation("io.projectreactor:reactor-core:_")
+    implementation("io.projectreactor:reactor-core:3.6.6")
 
     // r2dbc
     implementation("io.asyncer:r2dbc-mysql:0.9.2")
@@ -22,35 +22,35 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     // lombok
-    testAnnotationProcessor("org.projectlombok:lombok:_")
-    testCompileOnly("org.projectlombok:lombok:_")
+    testAnnotationProcessor("org.projectlombok:lombok")
+    testCompileOnly("org.projectlombok:lombok")
 
     // mockito
-    testImplementation("org.mockito:mockito-core:_")
+    testImplementation("org.mockito:mockito-core")
 
     // reactor test
-    testImplementation("io.projectreactor:reactor-test:_")
+    testImplementation("io.projectreactor:reactor-test")
 
     // r2dbc h2
     testImplementation("io.r2dbc:r2dbc-h2")
 
     // h2
-    testRuntimeOnly("com.h2database:h2:_")
+    testRuntimeOnly("com.h2database:h2")
 
     // embedded mongo
     testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
 
     // testcontainer
-    testImplementation("org.testcontainers:testcontainers:_")
-    testImplementation("org.testcontainers:junit-jupiter:_")
-    testImplementation("org.testcontainers:mongodb:_")
-    testImplementation("org.testcontainers:mysql:_")
-    testImplementation("org.testcontainers:r2dbc:_")
+    testImplementation("org.testcontainers:testcontainers")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:mongodb")
+    testImplementation("org.testcontainers:mysql")
+    testImplementation("org.testcontainers:r2dbc")
 
     // mysql
-    testImplementation("mysql:mysql-connector-java:_")
+    testImplementation("mysql:mysql-connector-java")
 
     // mockWebServer
-    testImplementation("com.squareup.okhttp3:mockwebserver:_")
+    testImplementation("com.squareup.okhttp3:mockwebserver")
 }
 

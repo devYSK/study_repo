@@ -27,12 +27,12 @@ subprojects {
 
     dependencies {
         // lombok
-        annotationProcessor("org.projectlombok:lombok:_")
-        compileOnly("org.projectlombok:lombok:_")
+        annotationProcessor("org.projectlombok:lombok")
+        compileOnly("org.projectlombok:lombok")
 
         // test
-        testImplementation("org.junit.jupiter:junit-jupiter-api:_")
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:_")
+        testImplementation("org.junit.jupiter:junit-jupiter-api")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     }
 }
 
@@ -53,8 +53,8 @@ val nonSpringProjects = listOf(
 configure(nonSpringProjects) {
     dependencies {
         // sl4jf
-        implementation("org.slf4j:slf4j-api:_")
-        implementation("ch.qos.logback:logback-classic:_")
-        implementation("ch.qos.logback:logback-core:_")
+        implementation("org.slf4j:slf4j-api")
+        implementation("ch.qos.logback:logback-classic")
+        implementation("ch.qos.logback:logback-core")
     }
 }

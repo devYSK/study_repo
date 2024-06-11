@@ -1,4 +1,25 @@
 rootProject.name = 'webflux'
 
-include('reactive')
+include('reactive', 'sse',
+
+        'simple-user-security',
+        'websocket',
+
+        "kotlin-coroutine",
+        "kotlin-coroutine-usage",
+
+        /**
+         * core
+         persistence
+         presentation
+         */
+
+        'campusgram-service:user',
+        'campusgram-service:image',
+        'campusgram-service:article:core',
+        'campusgram-service:article:persistence',
+        'campusgram-service:article:presentation',
+
+        'campusgram-service:gateway'
+)
 

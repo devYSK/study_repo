@@ -23,12 +23,12 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     // testcontainer
-    testImplementation("org.testcontainers:testcontainers:_")
-    testImplementation("org.testcontainers:junit-jupiter:_")
-    testImplementation("org.testcontainers:mongodb:_")
+    testImplementation("org.testcontainers:testcontainers")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:mongodb")
 
     // reactor
-    testImplementation("io.projectreactor:reactor-test:_")
+    testImplementation("io.projectreactor:reactor-test")
 }
 dependencyManagement {
     imports {

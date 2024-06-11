@@ -15,18 +15,18 @@ dependencies {
     implementation("io.projectreactor:reactor-tools")
 
     // rxjava
-    implementation("io.reactivex.rxjava3:rxjava:_")
+    implementation("io.reactivex.rxjava3:rxjava")
 
     if (System.getProperty("os.arch") == "aarch64" && System.getProperty("os.name") == "Mac OS X") {
-        runtimeOnly("io.netty:netty-resolver-dns-native-macos:_:osx-aarch_64")
+        runtimeOnly("io.netty:netty-resolver-dns-native-macos:osx-aarch_64")
     }
 
     /* test */
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     // lombok
-    testAnnotationProcessor("org.projectlombok:lombok:_")
-    testCompileOnly("org.projectlombok:lombok:_")
+    testAnnotationProcessor("org.projectlombok:lombok")
+    testCompileOnly("org.projectlombok:lombok")
 }
 
 dependencyManagement {
