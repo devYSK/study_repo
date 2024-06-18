@@ -20,6 +20,10 @@ include('reactive', 'sse',
         'campusgram-service:article:persistence',
         'campusgram-service:article:presentation',
 
-        'campusgram-service:gateway'
+        'campusgram-service:gateway',
+
+        'coroutine-mongo-chat',
+        'mongo-chat',
+        'coroutine-r2dbc-webflux'
 )
 
