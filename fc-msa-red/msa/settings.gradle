@@ -1,0 +1,8 @@
+rootProject.name = 'msa'
+
+
+include(
+        "gift",
+    "order"
+)
+
