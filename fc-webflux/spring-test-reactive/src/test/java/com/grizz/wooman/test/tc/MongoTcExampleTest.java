@@ -1,12 +1,12 @@
 package com.grizz.wooman.test.tc;
 
-import com.grizz.wooman.test.app.TestApplication;
-import com.grizz.wooman.test.app.repository.chat.ChatDocument;
-import com.grizz.wooman.test.app.repository.chat.ChatMongoRepository;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.test.context.ContextConfiguration;
@@ -15,21 +15,20 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
+
+import com.grizz.wooman.test.app.TestApplication;
+import com.grizz.wooman.test.app.repository.chat.ChatDocument;
+import com.grizz.wooman.test.app.repository.chat.ChatMongoRepository;
+
 import reactor.test.StepVerifier;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Testcontainers
 @ContextConfiguration(
         classes = TestApplication.class
 )
 @DataMongoTest(
-        excludeAutoConfiguration =
-                EmbeddedMongoAutoConfiguration.class
+        // excludeAutoConfiguration =
+        //         EmbeddedMongoAutoConfiguration.class
 )
 public class MongoTcExampleTest {
     @Container

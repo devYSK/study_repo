@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class FluxBlockingTest {
+
     @Test
     void test1() {
         Flux<Integer> flux = Flux.create(sink -> {
@@ -21,7 +22,7 @@ public class FluxBlockingTest {
         });
 
         var expected = IntStream.range(0, 10).boxed()
-                .collect(Collectors.toList());
+            .toList();
         var actual = flux.collectList().block();
 
         assertIterableEquals(expected, actual);
@@ -39,9 +40,8 @@ public class FluxBlockingTest {
             sink.complete();
         });
 
-        assertThrows(RuntimeException.class, () -> {
-            flux.collectList().block();
-        });
+        assertThrows(RuntimeException.class,
+            () -> flux.collectList().block());
     }
 
     @Test

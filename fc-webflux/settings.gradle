@@ -24,6 +24,7 @@ include('reactive', 'sse',
 
         'coroutine-mongo-chat',
         'mongo-chat',
-        'coroutine-r2dbc-webflux'
+        'coroutine-r2dbc-webflux',
+        'spring-test-reactive'
 )
 

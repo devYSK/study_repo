@@ -10,6 +10,7 @@ public class LastStepVerifyExampleTest {
     @Test
     void test1() {
         var err = new IllegalStateException("hello");
+
         StepVerifier.create(Mono.error(err))
                 .verifyErrorMessage("hello");
     }
@@ -24,6 +25,7 @@ public class LastStepVerifyExampleTest {
     @Test
     void test3() {
         var mono = Mono.delay(Duration.ofMillis(500));
+
         StepVerifier.create(mono)
                 .verifyTimeout(Duration.ofMillis(100));
     }

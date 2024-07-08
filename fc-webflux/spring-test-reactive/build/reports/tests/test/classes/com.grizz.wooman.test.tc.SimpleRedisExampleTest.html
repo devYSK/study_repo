@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - SimpleRedisExampleTest</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<h1>SimpleRedisExampleTest</h1>
+<div class="breadcrumbs">
+<a href="../index.html">all</a> &gt; 
+<a href="../packages/com.grizz.wooman.test.tc.html">com.grizz.wooman.test.tc</a> &gt; SimpleRedisExampleTest</div>
+<div id="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox" id="tests">
+<div class="counter">1</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="failures">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="ignored">
+<div class="counter">0</div>
+<p>ignored</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="duration">
+<div class="counter">15.552s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success" id="successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div id="tabs">
+<ul class="tabLinks">
+<li>
+<a href="#tab0">Tests</a>
+</li>
+<li>
+<a href="#tab1">Standard output</a>
+</li>
+</ul>
+<div id="tab0" class="tab">
+<h2>Tests</h2>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Duration</th>
+<th>Result</th>
+</tr>
+</thead>
+<tr>
+<td class="success">testRedisContainer()</td>
+<td class="success">15.552s</td>
+<td class="success">passed</td>
+</tr>
+</table>
+</div>
+<div id="tab1" class="tab">
+<h2>Standard output</h2>
+<span class="code">
+<pre>04:50 [Test worker] - Image pull policy will be performed by: DefaultPullPolicy()
+04:50 [Test worker] - Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+04:50 [Test worker] - Loaded org.testcontainers.dockerclient.UnixSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first
+04:50 [Test worker] - Found Docker environment with Docker accessed via Unix socket (/Users/ysk/.docker/run/docker.sock)
+04:50 [Test worker] - Docker host IP address is localhost
+04:50 [Test worker] - Connected to docker: 
+  Server Version: 26.1.1
+  API Version: 1.45
+  Operating System: Docker Desktop
+  Total Memory: 2916 MB
+04:52 [Test worker] - Pulling docker image: testcontainers/ryuk:0.7.0. Please be patient; this may take some time but only needs to be done once.
+04:55 [docker-java-stream-506298428] - Starting to pull image
+04:55 [docker-java-stream-506298428] - Pulling image layers:  0 pending,  0 downloaded,  0 extracted, (0 bytes/0 bytes)
+04:56 [docker-java-stream-506298428] - Pulling image layers:  2 pending,  1 downloaded,  0 extracted, (4 MB/? MB)
+04:56 [docker-java-stream-506298428] - Pulling image layers:  1 pending,  2 downloaded,  0 extracted, (4 MB/? MB)
+04:56 [docker-java-stream-506298428] - Pulling image layers:  1 pending,  2 downloaded,  1 extracted, (5 MB/? MB)
+04:57 [docker-java-stream-506298428] - Pulling image layers:  0 pending,  3 downloaded,  1 extracted, (6 MB/6 MB)
+04:57 [docker-java-stream-506298428] - Pulling image layers:  0 pending,  3 downloaded,  2 extracted, (6 MB/6 MB)
+04:57 [docker-java-stream-506298428] - Pulling image layers:  0 pending,  3 downloaded,  3 extracted, (6 MB/6 MB)
+04:58 [docker-java-stream-506298428] - Pull complete. 3 layers, pulled in 2s (downloaded 6 MB at 3 MB/s)
+04:58 [Test worker] - Image testcontainers/ryuk:0.7.0 pull took PT5.662173S
+04:58 [Test worker] - Creating container for image: testcontainers/ryuk:0.7.0
+04:58 [Test worker] - Container testcontainers/ryuk:0.7.0 is starting: 89e723fa60d17a7e0a659b3beea4de1f2af32aaad9cb50aa8e0f82cb94ccac37
+04:58 [Test worker] - Container testcontainers/ryuk:0.7.0 started in PT0.300723S
+04:58 [Test worker] - Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+04:58 [Test worker] - Checking the system...
+04:58 [Test worker] - ✔︎ Docker server version should be at least 1.6.0
+04:58 [Test worker] - Pulling docker image: redis:5.0.3-alpine. Please be patient; this may take some time but only needs to be done once.
+05:01 [docker-java-stream-530211450] - Starting to pull image
+05:01 [docker-java-stream-530211450] - Pulling image layers:  0 pending,  0 downloaded,  0 extracted, (0 bytes/0 bytes)
+05:02 [docker-java-stream-530211450] - Pulling image layers:  5 pending,  1 downloaded,  0 extracted, (395 KB/? MB)
+05:02 [docker-java-stream-530211450] - Pulling image layers:  4 pending,  2 downloaded,  0 extracted, (423 KB/? MB)
+05:02 [docker-java-stream-530211450] - Pulling image layers:  3 pending,  3 downloaded,  0 extracted, (423 KB/? MB)
+05:02 [docker-java-stream-530211450] - Pulling image layers:  3 pending,  3 downloaded,  1 extracted, (2 MB/? MB)
+05:02 [docker-java-stream-530211450] - Pulling image layers:  3 pending,  3 downloaded,  2 extracted, (2 MB/? MB)
+05:03 [docker-java-stream-530211450] - Pulling image layers:  3 pending,  3 downloaded,  3 extracted, (2 MB/? MB)
+05:04 [docker-java-stream-530211450] - Pulling image layers:  2 pending,  4 downloaded,  3 extracted, (12 MB/? MB)
+05:04 [docker-java-stream-530211450] - Pulling image layers:  1 pending,  5 downloaded,  3 extracted, (12 MB/? MB)
+05:04 [docker-java-stream-530211450] - Pulling image layers:  0 pending,  6 downloaded,  3 extracted, (12 MB/16 MB)
+05:04 [docker-java-stream-530211450] - Pulling image layers:  0 pending,  6 downloaded,  4 extracted, (16 MB/16 MB)
+05:04 [docker-java-stream-530211450] - Pulling image layers:  0 pending,  6 downloaded,  5 extracted, (16 MB/16 MB)
+05:04 [docker-java-stream-530211450] - Pulling image layers:  0 pending,  6 downloaded,  6 extracted, (16 MB/16 MB)
+05:04 [docker-java-stream-530211450] - Pull complete. 6 layers, pulled in 3s (downloaded 16 MB at 5 MB/s)
+05:04 [Test worker] - Image redis:5.0.3-alpine pull took PT6.177042S
+05:04 [Test worker] - Creating container for image: redis:5.0.3-alpine
+05:04 [Test worker] - Container redis:5.0.3-alpine is starting: f9a951cbc3b9b8397035d8a0cf3f3e62aec9d18b08e5ee19d72355bc1f80aa2a
+05:04 [Test worker] - Container redis:5.0.3-alpine started in PT0.30631S
+[6379]
+[]
+62645
+62645
+</pre>
+</span>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="http://www.gradle.org">Gradle 8.2.1</a> at 2024. 7. 9. 오전 12:05:06</p>
+</div>
+</div>
+</body>
+</html>

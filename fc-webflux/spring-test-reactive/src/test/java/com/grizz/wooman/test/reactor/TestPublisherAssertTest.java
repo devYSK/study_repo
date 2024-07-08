@@ -20,6 +20,7 @@ public class TestPublisherAssertTest {
             @Override public void onError(Throwable t) { }
             @Override public void onComplete() { }
         });
+
         testPublisher.assertSubscribers(1);
         testPublisher.assertWasRequested();
         testPublisher.assertMinRequested(5);

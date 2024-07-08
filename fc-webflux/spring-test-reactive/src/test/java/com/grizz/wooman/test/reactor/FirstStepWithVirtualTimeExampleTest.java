@@ -26,4 +26,16 @@ public class FirstStepWithVirtualTimeExampleTest {
                 .expectNextCount(5)
                 .verifyComplete();
     }
+
+    @Test
+    void test3() {
+        // var flux = Flux.range(0, 5)
+        //     .delayElements(Duration.ofSeconds(1));
+
+        StepVerifier.withVirtualTime(() ->  Flux.range(0, 5)
+                .delayElements(Duration.ofSeconds(1)))
+            .thenAwait(Duration.ofSeconds(5))
+            .expectNextCount(5)
+            .verifyComplete();
+    }
 }

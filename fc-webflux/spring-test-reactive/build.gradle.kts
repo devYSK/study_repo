@@ -38,7 +38,7 @@ dependencies {
     testRuntimeOnly("com.h2database:h2")
 
     // embedded mongo
-    testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
+    testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo:4.15.0")
 
     // testcontainer
     testImplementation("org.testcontainers:testcontainers")
@@ -48,7 +48,7 @@ dependencies {
     testImplementation("org.testcontainers:r2dbc")
 
     // mysql
-    testImplementation("mysql:mysql-connector-java")
+    testImplementation("com.mysql:mysql-connector-j")
 
     // mockWebServer
     testImplementation("com.squareup.okhttp3:mockwebserver")
