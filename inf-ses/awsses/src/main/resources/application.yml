@@ -1,0 +1,19 @@
+server.port: 8001
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    operations-sorted: method
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/Spring
+    username: root
+    password: root
+    driver-class-name: com.mysql.jdbc.Driver
+
+aws:
+  ses:
+    access-key:
+    secret-key:
+    region: us-east-1
