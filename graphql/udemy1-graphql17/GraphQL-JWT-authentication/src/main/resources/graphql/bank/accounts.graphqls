@@ -1,0 +1,38 @@
+directive @public on FIELD_DEFINITION
+
+type Query {
+    login(email: String!, password: String!): AuthPayload @public
+    accounts: [BankAccount]
+}
+
+type BankAccount {
+    id: ID!
+    client: Client!
+    currency: Currency!
+    balance: Float!
+    status: String!
+}
+
+type Client {
+    id: ID!
+    firstName: String!
+    middleName: String
+    lastName: String
+}
+
+type AuthPayload {
+    token: String
+    user: User
+}
+
+type User {
+    id: ID!
+    username: String!
+    email: String
+}
+
+
+# Supported currencies
+enum Currency {
+    EUR, CAD, USD
+}

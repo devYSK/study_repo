@@ -1,0 +1,51 @@
+mutation {
+  addTransaction(transaction: {
+    accountId: "A100",
+    transactionId: "TX1000",
+    postedTimestamp: "2024-02-15T12:00:00Z",
+    transactionTimestamp: "2024-02-15T08:00:00Z",
+    description: "Monthly salary",
+    status: POSTED,
+    amount: 3000.00,
+    transactionType: CHECK
+  })
+}
+
+mutation {
+  addTransaction(transaction: {
+    accountId: "A100",
+    transactionId: "TX1001",
+    postedTimestamp: "2024-02-15T12:00:00Z",
+    transactionTimestamp: "2024-02-15T08:00:00Z",
+    description: "Monthly salary - Adjustment Amount",
+    status: POSTED,
+    amount: 200.00,
+    transactionType: FEE
+  })
+}
+
+mutation {
+  addTransaction(transaction: {
+    accountId: "A100",
+    transactionId: "TX1002",
+    postedTimestamp: "2024-02-15T12:00:00Z",
+    transactionTimestamp: "2024-02-15T08:00:00Z",
+    description: "Divident erned from TELUS shares",
+    status: POSTED,
+    amount: 100.00,
+    transactionType: DIVIDEND
+  })
+}
+
+mutation {
+  addTransaction(transaction: {
+    accountId: "A102",
+    transactionId: "TX1005",
+    postedTimestamp: "2024-02-15T12:00:00Z",
+    transactionTimestamp: "2024-02-15T08:00:00Z",
+    description: "Monthly Fee for Gym Memership",
+    status: POSTED,
+    amount: 100.00,
+    transactionType: FEE
+  })
+}

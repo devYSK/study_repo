@@ -1,0 +1,46 @@
+mutation {
+    addAccount(account: {
+        clientId: 101,
+        currency: USD,
+        balance: 500.0,
+        status: "Active"
+    })
+}
+
+query  {
+  accounts {
+    id
+    currency
+    balance
+    status
+    client{
+      id
+      firstName
+      lastName
+    }
+  }
+}
+
+mutation {
+  editAccount(
+    account: {clientId: 102,
+      currency: USD,
+      balance: 800.0,
+      id: 1,
+      status: "Active"}
+  ) {
+        id
+        client {
+            id
+            firstName
+            lastName
+        }
+        currency
+        balance
+        status
+    }
+}
+
+mutation {
+	deleteAccount (id: 1)
+}

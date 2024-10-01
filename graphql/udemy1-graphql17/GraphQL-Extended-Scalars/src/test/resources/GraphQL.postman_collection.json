@@ -1,0 +1,140 @@
+{
+	"info": {
+		"_postman_id": "f7148aad-3552-45bb-8332-6a81c6b337f5",
+		"name": "GraphQL",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1829000"
+	},
+	"item": [
+		{
+			"name": "Get Accounts",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "query  {\r\n  accounts {\r\n    id\r\n    currency\r\n    balance\r\n    status\r\n    client{\r\n      id\r\n      firstName\r\n      middleName\r\n      lastName\r\n    }\r\n    transferLimit\r\n    accountCreateDate\r\n  }\r\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/graphql",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Account By Id",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "query  {\r\n  accountById (accountId : 1)  {\r\n    id\r\n    currency\r\n    balance\r\n    status\r\n    client{\r\n      id\r\n      firstName\r\n      middleName\r\n      lastName\r\n    }\r\n    transferLimit\r\n    accountCreateDate\r\n  }\r\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/graphql",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "AddAccounts",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation {\r\n    addAccount(account: {\r\n        currency: EUR,\r\n        balance: 3000.0,\r\n        status: \"Inactive\",\r\n        clientId: 104,\r\n        transferLimit:  10.0,\r\n        accountCreateDate: \"2023-14-12T12:39:57-08:00\"\r\n    })\r\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/graphql",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "EditAccounts",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation {\r\n  editAccount(\r\n    account: {\r\n      clientId: 3000,\r\n      currency: CAD,\r\n      balance: 300.0,\r\n      id: 51,\r\n      status: \"Active\"\r\n      }) {\r\n        id\r\n        client {\r\n            id\r\n            firstName\r\n            middleName\r\n            lastName\r\n        }\r\n        currency\r\n        balance\r\n        status\r\n    }\r\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/graphql",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteAccounts",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation {\r\n\tdeleteAccount (id: 10)\r\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/graphql",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

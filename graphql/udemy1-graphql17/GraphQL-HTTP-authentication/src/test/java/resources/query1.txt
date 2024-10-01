@@ -1,0 +1,14 @@
+query  {
+  accounts {
+    id
+    currency
+    balance
+    status
+    client{
+      id
+      firstName
+      middleName
+      lastName
+    }
+  }
+}

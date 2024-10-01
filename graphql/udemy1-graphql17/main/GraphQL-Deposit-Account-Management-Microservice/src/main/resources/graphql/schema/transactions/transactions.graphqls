@@ -1,0 +1,43 @@
+extend type Query {
+    getTransactionById (accountId: ID) : [DepositTransaction]
+}
+
+extend type Mutation {
+    addTransaction(transaction: DepositTransactionInput!): Boolean
+}
+
+interface Transaction {
+    transactionId: ID!
+    account: Account!
+    postedTimestamp: DateTime!
+    transactionTimestamp: DateTime!
+    description: String!
+    status: TransactionStatus!
+    amount: PositiveFloat!
+}
+
+type DepositTransaction implements Transaction {
+    transactionId: ID!
+    account: DepositAccount!
+    postedTimestamp: DateTime!
+    transactionTimestamp: DateTime!
+    description: String!
+    status: TransactionStatus!
+    amount: PositiveFloat!
+    transactionType: DepositTransactionType!
+    payee: String!
+    checkNumber: PositiveInt
+}
+
+input DepositTransactionInput {
+    accountId: ID!
+    transactionId: ID!
+    postedTimestamp: DateTime!
+    transactionTimestamp: DateTime!
+    description: String!
+    status: TransactionStatus!
+    amount: PositiveFloat!
+    transactionType: DepositTransactionType!
+    payee: String
+    checkNumber: PositiveInt
+}

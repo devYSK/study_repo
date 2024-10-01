@@ -1,0 +1,7 @@
+query {
+    userAccounts: accounts {
+        id
+        balance
+        currency
+    }
+}

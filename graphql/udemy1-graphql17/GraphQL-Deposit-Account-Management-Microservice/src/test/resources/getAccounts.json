@@ -1,0 +1,26 @@
+query{
+    getAllAccounts {
+      accountId
+      accountType
+      accountNumber
+      accountNumberDisplay
+      nickName
+      status
+      description
+      lineOfBusiness
+      routingTransitNumber
+      interestRate
+      interestRateType
+      interestRateAsOf
+      currency
+      lastActivityDate
+      balanceAsOf
+      currentBalance
+      openingDayBalance
+      availableBalance
+      annualPercentageYield
+      interestYtd
+      term
+      maturityDate
+  }
+}

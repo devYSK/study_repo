@@ -1,0 +1,20 @@
+fragment clientDetails on Client {
+    id
+    firstName
+    lastName
+}
+
+fragment accountDetails on BankAccount {
+    id
+    currency
+    balance
+    client {
+        ...clientDetails
+    }
+}
+
+query {
+    userAccounts: accounts {
+        ...accountDetails
+    }
+}

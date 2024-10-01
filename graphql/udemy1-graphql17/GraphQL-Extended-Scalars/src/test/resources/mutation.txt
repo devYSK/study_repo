@@ -1,0 +1,24 @@
+mutation CreateBankAccount($actInput: BankAccountInput) {
+  addAccount(account: $actInput) {
+    id
+    client {
+      firstName
+    }
+  }
+}
+
+Variables
+=========
+
+{
+  "actInput": {
+    "client": {
+      "firstName": "John",
+      "middleName": "A.",
+      "lastName": "Doe"
+    },
+    "currency": "USD",
+    "balance": 1000.5,
+    "status": "Active"
+  }
+}

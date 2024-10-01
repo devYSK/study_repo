@@ -1,0 +1,12 @@
+fragment bankAccountDetails on BankAccount {
+    id
+    currency
+    balance
+}
+
+query {
+    accounts {
+        ...bankAccountDetails
+        status
+    }
+}

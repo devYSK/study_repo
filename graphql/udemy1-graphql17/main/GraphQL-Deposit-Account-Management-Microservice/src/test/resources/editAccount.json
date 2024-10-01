@@ -1,0 +1,27 @@
+
+mutation {
+  editAccount(account: {
+    accountId: "1",
+    accountType: CHECKING,
+    accountNumber: "123456789",
+    accountNumberDisplay: "1234-567-89",
+    nickName: "Emergency Fund",
+    status: OPEN,
+    description: "High-yield savings account for emergency funds.",
+    lineOfBusiness: "Wholesale Banking",
+    routingTransitNumber: "111000025",
+    interestRate: 1.5,
+    interestRateType: FIXED,
+    interestRateAsOf: "2024-01-19T16:39:57-08:00",
+    currency: "INR",
+    lastActivityDate: "2024-01-19T16:39:57-08:00",
+    balanceAsOf: "2024-01-19T16:39:57-08:00",
+    currentBalance: 5000,
+    openingDayBalance: 5000,
+    availableBalance: 5000,
+    annualPercentageYield: 1.5,
+    interestYtd: 10,
+    term: 2,
+    maturityDate: "2024-01-19T16:39:57-08:00"
+  })
+}

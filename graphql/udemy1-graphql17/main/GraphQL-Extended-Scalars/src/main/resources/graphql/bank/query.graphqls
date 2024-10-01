@@ -1,0 +1,52 @@
+scalar CountryCode
+scalar DateTime
+scalar PositiveFloat
+
+type Query {
+    accounts: [BankAccountType]
+    accountById (accountId : ID): BankAccountType
+}
+
+type Mutation {
+    addAccount(account: BankAccountInput): Boolean
+}
+
+type BankAccountType {
+    id: ID
+    client: ClientType
+    currency: Currency
+    country: CountryCode
+    balance: Float
+    status: String
+    transferLimit:  PositiveFloat
+    accountCreateDate: String
+}
+
+input BankAccountInput {
+    id: ID
+    clientId: Int
+    currency: Currency
+    country: CountryCode
+    balance: Float
+    status: String
+    transferLimit:  PositiveFloat  #An Float scalar that MUST be greater than zero.
+    accountCreateDate: DateTime    #accepts string values like 1996-12-19T16:39:57-08:00 and produces java.time.OffsetDateTime
+}
+
+type ClientType {
+    id: ID
+    firstName: String
+    middleName: String
+    lastName: String
+    country: CountryCode            # accepts ISO Country Codes
+}
+
+# Supported currencies
+enum Currency {
+    #Euro
+    EUR,
+    # Canadian Dollar
+    CAD,
+    # United States Dollar
+    USD
+}

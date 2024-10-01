@@ -1,0 +1,79 @@
+mutation {
+    addAccount(account: {
+        clientId: 100,
+        currency: EUR,
+        balance: 500.0,
+        country: "FR",
+        transferLimit: 500
+        status: "Inactive",
+        accountCreateDate: "2023-12-22T16:39:57-08:00"
+    })
+}
+
+mutation {
+    addAccount(account: {
+        clientId: 101,
+        currency: CAD,
+        country: "IN",
+        transferLimit: 1000
+        balance: 5000.0,
+        status: "Active",
+        accountCreateDate: "2023-12-23T16:39:57-08:00"
+    })
+}
+
+mutation {
+    addAccount(account: {
+        clientId: 102,
+        currency: USD,
+        country: "US",
+        transferLimit: 300
+        balance: 3000.0,
+        status: "Active",
+        accountCreateDate: "2023-12-24T16:39:57-08:00"
+    })
+}
+
+query  {
+  accounts {
+    id
+    currency
+    balance
+    status
+    client{
+      id
+      firstName
+      middleName
+      lastName
+    }
+    transferLimit
+    accountCreateDate
+  }
+}
+
+query GetMultipleAccounts($firstAccountId: ID!, $secondAccountId: ID!) {
+    firstAccount: accountById(accountId: $firstAccountId) {
+        ...BankAccountDetails
+    }
+    secondAccount: accountById(accountId: $secondAccountId) {
+        ...BankAccountDetails
+    }
+}
+
+fragment BankAccountDetails on BankAccountType {
+    id
+    currency
+    client{
+      id
+      firstName
+      middleName
+      lastName
+    }
+    transferLimit
+    accountCreateDate
+}
+
+{
+    "firstAccountId": "4",
+    "secondAccountId": "5"
+}

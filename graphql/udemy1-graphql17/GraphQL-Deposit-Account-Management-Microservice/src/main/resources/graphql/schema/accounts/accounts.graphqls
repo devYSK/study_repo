@@ -1,0 +1,78 @@
+
+extend type Query {
+    getAccountById(accountID: ID!): DepositAccount
+    getAllAccounts: [DepositAccount]
+}
+
+extend type Mutation {
+    addAccount(account: DepositAccountInput!): Boolean
+    editAccount(account: DepositAccountInput!): DepositAccount
+    deleteAccount(accountID: ID!): Boolean
+}
+
+interface Account {
+    accountId: ID!
+    accountType: AccountType!
+    accountNumber: String!
+    accountNumberDisplay: String!
+    nickName: String!
+    status: AccountStatus!
+    description: String
+    lineOfBusiness: String
+    routingTransitNumber: String
+    interestRate: PositiveFloat
+    interestRateType: InterestRateType
+    interestRateAsOf: DateTime
+    currency: Currency
+    lastActivityDate: DateTime
+}
+
+type DepositAccount implements Account {
+    accountId: ID!
+    accountType: AccountType!
+    accountNumber: String!
+    accountNumberDisplay: String!
+    nickName: String!
+    status: AccountStatus!
+    description: String!
+    lineOfBusiness: String
+    routingTransitNumber: String
+    interestRate: PositiveFloat
+    interestRateType: InterestRateType
+    interestRateAsOf: DateTime
+    currency: Currency
+    lastActivityDate: DateTime
+    balanceAsOf: DateTime!
+    currentBalance: PositiveFloat!
+    openingDayBalance: PositiveFloat!
+    availableBalance: PositiveFloat!
+    annualPercentageYield: PositiveFloat!
+    interestYtd: PositiveFloat!
+    term: PositiveInt
+    maturityDate: DateTime
+}
+
+input DepositAccountInput {
+    accountId: ID!
+    accountType: AccountType!
+    accountNumber: String!
+    accountNumberDisplay: String!
+    nickName: String!
+    status: AccountStatus!
+    description: String
+    lineOfBusiness: String
+    routingTransitNumber: String
+    interestRate: PositiveFloat
+    interestRateType: InterestRateType
+    interestRateAsOf: DateTime
+    currency: String
+    lastActivityDate: DateTime
+    balanceAsOf: DateTime!
+    currentBalance: PositiveFloat!
+    openingDayBalance: PositiveFloat!
+    availableBalance: PositiveFloat!
+    annualPercentageYield: PositiveFloat!
+    interestYtd: PositiveFloat!
+    term: PositiveInt
+    maturityDate: DateTime
+}

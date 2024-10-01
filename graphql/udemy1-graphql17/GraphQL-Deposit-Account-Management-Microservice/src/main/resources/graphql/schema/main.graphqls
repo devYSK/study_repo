@@ -1,0 +1,57 @@
+# main.graphqls
+
+scalar CountryCode
+scalar DateTime
+scalar PositiveFloat
+scalar Currency
+scalar PositiveInt
+
+type Query {
+    # Empty - Query will be extended from other files
+}
+
+type Mutation {
+    # Empty - Mutations will be extended from other files
+}
+
+# Define all enum types here.
+enum AccountType {
+    CD
+    CHECKING
+    CREDITCARD
+    LOAN
+    MORTGAGE
+}
+
+enum AccountStatus {
+    OPEN
+    CLOSED
+    PENDINGOPEN
+    PENDINGCLOSE
+    DELINQUENT
+}
+
+enum InterestRateType {
+    FIXED
+    VARIABLE
+}
+
+enum TransactionStatus {
+    PENDING
+    POSTED
+}
+
+enum DepositTransactionType {
+    CHECK
+    WITHDRAWAL
+    TRANSFER
+    POSDEBIT
+    ATMWITHDRAWAL
+    BILLPAYMENT
+    FEE
+    DEPOSIT
+    ADJUSTMENT
+    INTEREST
+    DIVIDEND
+    DIRECTDEPOSIT
+}

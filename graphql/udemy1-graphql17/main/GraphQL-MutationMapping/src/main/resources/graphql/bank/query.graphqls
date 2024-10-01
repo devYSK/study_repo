@@ -1,0 +1,43 @@
+type Query {
+    accounts: [BankAccountType]
+    accountById (accountId : ID): BankAccountType
+}
+
+type Mutation {
+    addAccount(account: BankAccountInput): Boolean
+    editAccount(account: BankAccountInput): BankAccountType
+    deleteAccount(id: Int): Boolean
+}
+
+type BankAccountType {
+    id: ID
+    client: ClientType
+    currency: Currency
+    balance: Float
+    status: String
+}
+
+input BankAccountInput {
+    id: ID
+    clientId: Int
+    currency: Currency
+    balance: Float
+    status: String
+}
+
+type ClientType {
+    id: ID
+    firstName: String
+    middleName: String
+    lastName: String
+}
+
+# Supported currencies
+enum Currency {
+    #Euro
+    EUR,
+    # Canadian Dollar
+    CAD,
+    # United States Dollar
+    USD
+}
