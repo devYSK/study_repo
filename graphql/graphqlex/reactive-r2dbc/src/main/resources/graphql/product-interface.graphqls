@@ -1,0 +1,35 @@
+extend type Query{
+    iProducts: [IProduct]
+}
+
+interface IProduct{
+    id: ID!
+    description: String
+    price: Int
+}
+
+type Fruit implements IProduct{
+    id: ID!
+    description: String
+    price: Int
+    expiryDate: String
+}
+
+type Electronics implements IProduct{
+    id: ID!
+    description: String
+    price: Int
+    brand: Brand
+}
+
+enum Brand {
+    APPLE
+    SAMSUNG
+}
+
+type Book implements IProduct{
+    id: ID!
+    description: String
+    price: Int
+    author: String
+}

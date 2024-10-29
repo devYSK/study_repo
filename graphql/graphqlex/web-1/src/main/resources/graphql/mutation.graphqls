@@ -1,0 +1,31 @@
+type Mutation {
+	# add a new member
+	addMember(memberInput: MemberInput!): Response
+	
+	# remove a member
+	removeMember(memberId: Int!): Response
+}
+
+type Subscription {
+	# notifications for members
+	memberSubscription: Response
+}
+
+
+input MemberInput {
+	firstName: String!
+	lastName: String!
+	type: MemberType!
+	contact: Email!
+}
+
+enum Status {
+	SUCCESS
+	FAILURE
+}
+
+type Response {
+	status: Status!
+	memberId: ID
+	message: String
+}

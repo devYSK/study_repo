@@ -1,0 +1,44 @@
+spring:
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb  # H2 ???? ?????? URL
+    username: sa
+    password:
+    pool:
+      enabled: true
+      max-size: 10  # ??? ?? ?? ??
+
+  h2:
+    console:
+      enabled: true  # H2 ??? ??? (??? ??)
+      path: /h2-console  # H2 ??? ??? ??
+
+
+  graphql:
+    schema:
+      locations: classpath:graphql
+    #    schema:
+#      locations: classpath:graphql/${lec}
+    path: /graphql
+    websocket:
+      path: /graphql
+    graphiql:
+      enabled: true
+      path: /graphiql
+
+logging:
+  level:
+    root: INFO
+    io.netty.resolver.dns.DnsServerAddressStreamProviders: OFF
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %highlight(%-5level) %logger{36} - %msg%n"
+
+customer:
+  service:
+    url: http://localhost:8080/graphql
+  events:
+    subscription:
+      url: ws://localhost:8080/graphql
+
+server:
+  http2:
+    enabled: true

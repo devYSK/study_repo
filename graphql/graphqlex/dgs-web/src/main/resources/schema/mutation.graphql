@@ -1,0 +1,31 @@
+scalar Upload # 업로드 1버전
+scalar UploadFile # 업로드 2버전
+
+type Mutation {
+    addHello(helloInput: HelloInput!): Int
+    replaceHelloText(helloInput: HelloInput!): [Hello]
+    deleteHello(number: Int!): Int
+
+    addNewCustomer(
+        customer        : AddCustomerInput!
+    ): CustomerMutationResponse!
+
+    addDocumentToExistingCustomer(
+        customer        : UniqueCustomerInput!
+        documentType    : String! @NotBlank @Size(max: 30)
+        documentFile    : Upload!
+    ): CustomerMutationResponse!
+
+    uploadFile(description: String, file: UploadFile): FileResponse
+
+}
+interface MutationResponse {
+    success     : Boolean!
+    message     : String
+}
+
+type FileResponse {
+    success: Boolean
+    url: String
+    description: String
+}

@@ -1,0 +1,92 @@
+scalar BigDecimal
+scalar Email
+scalar Key
+directive @uppercase(condition: String!) on FIELD_DEFINITION
+scalar CursorString
+
+type Query {
+	# our first gql query
+	firstQuery: String
+	
+	# gql query with arguments
+	secondQuery(firstName: String!, lastName: String): String
+	
+	# get all the member records with filtering option for teacher/student
+	getMembers(filter: MemberType): [MemberResponse]
+	
+	# search members by name
+	searchByName(text: String!): [MemberSearchResult]
+	
+	# get paginated members response
+	getPaginatedMembers(page: PageInput): MemberResponseConnection!
+	
+	# query with interceptor
+	queryWithInterceptor: String
+	
+	# fetch member details based on id
+	getMember(memberId: Int!): MemberResponse
+	
+}
+
+type MemberResponseConnection {
+	pageInfo: PageInfo!
+	edges: [MemberResponseEdge!]!
+}
+
+type PageInfo {
+	startCursor: CursorString
+	endCursor: CursorString
+	hasPreviousPage: Boolean
+	hasNextPage: Boolean
+}
+
+type MemberResponseEdge {
+	node: MemberResponse!
+	cursor: CursorString!
+}
+
+
+input PageInput {
+	offset: Int
+	limit: Int
+	after: CursorString
+	before: CursorString
+}
+
+enum MemberType {
+	TEACHER
+	STUDENT
+}
+
+type MemberResponse {
+	id: Key!
+	name: String! @uppercase (condition: "John")
+	contact: Email @deprecated(reason: "testing graphql deprecated directive")
+	type: MemberType
+	subjectData: [SubjectResponse]
+}
+
+interface SubjectResponse {
+	subjectName: String!
+}
+
+type StudentSubjectResponse implements SubjectResponse {
+	subjectName: String!
+	marks: BigDecimal
+}
+
+type TeacherSubjectResponse implements SubjectResponse {
+	subjectName: String!
+	experience: Int
+}
+
+union SearchResult = StudentSubjectResponse | TeacherSubjectResponse
+
+type MemberSearchResult {
+	id: ID!
+	name: String!
+	contact: String
+	type: MemberType
+	subjectData: [SearchResult]
+}
+

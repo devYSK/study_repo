@@ -1,0 +1,12 @@
+mutation addMember ($fn: String!,
+                   $ln: String!,
+                   $type: MemberType!,
+                   $contact: Email!){
+  addMember(
+    memberInput: { firstName: $fn, lastName: $ln, type: $type, contact: $contact}
+  ) {
+    status
+    memberId
+    message
+  }
+}

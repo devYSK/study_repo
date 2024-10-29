@@ -1,0 +1,3 @@
+query secondQuery {
+  secondQuery(firstName: "test_first", lastName: "test_last")
+}

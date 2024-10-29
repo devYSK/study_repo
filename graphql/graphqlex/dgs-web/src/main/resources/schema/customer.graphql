@@ -1,0 +1,45 @@
+type Customer @connection {
+    uuid                : String!
+    fullName            : String!
+    birthDate           : Date!
+    phone               : String!
+    email               : String!
+    salesOrders         : [SalesOrder!]
+    addresses           : [Address!]
+    documents           : [Document!]
+}
+
+input AddCustomerInput {
+    fullName    : String! @NotBlank @Pattern(regexp: "^[A-Za-z ]{5,50}$")
+    birthDate   : Date!
+    email       : String! @Pattern(regexp: "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$")
+    phone       : String! @Pattern(regexp: "^[0-9]{5,15}$")
+    addresses   : [AddAddressInput!]
+}
+
+input UniqueCustomerInput {
+    """
+    Backend must check that one of uuid or email exists, but not both
+    """
+    uuid    : String @Pattern(regexp: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+    email   : String @Pattern(regexp: "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$")
+}
+
+type CustomerMutationResponse implements MutationResponse {
+    success             : Boolean!
+    message             : String
+    customerUuid        : String
+}
+
+type CustomerPagination {
+    customerConnection      : CustomerConnection
+    page                    : Int!
+    size                    : Int!
+    totalPage               : Int!
+    totalElement            : Long!
+}
+
+input UpdateCustomerInput {
+    phone       : String
+    email       : String
+}

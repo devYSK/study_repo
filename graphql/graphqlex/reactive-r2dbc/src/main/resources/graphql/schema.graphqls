@@ -1,0 +1,85 @@
+
+scalar Long
+scalar Byte
+scalar Short
+scalar BigDecimal
+scalar BigInteger
+scalar Date
+scalar LocalTime
+scalar DateTime
+scalar Object
+
+
+type Query {
+    tests: [String]
+    customers: [Customer]
+    get: AllTypes
+    products: [Product]
+    customerById(id: ID!): Customer
+    # 캐싱용
+    sayCache(name: String!): String
+}
+
+type Mutation{
+    createCustomer(customer: CustomerInput!): Customer
+    updateCustomer(id: ID!, customer: CustomerInput!): Customer
+    deleteCustomer(id: ID!): DeleteResponse!
+}
+
+input CustomerInput{
+    name: String
+    age: Int
+    city: String
+}
+
+type DeleteResponse{
+    id: ID!,
+    status: Status
+}
+
+enum Status{
+    SUCCESS
+    FAILURE
+}
+
+type CustomerOrder{
+    id: ID!
+    description: String
+}
+
+type Customer{
+    id: ID!
+    name: String
+    age: Int
+    city: String
+    orders(limit: Int!): [CustomerOrder]!
+    address: Address
+    account: Account
+}
+
+type AllTypes{
+    id: ID
+    height: Int
+    temperature: Float
+    city: String
+    isValid: Boolean
+    distance: Long
+    ageInYears: Byte
+    ageInMonths: Short
+    bigDecimal: BigDecimal
+    bigInteger: BigInteger
+    date: Date
+    time: LocalTime
+    dateTime: DateTime
+    car: Car
+}
+
+enum Car{
+    BMW
+    HONDA
+}
+
+type Product{
+    name: String
+    attributes: Object
+}

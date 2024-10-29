@@ -1,0 +1,17 @@
+server:
+  port: 8081
+
+spring:
+  data:
+    mongodb:
+      database: gqlreactivetest
+      host: 127.0.0.1
+      port: 27017
+  graphql:
+    websocket:
+      path: /subs
+    rsocket:
+      mapping: rsocket
+  rsocket:
+    server:
+      port: 8082

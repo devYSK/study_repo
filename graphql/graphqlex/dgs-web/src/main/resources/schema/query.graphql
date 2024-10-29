@@ -1,0 +1,61 @@
+
+type Query {
+    allHellos: [Hello]
+    oneHello: Hello
+    books(author: String): [Book]
+    booksByReleased(releasedInput: ReleaseHistoryInput!): [Book]
+    mobileApps(mobileAppFilter: MobileAppFilter): [MobileApp]
+
+    customerPagination(
+        customer        : UniqueCustomerInput
+        page            : Int
+        size            : Int
+    ): CustomerPagination
+
+    users(first: Int, after: String): UserConnection! # 커서 기반으로 유저 목록을 불러오는 쿼리
+}
+
+type UserConnection {
+    edges: [UserEdge!]!        # 유저의 데이터 항목들과 그 커서를 포함하는 리스트
+    pageInfo: PageInfo!        # 페이지 정보
+}
+
+type UserEdge {
+    cursor: String!            # 각각의 항목에 대한 고유한 커서
+    node: User!                # 실제 데이터 항목, 여기서는 유저 정보를 나타냄
+}
+
+type PageInfo {
+    hasNextPage: Boolean!      # 다음 페이지가 있는지 여부
+    hasPreviousPage: Boolean!  # 이전 페이지가 있는지 여부
+    startCursor: String        # 현재 페이지의 첫 번째 항목의 커서
+    endCursor: String          # 현재 페이지의 마지막 항목의 커서
+}
+
+type User {
+    id: ID!
+    name: String!
+    email: String!
+}
+
+#
+# GraphQL에서 Connection은 커서 기반 페이지네이션을 구현할 때 사용하는 표준화된 구조로, 특히 많은 양의 데이터를 페이지네이션 방식으로 효율적으로 전달하기 위한 패턴입니다. 이 방식은 Relay (Facebook의 GraphQL 클라이언트 라이브러리)에서 처음 도입되어, GraphQL 스펙에 널리 사용되고 있습니다.
+#
+# Connection 패턴은 다음과 같은 핵심 요소로 구성됩니다:
+#
+# 1. Edges
+# Edges는 각각의 데이터 항목을 나타냅니다. 각 항목(노드)의 정보와 그 노드에 대한 cursor를 포함합니다.
+#
+# 2. Nodes
+# Nodes는 Edges 안에 실제 데이터 항목(예: 유저 데이터 등)을 포함하는 요소입니다.
+#
+# 3. Cursor
+# Cursor는 데이터의 위치를 나타내며, 페이지네이션을 위한 고유한 식별자입니다. 일반적으로 데이터베이스의 ID나 타임스탬프 등을 기반으로 생성됩니다. 이 커서를 통해 다음 페이지를 불러올 수 있습니다.
+#
+# 4. PageInfo
+# PageInfo는 페이지네이션과 관련된 정보를 포함합니다. 이 필드는 Connection의 중요한 부분이며, 다음과 같은 요소들을 포함합니다:
+#
+# hasNextPage: 다음 페이지가 있는지 여부.
+# hasPreviousPage: 이전 페이지가 있는지 여부.
+# startCursor: 현재 페이지의 첫 번째 항목의 커서.
+# endCursor: 현재 페이지의 마지막 항목의 커서.

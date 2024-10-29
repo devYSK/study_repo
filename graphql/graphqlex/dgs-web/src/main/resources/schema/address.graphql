@@ -1,0 +1,12 @@
+type Address {
+    uuid            : String!
+    street          : String!
+    city            : String!
+    zipcode         : String!
+}
+
+input AddAddressInput {
+    street  : String! @NotBlank @Size(min: 5, max: 50)
+    city    : String! @NotBlank @Size(min: 5, max: 50)
+    zipcode : String! @Pattern(regexp: "^[0-9]{4,7}$")
+}

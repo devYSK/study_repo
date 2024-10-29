@@ -1,0 +1,7 @@
+subscription notifications {
+  memberSubscription {
+    status
+    memberId
+    message
+  }
+}
