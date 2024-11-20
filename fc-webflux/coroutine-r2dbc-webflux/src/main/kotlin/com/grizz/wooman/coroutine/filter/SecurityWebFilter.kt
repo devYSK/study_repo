@@ -17,6 +17,7 @@ import reactor.util.context.Context
 class SecurityWebFilter(
     private val authService: AuthService
 ) : WebFilter {
+
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         return mono {
             val resp = exchange.response

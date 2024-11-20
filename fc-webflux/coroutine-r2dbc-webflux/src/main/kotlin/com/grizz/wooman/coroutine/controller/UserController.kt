@@ -34,6 +34,7 @@ class UserController(
             .awaitSingle()
 
         val name = context.authentication.name
+
         if (name != userId) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED)
         }
