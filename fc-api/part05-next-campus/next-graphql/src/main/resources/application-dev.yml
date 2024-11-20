@@ -1,0 +1,70 @@
+spring:
+  application:
+    name: next-graphql
+  graphql:
+    path: /graphql
+    graphiql:
+      enabled: true
+      path: /graphiql
+    schema:
+      inspection:
+        enabled: true
+    websocket:
+      path: /graphql
+      keep-alive: 60
+  data:
+    redis:
+      host: next-campus-redis
+      port: 6379
+      client-type: lettuce
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://next-discovery:8000/eureka/
+    registerWithEureka: true
+    fetchRegistry: true
+
+grpc:
+  client:
+    next-playback-service:
+      address: 'discovery:///next-playback-service'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+    next-payment-service:
+      address: 'discovery:///next-enrollment-service'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+    next-enrollment-service:
+      address: 'discovery:///next-enrollment-service'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+    propagation:
+      consume: b3
+      produce: b3_multi
+  zipkin:
+    tracing:
+      endpoint: "http://next-campus-zipkin:9411/api/v2/spans"
+  endpoints:
+    web:
+      exposure:
+        include:
+          - info
+          - health
+          - loggers
+          - mappings
+          - metrics
+          - shutdown
+          - prometheus
+
+logging:
+  pattern:
+    level: "%5p [%X{traceId:-},%X{spanId:-}]"
