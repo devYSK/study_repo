@@ -1,0 +1,84 @@
+name: 부하 테스트
+run-name: 3. ${{ inputs.url }} 서버 동접자 ${{ inputs.vus }}명 부하테스트 💣💣💣
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: '부하 테스트를 하고자 하는 url'
+        type: choice
+        required: true
+        options:
+          - https://aicreation-develop2.miricanvas.com
+      duration:
+        description: '테스트 진행할 시간'
+        type: number
+        required: true
+        default: 300
+      vus:
+        description: '동접자 수'
+        type: number
+        required: true
+        default: 10
+      include-polling:
+        description: '테스트에서 polling을 포함할지 여부'
+        type: boolean
+        required: false
+        default: false
+      features:
+        description: '테스트 할 기능들을 쉼표로 구분해서 입력 ex)text-to-image, image-to-image, remove-background, erase-area, outpaint, recolor, recommended-image, replace-background, upscale'
+        type: string
+        required: true
+        default: 'text-to-image'
+      same-auth:
+        description: '동일한 인증정보를 사용할지 여부'
+        type: boolean
+        required: true
+        default: false
+      enable-external-api:
+        description: '외부 API 사용 여부'
+        type: boolean
+        required: true
+        default: false
+
+jobs:
+  load-test:
+    name: 부하 테스트
+    runs-on: 4090-runner
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: 시나리오 입력값 유효 검사
+        run: |
+          VALID_FEATURES="text-to-image,image-to-image,remove-background,erase-area,outpaint,recolor,recommended-image,replace-background,upscale"
+          
+          # 공백 제거
+          features_cleaned=$(echo "${{ inputs.features }}" | tr -d '[:space:]')
+          
+          # 쉼표로 구분된 입력 기능을 배열로 변환
+          IFS=',' read -r -a input_features <<< "$features_cleaned"
+          
+          # 입력 기능이 유효한지 확인
+          for feature in "${input_features[@]}"; do
+            if [[ ! ",$VALID_FEATURES," =~ ",$feature," ]]; then
+              echo "Invalid feature: $feature"
+              exit 1
+            fi
+          done
+      - name: k6 setup
+        uses: grafana/setup-k6-action@v1
+
+      - name: run k6 test
+        uses: grafana/run-k6-action@v1
+        with:
+          path: module-infra/k6/script/script.js
+          flags: '-o experimental-prometheus-rw'
+        env:
+          K6_PROMETHEUS_RW_SERVER_URL: http://cpdevk-metric.miricanvas.com:9009/api/v1/push
+          K6_DURATION: ${{ inputs.duration }}s
+          K6_VUS: ${{ inputs.vus }}
+          K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: true
+          K6_URL: ${{ inputs.url }}
+          K6_REQUIRED_POLLING: ${{ inputs.include-polling }}
+          K6_TEST: ${{ inputs.features }}
+          K6_SAME_AUTH: ${{ inputs.same-auth }}
+          K6_ENABLE_EXTERNAL_API: ${{ inputs.enable-external-api }}

@@ -1,0 +1,10 @@
+apiVersion: 1
+providers:
+  - name: 'K6 Load Testing Dashboards' # 대시보드 이름
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards # JSON 파일 경로

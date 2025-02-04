@@ -1,0 +1,12 @@
+apiVersion: 1
+datasources:
+  - name: "influxDb"          # 플레이스홀더 이름
+    uid: "k6-influxdb"         # 고유 식별자 (원하는 문자열로 설정)
+    type: influxdb            # 데이터 소스 유형
+    access: proxy             # Grafana가 데이터 소스에 접근하는 방식
+    url: http://influxdb:8086 # InfluxDB의 URL
+    database: k6              # 데이터베이스 이름
+    user: admin               # 데이터베이스 사용자 이름
+    password: admin           # 데이터베이스 비밀번호
+    isDefault: true           # 기본 데이터 소스로 설정
+    editable: false           # UI에서 수정 가능 여부
