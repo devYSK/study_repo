@@ -19,13 +19,7 @@ class MessageUserDetailsService(userRepository: UserRepository) : UserDetailsSer
         val userEntity: UserEntity =
             userRepository
                 .findByUsername(username)
-                .orElseThrow {
-                    log.info(
-                        "User not found: {}",
-                        username
-                    )
-                    UsernameNotFoundException("")
-                }
+                ?: throw UsernameNotFoundException("")
 
         return MessageUserDetails(
             userEntity.userId, userEntity.username, userEntity.password

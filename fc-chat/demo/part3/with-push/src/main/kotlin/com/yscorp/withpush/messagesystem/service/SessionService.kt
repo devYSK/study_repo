@@ -1,10 +1,15 @@
 package com.yscorp.withpush.messagesystem.service
 
-import net.prostars.messagesystem.constant.IdKey
+import com.yscorp.withpush.messagesystem.constant.IdKey
+import com.yscorp.withpush.messagesystem.dto.domain.ChannelId
+import com.yscorp.withpush.messagesystem.dto.domain.UserId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.session.Session
+import org.springframework.session.SessionRepository
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.concurrent.TimeUnit
@@ -29,15 +34,17 @@ class SessionService(
     fun getOnlineParticipantUserIds(channelId: ChannelId, userIds: List<UserId>): List<UserId?> {
         val channelIdKeys = userIds.stream().map<String> { userId: UserId -> this.buildChannelIdKey(userId) }.toList()
         try {
-            val channelIds: List<String> = stringRedisTemplate.opsForValue().multiGet(channelIdKeys)
+            val channelIds  = stringRedisTemplate.opsForValue().multiGet(channelIdKeys)
+
             if (channelIds != null) {
-                val onlineParticipantUserIds: MutableList<UserId?> = ArrayList<UserId>(userIds.size)
-                val chId: String = channelId.id().toString()
+                val onlineParticipantUserIds: MutableList<UserId> = ArrayList(userIds.size)
+                val chId: String = channelId.id.toString()
                 for (idx in userIds.indices) {
                     val value = channelIds[idx]
-                    onlineParticipantUserIds.add(
-                        if (value != null && value == chId) userIds[idx] else null
-                    )
+
+                    if (value != null && value == chId) {
+                        onlineParticipantUserIds.add(userIds[idx])
+                    }
                 }
                 return onlineParticipantUserIds
             }
@@ -52,7 +59,7 @@ class SessionService(
         try {
             stringRedisTemplate
                 .opsForValue()
-                .set(channelIdKey, channelId.id().toString(), TTL, TimeUnit.SECONDS)
+                .set(channelIdKey, channelId.id.toString(), TTL, TimeUnit.SECONDS)
             return true
         } catch (ex: Exception) {
             log.error("Redis set failed. key: {}, channelId: {}", channelIdKey, channelId)
@@ -86,7 +93,8 @@ class SessionService(
 
     private fun buildChannelIdKey(userId: UserId): String {
         val NAMESPACE = "message:user"
-        return "%s:%d:%s".formatted(NAMESPACE, userId.id(), IdKey.CHANNEL_ID.getValue())
+
+        return "%s:%d:%s".formatted(NAMESPACE, userId.id, IdKey.CHANNEL_ID.value)
     }
 
     companion object {

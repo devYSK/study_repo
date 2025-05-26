@@ -1,6 +1,8 @@
 package com.yscorp.withpush.messagesystem.repository
 
-import net.prostars.messagesystem.entity.MessageEntity
+import com.yscorp.withpush.messagesystem.entity.MessageEntity
+import org.springframework.data.jpa.repository.JpaRepository
+
 
 @org.springframework.stereotype.Repository
-interface MessageRepository : JpaRepository<MessageEntity?, Long?>
+interface MessageRepository : JpaRepository<MessageEntity, Long>

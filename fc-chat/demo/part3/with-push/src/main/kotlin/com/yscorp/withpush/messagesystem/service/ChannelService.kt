@@ -1,113 +1,98 @@
 package com.yscorp.withpush.messagesystem.service
 
-import net.prostars.messagesystem.constant.ResultType
+import com.yscorp.withpush.messagesystem.constant.ResultType
+import com.yscorp.withpush.messagesystem.constant.UserConnectionStatus
+import com.yscorp.withpush.messagesystem.dto.domain.Channel
+import com.yscorp.withpush.messagesystem.dto.domain.ChannelId
+import com.yscorp.withpush.messagesystem.dto.domain.InviteCode
+import com.yscorp.withpush.messagesystem.dto.domain.UserId
+import com.yscorp.withpush.messagesystem.entity.ChannelEntity
+import com.yscorp.withpush.messagesystem.entity.UserChannelEntity
+import com.yscorp.withpush.messagesystem.repository.ChannelRepository
+import com.yscorp.withpush.messagesystem.repository.UserChannelRepository
+import jakarta.persistence.EntityNotFoundException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.data.util.Pair
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
-import java.util.stream.Collectors
 
 @Service
 class ChannelService(
     private val sessionService: SessionService,
     private val userConnectionService: UserConnectionService,
-    channelRepository: ChannelRepository,
-    userChannelRepository: UserChannelRepository
+    private val channelRepository: ChannelRepository,
+    private val userChannelRepository: UserChannelRepository
 ) {
-    private val channelRepository: ChannelRepository = channelRepository
-    private val userChannelRepository: UserChannelRepository = userChannelRepository
 
-    fun getInviteCode(channelId: ChannelId): Optional<InviteCode> {
-        val inviteCode: Optional<InviteCode> =
-            channelRepository
-                .findChannelInviteCodeByChannelId(channelId.id())
-                .map { projection -> InviteCode(projection.getInviteCode()) }
-        if (inviteCode.isEmpty()) {
+    fun getInviteCode(channelId: ChannelId): InviteCode? {
+        val projection = channelRepository.findChannelInviteCodeByChannelId(channelId.id)
+        if (projection == null) {
             log.warn("Invite code is not exist. channelId: {}", channelId)
+            return null
         }
-        return inviteCode
+        return InviteCode(projection.inviteCode)
     }
 
     fun isJoined(channelId: ChannelId, userId: UserId): Boolean {
-        return userChannelRepository.existsByUserIdAndChannelId(userId.id(), channelId.id())
+        return userChannelRepository.existsByUserIdAndChannelId(userId.id, channelId.id)
     }
 
     fun getParticipantIds(channelId: ChannelId): List<UserId> {
-        return userChannelRepository.findUserIdsByChannelId(channelId.id()).stream()
-            .map { userId -> UserId(userId.getUserId()) }
-            .toList()
+        return userChannelRepository.findUserIdsByChannelId(channelId.id)
+            .map { UserId(it.userId) }
     }
 
-    fun getOnlineParticipantIds(channelId: ChannelId, userIds: List<UserId?>): List<UserId?> {
+    fun getOnlineParticipantIds(channelId: ChannelId, userIds: List<UserId>): List<UserId?> {
         return sessionService.getOnlineParticipantUserIds(channelId, userIds)
     }
 
-    fun getChannel(inviteCode: InviteCode): Optional<Channel> {
-        return channelRepository
-            .findChannelByInviteCode(inviteCode.code())
-            .map { projection ->
-                Channel(
-                    ChannelId(projection.getChannelId()),
-                    projection.getTitle(),
-                    projection.getHeadCount()
-                )
-            }
+    fun getChannel(inviteCode: InviteCode): Channel? {
+        return channelRepository.findChannelByInviteCode(inviteCode.code)?.let {
+            Channel(ChannelId(it.channelId), it.title, it.headCount)
+        }
     }
 
     fun getChannels(userId: UserId): List<Channel> {
-        return userChannelRepository.findChannelsByUserId(userId.id()).stream()
-            .map { projection ->
-                Channel(
-                    ChannelId(projection.getChannelId()),
-                    projection.getTitle(),
-                    projection.getHeadCount()
-                )
-            }
-            .toList()
+        return userChannelRepository.findChannelsByUserId(userId.id)
+            .map { Channel(ChannelId(it.channelId), it.title, it.headCount) }
     }
 
     @Transactional
-    fun create(
-        senderUserId: UserId, participantIds: List<UserId>, title: String?
-    ): Pair<Optional<Channel>, ResultType> {
-        if (title == null || title.isEmpty()) {
+    fun create(senderUserId: UserId, participantIds: List<UserId>, title: String?): Pair<Channel?, ResultType> {
+        if (title.isNullOrBlank()) {
             log.warn("Invalid args : title is empty.")
-            return Pair.of<Optional<Channel>, ResultType>(Optional.empty<Channel>(), ResultType.INVALID_ARGS)
+            return null to ResultType.INVALID_ARGS
         }
 
         val headCount = participantIds.size + 1
         if (headCount > LIMIT_HEAD_COUNT) {
             log.warn(
                 "Over limit of channel. senderUserId: {}, participantIds count={}, title={}",
-                senderUserId,
-                participantIds.size,
-                title
+                senderUserId, participantIds.size, title
             )
-            return Pair.of<Optional<Channel>, ResultType>(Optional.empty<Channel>(), ResultType.OVER_LIMIT)
+            return null to ResultType.OVER_LIMIT
         }
 
-        if (userConnectionService.countConnectionStatus(
-                senderUserId, participantIds, UserConnectionStatus.ACCEPTED
-            )
-            !== participantIds.size
+        if (userConnectionService.countConnectionStatus(senderUserId, participantIds, UserConnectionStatus.ACCEPTED)
+            != participantIds.size.toLong()
         ) {
             log.warn("Included unconnected user. participantIds: {}", participantIds)
-            return Pair.of<Optional<Channel>, ResultType>(Optional.empty<Channel>(), ResultType.NOT_ALLOWED)
+            return null to ResultType.NOT_ALLOWED
         }
 
-        try {
-            val channelEntity: ChannelEntity = channelRepository.save(ChannelEntity(title, headCount))
-            val channelId: Long = channelEntity.getChannelId()
-            val userChannelEntities: MutableList<UserChannelEntity> =
-                participantIds.stream()
-                    .map<Any> { participantId: UserId -> UserChannelEntity(participantId.id(), channelId, 0) }
-                    .collect(Collectors.toList<Any>())
-            userChannelEntities.add(UserChannelEntity(senderUserId.id(), channelId, 0))
+        return try {
+            val channelEntity = channelRepository.save(ChannelEntity(title, headCount))
+            val channelId = channelEntity.channelId ?: throw IllegalStateException("Channel ID is null after save.")
+
+            val userChannelEntities = participantIds.map {
+                UserChannelEntity(it.id, channelId, 0)
+            }.toMutableList().apply {
+                add(UserChannelEntity(senderUserId.id, channelId, 0))
+            }
+
             userChannelRepository.saveAll(userChannelEntities)
-            val channel: Channel = Channel(ChannelId(channelId), title, headCount)
-            return Pair.of<Optional<Channel>, ResultType>(Optional.of<Channel>(channel), ResultType.SUCCESS)
+            Channel(ChannelId(channelId), title, headCount) to ResultType.SUCCESS
         } catch (ex: Exception) {
             log.error("Create failed. cause: {}", ex.message)
             throw ex
@@ -115,59 +100,46 @@ class ChannelService(
     }
 
     @Transactional
-    fun join(inviteCode: InviteCode, userId: UserId): Pair<Optional<Channel>, ResultType> {
-        val ch: Optional<Channel> = getChannel(inviteCode)
-        if (ch.isEmpty()) {
-            return Pair.of<Optional<Channel>, ResultType>(Optional.empty<Channel>(), ResultType.NOT_FOUND)
-        }
-        val channel: Channel = ch.get()
+    fun join(inviteCode: InviteCode, userId: UserId): Pair<Channel?, ResultType> {
+        val channel = getChannel(inviteCode) ?: return null to ResultType.NOT_FOUND
 
-        if (isJoined(channel.channelId(), userId)) {
-            return Pair.of<Optional<Channel>, ResultType>(Optional.empty<Channel>(), ResultType.ALREADY_JOINED)
-        } else if (channel.headCount() >= LIMIT_HEAD_COUNT) {
-            return Pair.of<Optional<Channel>, ResultType>(Optional.empty<Channel>(), ResultType.OVER_LIMIT)
+        if (isJoined(channel.channelId, userId)) {
+            return null to ResultType.ALREADY_JOINED
         }
 
-        val channelEntity: ChannelEntity =
-            channelRepository
-                .findForUpdateByChannelId(channel.channelId().id())
-                .orElseThrow { EntityNotFoundException("Invalid channelId: " + channel.channelId()) }
-        if (channelEntity.getHeadCount() < LIMIT_HEAD_COUNT) {
-            channelEntity.setHeadCount(channelEntity.getHeadCount() + 1)
-            userChannelRepository.save(UserChannelEntity(userId.id(), channel.channelId().id(), 0))
+        if (channel.headCount >= LIMIT_HEAD_COUNT) {
+            return null to ResultType.OVER_LIMIT
         }
-        return Pair.of<Optional<Channel>, ResultType>(Optional.of<Channel>(channel), ResultType.SUCCESS)
+
+        val channelEntity = channelRepository.findForUpdateByChannelId(channel.channelId.id)
+            ?: throw EntityNotFoundException("Invalid channelId: ${channel.channelId}")
+
+        if (channelEntity.headCount < LIMIT_HEAD_COUNT) {
+            channelEntity.headCount += 1
+            userChannelRepository.save(UserChannelEntity(userId.id, channel.channelId.id, 0))
+        }
+
+        return channel to ResultType.SUCCESS
     }
 
-    fun enter(channelId: ChannelId, userId: UserId): Pair<Optional<String>, ResultType> {
+    fun enter(channelId: ChannelId, userId: UserId): Pair<String?, ResultType> {
         if (!isJoined(channelId, userId)) {
-            log.warn(
-                "Enter channel failed. User not joined the channel. channelId: {}, userId: {}",
-                channelId,
-                userId
-            )
-            return Pair.of<Optional<String>, ResultType>(Optional.empty<String>(), ResultType.NOT_JOINED)
+            log.warn("Enter channel failed. User not joined. channelId: {}, userId: {}", channelId, userId)
+            return null to ResultType.NOT_JOINED
         }
 
-        val title: Optional<String> =
-            channelRepository
-                .findChannelTitleByChannelId(channelId.id())
-                .map(ChannelTitleProjection::getTitle)
-        if (title.isEmpty) {
-            log.warn(
-                "Enter channel failed. Channel does not exist. channelId: {}, userId: {}",
-                channelId,
-                userId
-            )
-            return Pair.of<Optional<String>, ResultType>(Optional.empty<String>(), ResultType.NOT_FOUND)
+        val title = channelRepository.findChannelTitleByChannelId(channelId.id)?.title
+        if (title == null) {
+            log.warn("Enter channel failed. Channel not found. channelId: {}, userId: {}", channelId, userId)
+            return null to ResultType.NOT_FOUND
         }
 
-        if (sessionService.setActiveChannel(userId, channelId)) {
-            return Pair.of<Optional<String>, ResultType>(title, ResultType.SUCCESS)
+        return if (sessionService.setActiveChannel(userId, channelId)) {
+            title to ResultType.SUCCESS
+        } else {
+            log.error("Enter channel failed. channelId: {}, userId: {}", channelId, userId)
+            null to ResultType.FAILED
         }
-
-        log.error("Enter channel failed. channelId: {}, userId: {}", channelId, userId)
-        return Pair.of<Optional<String>, ResultType>(Optional.empty<String>(), ResultType.FAILED)
     }
 
     fun leave(userId: UserId): Boolean {
@@ -180,17 +152,16 @@ class ChannelService(
             return ResultType.NOT_JOINED
         }
 
-        val channelEntity: ChannelEntity =
-            channelRepository
-                .findForUpdateByChannelId(channelId.id())
-                .orElseThrow { EntityNotFoundException("Invalid channelId: $channelId") }
-        if (channelEntity.getHeadCount() > 0) {
-            channelEntity.setHeadCount(channelEntity.getHeadCount() - 1)
+        val channelEntity = channelRepository.findForUpdateByChannelId(channelId.id)
+            ?: throw EntityNotFoundException("Invalid channelId: $channelId")
+
+        if (channelEntity.headCount > 0) {
+            channelEntity.headCount -= 1
         } else {
             log.error("Count is already zero. channelId: {}, userId: {}", channelId, userId)
         }
 
-        userChannelRepository.deleteByUserIdAndChannelId(userId.id(), channelId.id())
+        userChannelRepository.deleteByUserIdAndChannelId(userId.id, channelId.id)
         return ResultType.SUCCESS
     }
 

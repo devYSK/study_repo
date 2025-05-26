@@ -1,12 +1,9 @@
 package com.yscorp.withpush.messagesystem.dto.websocket.outbound
 
-import net.prostars.messagesystem.constant.MessageType
+import com.yscorp.withpush.messagesystem.constant.MessageType
+import com.yscorp.withpush.messagesystem.constant.UserConnectionStatus
 
-class DisconnectResponse(val username: String, status: UserConnectionStatus) :
+
+class DisconnectResponse(val username: String, val status: UserConnectionStatus) :
     BaseMessage(MessageType.DISCONNECT_RESPONSE) {
-    private val status: UserConnectionStatus = status
-
-    fun getStatus(): UserConnectionStatus {
-        return status
-    }
 }

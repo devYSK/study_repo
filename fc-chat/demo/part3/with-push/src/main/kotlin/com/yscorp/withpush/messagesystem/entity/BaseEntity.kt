@@ -8,9 +8,9 @@ import java.time.LocalDateTime
 
 @MappedSuperclass
 abstract class BaseEntity {
+
     @Column(name = "created_at", updatable = false, nullable = false)
-    var createAt: LocalDateTime? = null
-        private set
+    var createAt: LocalDateTime = LocalDateTime.now()
 
     @Column(name = "updated_at", nullable = false)
     var updatedAt: LocalDateTime? = null

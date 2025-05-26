@@ -10,9 +10,11 @@ import javax.sql.DataSource
 @Configuration
 @Suppress("unused")
 class DataSourceConfig {
+
     @Bean(name = ["dataSource"])
     @ConfigurationProperties(prefix = "spring.datasource.hikari")
     fun dataSource(): DataSource {
         return DataSourceBuilder.create().type(HikariDataSource::class.java).build()
     }
+
 }

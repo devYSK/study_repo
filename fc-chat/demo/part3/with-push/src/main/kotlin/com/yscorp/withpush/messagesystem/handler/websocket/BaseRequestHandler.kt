@@ -1,7 +1,8 @@
 package com.yscorp.withpush.messagesystem.handler.websocket
 
-import net.prostars.messagesystem.dto.websocket.inbound.BaseRequest
+import com.yscorp.withpush.messagesystem.dto.websocket.inbound.BaseRequest
+import org.springframework.web.socket.WebSocketSession
 
-interface BaseRequestHandler<T : BaseRequest?> {
+interface BaseRequestHandler<T : BaseRequest> {
     fun handleRequest(webSocketSession: WebSocketSession, request: T)
 }

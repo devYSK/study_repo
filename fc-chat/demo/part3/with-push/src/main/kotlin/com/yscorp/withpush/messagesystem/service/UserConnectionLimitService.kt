@@ -1,79 +1,76 @@
 package com.yscorp.withpush.messagesystem.service
 
-import net.prostars.messagesystem.constant.UserConnectionStatus
+import com.yscorp.withpush.messagesystem.constant.UserConnectionStatus
+import com.yscorp.withpush.messagesystem.dto.domain.UserId
+import com.yscorp.withpush.messagesystem.repository.UserConnectionRepository
+import com.yscorp.withpush.messagesystem.repository.UserRepository
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.function.Function
 
 @Service
-class UserConnectionLimitService(userRepository: UserRepository, userConnectionRepository: UserConnectionRepository) {
-    private val userRepository: UserRepository = userRepository
-    private val userConnectionRepository: UserConnectionRepository = userConnectionRepository
+class UserConnectionLimitService(
+    private val userRepository: UserRepository,
+    private val userConnectionRepository: UserConnectionRepository
+) {
+
     var limitConnections: Int = 1000
 
+    /**
+     * 친구 요청 수락 처리.
+     * 두 유저의 연결 수를 증가시키고, 상태를 ACCEPTED로 변경.
+     * 제한을 초과하면 예외 발생.
+     */
     @Transactional
     fun accept(acceptorUserId: UserId, inviterUserId: UserId) {
-        val firstUserId = java.lang.Long.min(acceptorUserId.id(), inviterUserId.id())
-        val secondUserId = java.lang.Long.max(acceptorUserId.id(), inviterUserId.id())
-        val firstUserEntity: UserEntity =
-            userRepository
-                .findForUpdateByUserId(firstUserId)
-                .orElseThrow { EntityNotFoundException("Invalid userId: $firstUserId") }
-        val secondUserEntity: UserEntity =
-            userRepository
-                .findForUpdateByUserId(secondUserId)
-                .orElseThrow { EntityNotFoundException("Invalid userId: $secondUserId") }
-        val userConnectionEntity: UserConnectionEntity =
-            userConnectionRepository
-                .findByPartnerAUserIdAndPartnerBUserIdAndStatus(
-                    firstUserId, secondUserId, UserConnectionStatus.PENDING
-                )
-                .orElseThrow { EntityNotFoundException("Invalid status.") }
+        val firstUserId = minOf(acceptorUserId.id, inviterUserId.id)
+        val secondUserId = maxOf(acceptorUserId.id, inviterUserId.id)
 
-        val getErrorMessage =
-            Function { userId: Long ->
-                if (userId == acceptorUserId.id())
-                    "Connection limit reached."
-                else
-                    "Connection limit reached by the other user."
-            }
+        val firstUser = userRepository.findForUpdateByUserId(firstUserId)
+            ?: throw EntityNotFoundException("Invalid userId: $firstUserId")
+        val secondUser = userRepository.findForUpdateByUserId(secondUserId)
+            ?: throw EntityNotFoundException("Invalid userId: $secondUserId")
+        val connection = userConnectionRepository
+            .findByPartnerAUserIdAndPartnerBUserIdAndStatus(
+                firstUserId, secondUserId, UserConnectionStatus.PENDING
+            ) ?: throw EntityNotFoundException("Invalid status.")
 
-        val firstConnectionCount: Int = firstUserEntity.getConnectionCount()
-        check(firstConnectionCount < limitConnections) { getErrorMessage.apply(firstUserId) }
-        val secondConnectionCount: Int = secondUserEntity.getConnectionCount()
-        check(secondConnectionCount < limitConnections) { getErrorMessage.apply(secondUserId) }
+        fun errorMessage(userId: Long): String =
+            if (userId == acceptorUserId.id) "Connection limit reached."
+            else "Connection limit reached by the other user."
 
-        firstUserEntity.setConnectionCount(firstConnectionCount + 1)
-        secondUserEntity.setConnectionCount(secondConnectionCount + 1)
-        userConnectionEntity.setStatus(UserConnectionStatus.ACCEPTED)
+        check(firstUser.connectionCount < limitConnections) { errorMessage(firstUserId) }
+        check(secondUser.connectionCount < limitConnections) { errorMessage(secondUserId) }
+
+        firstUser.connectionCount += 1
+        secondUser.connectionCount += 1
+        connection.status = UserConnectionStatus.ACCEPTED
     }
 
+    /**
+     * 친구 연결 해제 처리.
+     * 두 유저의 연결 수를 감소시키고, 상태를 DISCONNECTED로 변경.
+     * 연결 수가 이미 0이면 예외 발생.
+     */
     @Transactional
     fun disconnect(senderUserId: UserId, partnerUserId: UserId) {
-        val firstUserId = java.lang.Long.min(senderUserId.id(), partnerUserId.id())
-        val secondUserId = java.lang.Long.max(senderUserId.id(), partnerUserId.id())
-        val firstUserEntity: UserEntity =
-            userRepository
-                .findForUpdateByUserId(firstUserId)
-                .orElseThrow { EntityNotFoundException("Invalid userId: $firstUserId") }
-        val secondUserEntity: UserEntity =
-            userRepository
-                .findForUpdateByUserId(secondUserId)
-                .orElseThrow { EntityNotFoundException("Invalid userId: $secondUserId") }
-        val userConnectionEntity: UserConnectionEntity =
-            userConnectionRepository
-                .findByPartnerAUserIdAndPartnerBUserIdAndStatus(
-                    firstUserId, secondUserId, UserConnectionStatus.ACCEPTED
-                )
-                .orElseThrow { EntityNotFoundException("Invalid status.") }
+        val firstUserId = minOf(senderUserId.id, partnerUserId.id)
+        val secondUserId = maxOf(senderUserId.id, partnerUserId.id)
 
-        val firstConnectionCount: Int = firstUserEntity.getConnectionCount()
-        check(firstConnectionCount > 0) { "Count is already zero. userId: $firstUserId" }
-        val secondConnectionCount: Int = secondUserEntity.getConnectionCount()
-        check(secondConnectionCount > 0) { "Count is already zero. userId: $senderUserId" }
+        val firstUser = userRepository.findForUpdateByUserId(firstUserId)
+            ?: throw EntityNotFoundException("Invalid userId: $firstUserId")
+        val secondUser = userRepository.findForUpdateByUserId(secondUserId)
+            ?: throw EntityNotFoundException("Invalid userId: $secondUserId")
+        val connection = userConnectionRepository
+            .findByPartnerAUserIdAndPartnerBUserIdAndStatus(
+                firstUserId, secondUserId, UserConnectionStatus.ACCEPTED
+            ) ?: throw EntityNotFoundException("Invalid status.")
 
-        firstUserEntity.setConnectionCount(firstConnectionCount - 1)
-        secondUserEntity.setConnectionCount(secondConnectionCount - 1)
-        userConnectionEntity.setStatus(UserConnectionStatus.DISCONNECTED)
+        check(firstUser.connectionCount > 0) { "Count is already zero. userId: $firstUserId" }
+        check(secondUser.connectionCount > 0) { "Count is already zero. userId: $secondUserId" }
+
+        firstUser.connectionCount -= 1
+        secondUser.connectionCount -= 1
+        connection.status = UserConnectionStatus.DISCONNECTED
     }
 }

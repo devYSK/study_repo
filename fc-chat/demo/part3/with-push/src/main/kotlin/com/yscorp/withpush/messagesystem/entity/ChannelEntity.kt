@@ -1,32 +1,33 @@
 package com.yscorp.withpush.messagesystem.entity
 
+import jakarta.persistence.*
 import java.util.*
 
 @Entity
 @Table(name = "channel")
-class ChannelEntity : BaseEntity {
+class ChannelEntity(
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "channel_id")
-    val channelId: Long? = null
+    val channelId: Long? = null,
 
     @Column(name = "title", nullable = false)
-    var title: String? = null
-        private set
+    var title: String,
 
     @Column(name = "invite_code", nullable = false)
-    var inviteCode: String? = null
-        private set
+    var inviteCode: String? = null,
 
     @Column(name = "head_count", nullable = false)
-    var headCount: Int = 0
+    var headCount: Int = 0,
 
-    constructor()
+    ) : BaseEntity() {
 
-    constructor(title: String?, headCount: Int) {
-        this.title = title
-        this.headCount = headCount
-        this.inviteCode = UUID.randomUUID().toString().replace("-", "")
+    constructor(title: String, headCount: Int) : this(
+        title = title,
+        inviteCode = UUID.randomUUID().toString().replace("-", ""),
+        headCount = headCount
+    ) {
     }
 
     override fun equals(o: Any?): Boolean {

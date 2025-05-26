@@ -1,11 +1,7 @@
 package com.yscorp.withpush.messagesystem.dto.websocket.outbound
 
-import net.prostars.messagesystem.constant.MessageType
+import com.yscorp.withpush.messagesystem.dto.domain.InviteCode
+import com.yscorp.withpush.messagesystem.constant.MessageType
 
-class FetchUserInvitecodeResponse(inviteCode: InviteCode) : BaseMessage(MessageType.FETCH_USER_INVITECODE_RESPONSE) {
-    private val inviteCode: InviteCode = inviteCode
-
-    fun getInviteCode(): InviteCode {
-        return inviteCode
-    }
+class FetchUserInvitecodeResponse(val inviteCode: InviteCode) : BaseMessage(MessageType.FETCH_USER_INVITECODE_RESPONSE) {
 }

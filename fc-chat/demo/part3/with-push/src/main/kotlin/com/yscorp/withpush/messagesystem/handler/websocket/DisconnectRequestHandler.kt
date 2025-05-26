@@ -1,27 +1,33 @@
 package com.yscorp.withpush.messagesystem.handler.websocket
 
-import net.prostars.messagesystem.constant.IdKey
-import org.springframework.data.util.Pair
+import com.yscorp.withpush.messagesystem.constant.IdKey
+import com.yscorp.withpush.messagesystem.constant.MessageType
+import com.yscorp.withpush.messagesystem.constant.UserConnectionStatus
+import com.yscorp.withpush.messagesystem.dto.domain.UserId
+import com.yscorp.withpush.messagesystem.dto.websocket.inbound.DisconnectRequest
+import com.yscorp.withpush.messagesystem.dto.websocket.outbound.DisconnectResponse
+import com.yscorp.withpush.messagesystem.dto.websocket.outbound.ErrorResponse
+import com.yscorp.withpush.messagesystem.service.ClientNotificationService
+import com.yscorp.withpush.messagesystem.service.UserConnectionService
 import org.springframework.stereotype.Component
+import org.springframework.web.socket.WebSocketSession
 
 @Component
 @Suppress("unused")
 class DisconnectRequestHandler(
-    userConnectionService: UserConnectionService,
-    clientNotificationService: ClientNotificationService
+    private val userConnectionService: UserConnectionService,
+    private val clientNotificationService: ClientNotificationService
 ) : BaseRequestHandler<DisconnectRequest> {
-    private val userConnectionService: UserConnectionService = userConnectionService
-    private val clientNotificationService: ClientNotificationService = clientNotificationService
 
     override fun handleRequest(senderSession: WebSocketSession, request: DisconnectRequest) {
-        val senderUserId: UserId = senderSession.getAttributes().get(IdKey.USER_ID.getValue()) as UserId
+        val senderUserId: UserId = senderSession.attributes[IdKey.USER_ID.value] as UserId
         val result: Pair<Boolean, String> =
-            userConnectionService.disconnect(senderUserId, request.getUsername())
+            userConnectionService.disconnect(senderUserId, request.username)
         if (result.first) {
             clientNotificationService.sendMessage(
                 senderSession,
                 senderUserId,
-                DisconnectResponse(request.getUsername(), UserConnectionStatus.DISCONNECTED)
+                DisconnectResponse(request.username, UserConnectionStatus.DISCONNECTED)
             )
         } else {
             val errorMessage = result.second

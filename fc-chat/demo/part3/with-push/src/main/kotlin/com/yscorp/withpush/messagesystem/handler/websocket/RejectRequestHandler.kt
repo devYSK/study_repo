@@ -1,32 +1,44 @@
 package com.yscorp.withpush.messagesystem.handler.websocket
 
-import net.prostars.messagesystem.constant.IdKey
-import org.springframework.data.util.Pair
+import com.yscorp.withpush.messagesystem.constant.IdKey
+import com.yscorp.withpush.messagesystem.constant.MessageType
+import com.yscorp.withpush.messagesystem.constant.UserConnectionStatus
+import com.yscorp.withpush.messagesystem.dto.domain.UserId
+import com.yscorp.withpush.messagesystem.dto.websocket.inbound.RejectRequest
+import com.yscorp.withpush.messagesystem.dto.websocket.outbound.ErrorResponse
+import com.yscorp.withpush.messagesystem.dto.websocket.outbound.RejectResponse
+import com.yscorp.withpush.messagesystem.service.ClientNotificationService
+import com.yscorp.withpush.messagesystem.service.UserConnectionService
 import org.springframework.stereotype.Component
+import org.springframework.web.socket.WebSocketSession
 
 @Component
 @Suppress("unused")
 class RejectRequestHandler(
-    userConnectionService: UserConnectionService,
-    clientNotificationService: ClientNotificationService
-) : BaseRequestHandler<RejectRequest?> {
-    private val userConnectionService: UserConnectionService = userConnectionService
-    private val clientNotificationService: ClientNotificationService = clientNotificationService
+    private val userConnectionService: UserConnectionService,
+    private val clientNotificationService: ClientNotificationService
+) : BaseRequestHandler<RejectRequest> {
 
+    /**
+     * 친구 초대 거절 요청을 처리합니다.
+     * 성공 시 RejectResponse, 실패 시 ErrorResponse를 클라이언트에 전송합니다.
+     */
     override fun handleRequest(senderSession: WebSocketSession, request: RejectRequest) {
-        val senderUserId: UserId = senderSession.getAttributes().get(IdKey.USER_ID.getValue()) as UserId
-        val result: Pair<Boolean, String> =
-            userConnectionService.reject(senderUserId, request.getUsername())
-        if (result.first) {
+        val senderUserId = senderSession.attributes[IdKey.USER_ID.value] as? UserId ?: return
+
+        val (success, message) = userConnectionService.reject(senderUserId, request.username)
+
+        if (success) {
             clientNotificationService.sendMessage(
                 senderSession,
                 senderUserId,
-                RejectResponse(request.getUsername(), UserConnectionStatus.REJECTED)
+                RejectResponse(request.username, UserConnectionStatus.REJECTED)
             )
         } else {
-            val errorMessage = result.second
             clientNotificationService.sendMessage(
-                senderSession, senderUserId, ErrorResponse(MessageType.REJECT_REQUEST, errorMessage)
+                senderSession,
+                senderUserId,
+                ErrorResponse(MessageType.REJECT_REQUEST, message)
             )
         }
     }

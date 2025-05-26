@@ -1,46 +1,28 @@
 package com.yscorp.withpush.messagesystem.entity
 
-import net.prostars.messagesystem.constant.UserConnectionStatus
+import com.yscorp.withpush.messagesystem.constant.UserConnectionStatus
+import jakarta.persistence.*
 import java.util.*
 
 @Entity
 @Table(name = "user_connection")
 @IdClass(UserConnectionId::class)
-class UserConnectionEntity : BaseEntity {
+class UserConnectionEntity(
     @Id
     @Column(name = "partner_a_user_id", nullable = false)
-    var partnerAUserId: Long? = null
-        private set
+    var partnerAUserId: Long? = null,
 
     @Id
     @Column(name = "partner_b_user_id", nullable = false)
-    var partnerBUserId: Long? = null
-        private set
+    var partnerBUserId: Long? = null,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private var status: UserConnectionStatus? = null
+    var status: UserConnectionStatus? = null,
 
     @Column(name = "inviter_user_id", nullable = false)
-    var inviterUserId: Long? = null
-        private set
-
-    constructor()
-
-    constructor(partnerAUserId: Long?, partnerBUserId: Long?, status: UserConnectionStatus?, inviterUserId: Long?) {
-        this.partnerAUserId = partnerAUserId
-        this.partnerBUserId = partnerBUserId
-        this.status = status
-        this.inviterUserId = inviterUserId
-    }
-
-    fun getStatus(): UserConnectionStatus? {
-        return status
-    }
-
-    fun setStatus(status: UserConnectionStatus?) {
-        this.status = status
-    }
+    var inviterUserId: Long? = null,
+) : BaseEntity() {
 
     override fun equals(o: Any?): Boolean {
         if (o == null || javaClass != o.javaClass) return false

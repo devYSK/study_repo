@@ -1,16 +1,8 @@
 package com.yscorp.withpush.messagesystem.dto.websocket.outbound
 
-import net.prostars.messagesystem.constant.MessageType
+import com.yscorp.withpush.messagesystem.constant.MessageType
+import com.yscorp.withpush.messagesystem.constant.UserConnectionStatus
+import com.yscorp.withpush.messagesystem.dto.domain.InviteCode
 
-class InviteResponse(inviteCode: InviteCode, status: UserConnectionStatus) : BaseMessage(MessageType.INVITE_RESPONSE) {
-    private val inviteCode: InviteCode = inviteCode
-    private val status: UserConnectionStatus = status
-
-    fun getInviteCode(): InviteCode {
-        return inviteCode
-    }
-
-    fun getStatus(): UserConnectionStatus {
-        return status
-    }
+class InviteResponse(val inviteCode: InviteCode,val  status: UserConnectionStatus) : BaseMessage(MessageType.INVITE_RESPONSE) {
 }

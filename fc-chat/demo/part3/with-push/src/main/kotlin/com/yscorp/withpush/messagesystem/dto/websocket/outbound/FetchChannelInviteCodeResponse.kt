@@ -1,17 +1,10 @@
 package com.yscorp.withpush.messagesystem.dto.websocket.outbound
 
-import net.prostars.messagesystem.constant.MessageType
+import com.yscorp.withpush.messagesystem.constant.MessageType
+import com.yscorp.withpush.messagesystem.dto.domain.ChannelId
+import com.yscorp.withpush.messagesystem.dto.domain.InviteCode
 
-class FetchChannelInviteCodeResponse(channelId: ChannelId, inviteCode: InviteCode) :
+
+class FetchChannelInviteCodeResponse(val channelId: ChannelId, val inviteCode: InviteCode) :
     BaseMessage(MessageType.FETCH_CHANNEL_INVITECODE_RESPONSE) {
-    private val channelId: ChannelId = channelId
-    private val inviteCode: InviteCode = inviteCode
-
-    fun getChannelId(): ChannelId {
-        return channelId
-    }
-
-    fun getInviteCode(): InviteCode {
-        return inviteCode
-    }
 }

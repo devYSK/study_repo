@@ -1,263 +1,179 @@
 package com.yscorp.withpush.messagesystem.service
 
-import net.prostars.messagesystem.constant.UserConnectionStatus
+import com.yscorp.withpush.messagesystem.constant.UserConnectionStatus
+import com.yscorp.withpush.messagesystem.dto.domain.InviteCode
+import com.yscorp.withpush.messagesystem.dto.domain.User
+import com.yscorp.withpush.messagesystem.dto.domain.UserId
+import com.yscorp.withpush.messagesystem.entity.UserConnectionEntity
+import com.yscorp.withpush.messagesystem.repository.UserConnectionRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.data.util.Pair
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
-import java.util.function.Predicate
-import java.util.stream.Stream
 
 @Service
 class UserConnectionService(
     private val userService: UserService,
     private val userConnectionLimitService: UserConnectionLimitService,
-    userConnectionRepository: UserConnectionRepository
+    private val userConnectionRepository: UserConnectionRepository
 ) {
-    private val userConnectionRepository: UserConnectionRepository = userConnectionRepository
 
     @Transactional(readOnly = true)
     fun getUsersByStatus(userId: UserId, status: UserConnectionStatus): List<User> {
-        val usersA: List<UserIdUsernameInviterUserIdProjection> =
-            userConnectionRepository.findByPartnerAUserIdAndStatus(userId.id(), status)
-        val usersB: List<UserIdUsernameInviterUserIdProjection> =
-            userConnectionRepository.findByPartnerBUserIdAndStatus(userId.id(), status)
-        return if (status === UserConnectionStatus.ACCEPTED) {
-            Stream.concat<UserIdUsernameInviterUserIdProjection>(usersA.stream(), usersB.stream())
-                .map<Any> { item: UserIdUsernameInviterUserIdProjection ->
-                    User(
-                        UserId(item.getUserId()),
-                        item.getUsername()
-                    )
-                }
-                .toList()
-        } else {
-            Stream.concat<UserIdUsernameInviterUserIdProjection>(usersA.stream(), usersB.stream())
-                .filter { item: UserIdUsernameInviterUserIdProjection -> !item.getInviterUserId().equals(userId.id()) }
-                .map<Any> { item: UserIdUsernameInviterUserIdProjection ->
-                    User(
-                        UserId(item.getUserId()),
-                        item.getUsername()
-                    )
-                }
-                .toList()
-        }
+        val usersA = userConnectionRepository.findByPartnerAUserIdAndStatus(userId.id, status)
+        val usersB = userConnectionRepository.findByPartnerBUserIdAndStatus(userId.id, status)
+
+        return (usersA + usersB)
+            .filter { status != UserConnectionStatus.ACCEPTED || it.inviterUserId != userId.id }
+            .map { User(UserId(it.userId), it.username) }
     }
 
     fun getStatus(inviterUserId: UserId, partnerUserId: UserId): UserConnectionStatus {
+        val a = inviterUserId.id
+        val b = partnerUserId.id
+
         return userConnectionRepository
-            .findUserConnectionStatusByPartnerAUserIdAndPartnerBUserId(
-                java.lang.Long.min(inviterUserId.id(), partnerUserId.id()),
-                java.lang.Long.max(inviterUserId.id(), partnerUserId.id())
-            )
-            .map { status -> UserConnectionStatus.valueOf(status.getStatus()) }
-            .orElse(UserConnectionStatus.NONE)
+            .findUserConnectionStatusByPartnerAUserIdAndPartnerBUserId(minOf(a, b), maxOf(a, b))
+            ?.status
+            ?.let(UserConnectionStatus::valueOf)
+            ?: UserConnectionStatus.NONE
     }
 
     @Transactional(readOnly = true)
-    fun countConnectionStatus(
-        senderUserId: UserId, partnerUserIds: List<UserId>, status: UserConnectionStatus?
-    ): Long {
-        val ids: List<Long> = partnerUserIds.stream().map<Any>(UserId::id).toList()
-        return (userConnectionRepository.countByPartnerAUserIdAndPartnerBUserIdInAndStatus(
-            senderUserId.id(), ids, status
-        )
-            + userConnectionRepository.countByPartnerBUserIdAndPartnerAUserIdInAndStatus(
-            senderUserId.id(), ids, status
-        ))
+    fun countConnectionStatus(senderUserId: UserId, partnerUserIds: List<UserId>, status: UserConnectionStatus?): Long {
+        val ids = partnerUserIds.map { it.id }
+        return userConnectionRepository.countByPartnerAUserIdAndPartnerBUserIdInAndStatus(senderUserId.id, ids, status) +
+            userConnectionRepository.countByPartnerBUserIdAndPartnerAUserIdInAndStatus(senderUserId.id, ids, status)
     }
 
-    fun invite(inviterUserId: UserId, inviteCode: InviteCode): Pair<Optional<UserId>, String> {
-        val partner: Optional<User?>? = userService.getUser(inviteCode)
-        if (partner!!.isEmpty()) {
-            log.info("Invalid invite code. {}, from {}", inviteCode, inviterUserId)
-            return Pair.of<Optional<UserId>, String>(Optional.empty<UserId>(), "Invalid invite code.")
-        }
+    fun invite(inviterUserId: UserId, inviteCode: InviteCode): Pair<UserId?, String> {
+        val partner = userService.getUser(inviteCode) ?: return null to "Invalid invite code."
 
-        val partnerUserId: UserId = partner.get().userId()
-        val partnerUsername: String = partner.get().username()
-        if (partnerUserId.equals(inviterUserId)) {
-            return Pair.of<Optional<UserId>, String>(Optional.empty<UserId>(), "Can't self invite.")
-        }
+        val partnerUserId = partner.userId
+        val partnerUsername = partner.username
 
-        val userConnectionStatus: UserConnectionStatus = getStatus(inviterUserId, partnerUserId)
-        return when (userConnectionStatus) {
-            NONE, DISCONNECTED -> {
-                if (userService
-                        .getConnectionCount(inviterUserId)
-                        .filter { count -> count >= userConnectionLimitService.limitConnections }
-                        .isPresent
-                ) {
-                    Pair.of<Optional<UserId>, String>(Optional.empty<UserId>(), "Connection limit reached.")
-                }
+        if (partnerUserId == inviterUserId) return null to "Can't self invite."
 
-                val inviterUsername = userService.getUsername(inviterUserId)
-                if (inviterUsername!!.isEmpty) {
-                    log.warn("InviteRequest failed.")
-                    Pair.of<Optional<UserId>, String>(Optional.empty<UserId>(), "InviteRequest failed.")
-                }
+        return when (val status = getStatus(inviterUserId, partnerUserId)) {
+            UserConnectionStatus.NONE, UserConnectionStatus.DISCONNECTED -> {
+                val isLimitReached = userService.getConnectionCount(inviterUserId)
+                    ?.let { it >= userConnectionLimitService.limitConnections } ?: false
+
+                if (isLimitReached) return null to "Connection limit reached."
+
+                val inviterUsername = userService.getUsername(inviterUserId) ?: return null to "InviteRequest failed."
+
                 try {
                     setStatus(inviterUserId, partnerUserId, UserConnectionStatus.PENDING)
-                    Pair.of<Optional<UserId>, String>(Optional.of<UserId>(partnerUserId), inviterUsername.get())
+                    partnerUserId to inviterUsername
                 } catch (ex: Exception) {
                     log.error("Set pending failed. cause: {}", ex.message)
-                    Pair.of<Optional<UserId>, String>(Optional.empty<UserId>(), "InviteRequest failed.")
+                    null to "InviteRequest failed."
                 }
             }
 
-            ACCEPTED -> Pair.of<Optional<UserId>, String>(
-                Optional.of<UserId>(partnerUserId),
-                "Already connected with $partnerUsername"
-            )
+            UserConnectionStatus.ACCEPTED -> partnerUserId to "Already connected with $partnerUsername"
 
-            PENDING, REJECTED -> {
-                log.info(
-                    "{} invites {} but does not deliver the invitation request.",
-                    inviterUserId,
-                    partnerUsername
-                )
-                Pair.of<Optional<UserId>, String>(
-                    Optional.of<UserId>(partnerUserId),
-                    "Already invited to $partnerUsername"
-                )
+            UserConnectionStatus.PENDING, UserConnectionStatus.REJECTED -> {
+                log.info("{} invites {} but does not deliver the invitation request.", inviterUserId, partnerUsername)
+                partnerUserId to "Already invited to $partnerUsername"
             }
         }
     }
 
     @Transactional
-    fun accept(acceptorUserId: UserId, inviterUsername: String?): Pair<Optional<UserId>, String?> {
-        val userId: Optional<UserId?>? = userService.getUserId(inviterUsername)
-        if (userId!!.isEmpty()) {
-            return Pair.of<Optional<UserId>, String?>(Optional.empty<UserId>(), "Invalid username.")
-        }
-        val inviterUserId: UserId = userId.get()
+    fun accept(acceptorUserId: UserId, inviterUsername: String): Pair<UserId?, String> {
+        val inviterUserId = userService.getUserId(inviterUsername) ?: return null to "Invalid username."
 
-        if (acceptorUserId.equals(inviterUserId)) {
-            return Pair.of<Optional<UserId>, String?>(Optional.empty<UserId>(), "Can't self accept.")
-        }
+        if (acceptorUserId == inviterUserId) return null to "Can't self accept."
 
-        if (getInviterUserId(acceptorUserId, inviterUserId)
-                .filter(Predicate<UserId> { invitationSenderUserId: UserId ->
-                    invitationSenderUserId.equals(
-                        inviterUserId
-                    )
-                })
-                .isEmpty()
-        ) {
-            return Pair.of<Optional<UserId>, String?>(Optional.empty<UserId>(), "Invalid username.")
-        }
+        val actualInviter = getInviterUserId(acceptorUserId, inviterUserId)
+        if (actualInviter != inviterUserId) return null to "Invalid username."
 
-        val userConnectionStatus: UserConnectionStatus = getStatus(inviterUserId, acceptorUserId)
-        if (userConnectionStatus === UserConnectionStatus.ACCEPTED) {
-            return Pair.of<Optional<UserId>, String?>(Optional.empty<UserId>(), "Already connected.")
-        }
-        if (userConnectionStatus !== UserConnectionStatus.PENDING) {
-            return Pair.of<Optional<UserId>, String?>(Optional.empty<UserId>(), "Accept failed.")
-        }
+        val status = getStatus(inviterUserId, acceptorUserId)
+        if (status == UserConnectionStatus.ACCEPTED) return null to "Already connected."
+        if (status != UserConnectionStatus.PENDING) return null to "Accept failed."
 
-        val acceptorUsername = userService.getUsername(acceptorUserId)
-        if (acceptorUsername!!.isEmpty) {
-            log.error("Invalid userId. userId: {}", acceptorUserId)
-            return Pair.of<Optional<UserId>, String?>(Optional.empty<UserId>(), "Accept failed.")
-        }
+        val acceptorUsername = userService.getUsername(acceptorUserId) ?: return null to "Accept failed."
 
-        try {
+        return try {
             userConnectionLimitService.accept(acceptorUserId, inviterUserId)
-            return Pair.of<Optional<UserId>, String?>(Optional.of<UserId>(inviterUserId), acceptorUsername.get())
+            inviterUserId to acceptorUsername
         } catch (ex: IllegalStateException) {
-            return Pair.of<Optional<UserId>, String?>(Optional.empty<UserId>(), ex.message)
+            null to ex.message!!
         } catch (ex: Exception) {
             log.error("Accept failed. cause: {}", ex.message)
-            return Pair.of<Optional<UserId>, String?>(Optional.empty<UserId>(), "Accept failed.")
+            null to "Accept failed."
         }
     }
 
     fun reject(senderUserId: UserId, inviterUsername: String): Pair<Boolean, String> {
-        return userService
-            .getUserId(inviterUsername)
-            .filter { inviterUserId -> !inviterUserId.equals(senderUserId) }
-            .filter { inviterUserId ->
-                getInviterUserId(inviterUserId, senderUserId)
-                    .filter(Predicate<UserId> { invitationSenderUserId: UserId ->
-                        invitationSenderUserId.equals(
-                            inviterUserId
-                        )
-                    })
-                    .isPresent()
-            }
-            .filter { inviterUserId -> getStatus(inviterUserId, senderUserId) === UserConnectionStatus.PENDING }
-            .map { inviterUserId ->
-                try {
-                    setStatus(inviterUserId, senderUserId, UserConnectionStatus.REJECTED)
-                    return@map Pair.of<S, T>(true, inviterUsername)
-                } catch (ex: Exception) {
-                    log.error(
-                        "Set rejected failed. cause: {}",
-                        ex.message
-                    )
-                    return@map Pair.of<S, T>(false, "Reject failed.")
-                }
-            }
-            .orElse(Pair.of<S, T>(false, "Reject failed."))
+        val inviterUserId = userService.getUserId(inviterUsername) ?: return false to "Reject failed."
+
+        if (inviterUserId == senderUserId) return false to "Reject failed."
+
+        val actualInviter = getInviterUserId(inviterUserId, senderUserId)
+        if (actualInviter != inviterUserId) return false to "Reject failed."
+
+        if (getStatus(inviterUserId, senderUserId) != UserConnectionStatus.PENDING) {
+            return false to "Reject failed."
+        }
+
+        return try {
+            setStatus(inviterUserId, senderUserId, UserConnectionStatus.REJECTED)
+            true to inviterUsername
+        } catch (ex: Exception) {
+            log.error("Set rejected failed. cause: {}", ex.message)
+            false to "Reject failed."
+        }
     }
 
     @Transactional
     fun disconnect(senderUserId: UserId, partnerUsername: String): Pair<Boolean, String> {
-        return userService
-            .getUserId(partnerUsername)
-            .filter { partnerUserId -> !senderUserId.equals(partnerUserId) }
-            .map { partnerUserId ->
-                try {
-                    val userConnectionStatus: UserConnectionStatus = getStatus(senderUserId, partnerUserId)
-                    if (userConnectionStatus === UserConnectionStatus.ACCEPTED) {
-                        userConnectionLimitService.disconnect(senderUserId, partnerUserId)
-                        return@map Pair.of<S, T>(true, partnerUsername)
-                    } else if (userConnectionStatus === UserConnectionStatus.REJECTED
-                        && getInviterUserId(senderUserId, partnerUserId)
-                            .filter(Predicate<UserId> { inviterUserId: UserId ->
-                                inviterUserId.equals(
-                                    partnerUserId
-                                )
-                            })
-                            .isPresent()
-                    ) {
-                        setStatus(senderUserId, partnerUserId, UserConnectionStatus.DISCONNECTED)
-                        return@map Pair.of<S, T>(true, partnerUsername)
-                    }
-                } catch (ex: Exception) {
-                    log.error(
-                        "Disconnect failed. cause: {}",
-                        ex.message
-                    )
-                }
-                Pair.of<S, T>(false, "Disconnect failed.")
+        val partnerUserId = userService.getUserId(partnerUsername) ?: return false to "Disconnect failed."
+        if (senderUserId == partnerUserId) return false to "Disconnect failed."
+
+        return try {
+            val status = getStatus(senderUserId, partnerUserId)
+            if (status == UserConnectionStatus.ACCEPTED) {
+                userConnectionLimitService.disconnect(senderUserId, partnerUserId)
+                true to partnerUsername
+            } else if (
+                status == UserConnectionStatus.REJECTED &&
+                getInviterUserId(senderUserId, partnerUserId) == partnerUserId
+            ) {
+                setStatus(senderUserId, partnerUserId, UserConnectionStatus.DISCONNECTED)
+                true to partnerUsername
+            } else {
+                false to "Disconnect failed."
             }
-            .orElse(Pair.of<S, T>(false, "Disconnect failed."))
+        } catch (ex: Exception) {
+            log.error("Disconnect failed. cause: {}", ex.message)
+            false to "Disconnect failed."
+        }
     }
 
-    private fun getInviterUserId(partnerAUserId: UserId, partnerBUserId: UserId): Optional<UserId> {
+    private fun getInviterUserId(partnerAUserId: UserId, partnerBUserId: UserId): UserId? {
         return userConnectionRepository
             .findInviterUserIdByPartnerAUserIdAndPartnerBUserId(
-                java.lang.Long.min(partnerAUserId.id(), partnerBUserId.id()),
-                java.lang.Long.max(partnerAUserId.id(), partnerBUserId.id())
+                minOf(partnerAUserId.id, partnerBUserId.id),
+                maxOf(partnerAUserId.id, partnerBUserId.id)
             )
-            .map { inviterUserId -> UserId(inviterUserId.getInviterUserId()) }
+            ?.inviterUserId
+            ?.let(::UserId)
     }
 
     @Transactional
-    private fun setStatus(
-        inviterUserId: UserId, partnerUserId: UserId, userConnectionStatus: UserConnectionStatus
-    ) {
-        require(userConnectionStatus !== UserConnectionStatus.ACCEPTED) { "Can't set to accepted." }
+    fun setStatus(inviterUserId: UserId, partnerUserId: UserId, status: UserConnectionStatus) {
+        require(status != UserConnectionStatus.ACCEPTED) { "Can't set to accepted." }
 
         userConnectionRepository.save(
             UserConnectionEntity(
-                java.lang.Long.min(inviterUserId.id(), partnerUserId.id()),
-                java.lang.Long.max(inviterUserId.id(), partnerUserId.id()),
-                userConnectionStatus,
-                inviterUserId.id()
+                minOf(inviterUserId.id, partnerUserId.id),
+                maxOf(inviterUserId.id, partnerUserId.id),
+                status,
+                inviterUserId.id
             )
         )
     }

@@ -1,31 +1,27 @@
 package com.yscorp.withpush.messagesystem.entity
 
+import jakarta.persistence.*
 import java.util.*
+
 
 @Entity
 @Table(name = "user_channel")
 @IdClass(UserChannelId::class)
-class UserChannelEntity : BaseEntity {
+class UserChannelEntity(
+
     @Id
     @Column(name = "user_id", nullable = false)
-    var userId: Long? = null
-        private set
+    var userId: Long? = null,
 
     @Id
     @Column(name = "channel_id", nullable = false)
-    var channelId: Long? = null
-        private set
+    var channelId: Long? = null,
 
     @Column(name = "last_read_msg_seq", nullable = false)
-    var lastReadMsgSeq: Long = 0
+    var lastReadMsgSeq: Long = 0,
 
-    constructor()
+    ) : BaseEntity() {
 
-    constructor(userId: Long?, channelId: Long?, lastReadMsgSeq: Long) {
-        this.userId = userId
-        this.channelId = channelId
-        this.lastReadMsgSeq = lastReadMsgSeq
-    }
 
     override fun equals(o: Any?): Boolean {
         if (o == null || javaClass != o.javaClass) return false

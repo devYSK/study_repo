@@ -3,18 +3,10 @@ package com.yscorp.withpush.messagesystem.entity
 import java.io.Serializable
 import java.util.*
 
-class UserConnectionId : Serializable {
-    var partnerAUserId: Long? = null
-        private set
-    var partnerBUserId: Long? = null
-        private set
-
-    constructor()
-
-    constructor(partnerAUserId: Long?, partnerBUserId: Long?) {
-        this.partnerAUserId = partnerAUserId
-        this.partnerBUserId = partnerBUserId
-    }
+class UserConnectionId(
+    val partnerAUserId: Long,
+    val partnerBUserId: Long,
+) : Serializable {
 
     override fun equals(o: Any?): Boolean {
         if (o == null || javaClass != o.javaClass) return false

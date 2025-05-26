@@ -1,15 +1,21 @@
 package com.yscorp.withpush.messagesystem.repository
 
-import net.prostars.messagesystem.dto.projection.ChannelProjection
+import com.yscorp.withpush.messagesystem.dto.projection.ChannelProjection
+import com.yscorp.withpush.messagesystem.dto.projection.ChannelTitleProjection
+import com.yscorp.withpush.messagesystem.dto.projection.InviteCodeProjection
+import com.yscorp.withpush.messagesystem.entity.ChannelEntity
+import jakarta.persistence.LockModeType
+import org.springframework.data.jpa.repository.JpaRepository
 
 @org.springframework.stereotype.Repository
-interface ChannelRepository : JpaRepository<ChannelEntity?, Long?> {
-    fun findChannelTitleByChannelId(@org.springframework.lang.NonNull channelId: Long?): java.util.Optional<ChannelTitleProjection?>?
+interface ChannelRepository : JpaRepository<ChannelEntity, Long> {
+    fun findChannelTitleByChannelId(channelId: Long): ChannelTitleProjection?
 
-    fun findChannelInviteCodeByChannelId(@org.springframework.lang.NonNull channelId: Long?): java.util.Optional<InviteCodeProjection?>?
+    fun findChannelInviteCodeByChannelId(channelId: Long): InviteCodeProjection?
 
-    fun findChannelByInviteCode(@org.springframework.lang.NonNull inviteCode: String?): java.util.Optional<ChannelProjection?>?
+    fun findChannelByInviteCode(inviteCode: String): ChannelProjection?
 
     @org.springframework.data.jpa.repository.Lock(LockModeType.PESSIMISTIC_WRITE)
-    fun findForUpdateByChannelId(@org.springframework.lang.NonNull channelId: Long?): java.util.Optional<ChannelEntity?>?
+    fun findForUpdateByChannelId(channelId: Long): ChannelEntity?
+
 }

@@ -1,6 +1,6 @@
 package com.yscorp.withpush.messagesystem.service
 
-import net.prostars.messagesystem.dto.domain.UserId
+import com.yscorp.withpush.messagesystem.dto.domain.UserId
 
 @org.springframework.stereotype.Service
 class PushService {

@@ -8,21 +8,30 @@ import java.util.*
 
 @Component
 class JsonUtil(private val objectMapper: ObjectMapper) {
-    fun <T> fromJson(json: String?, clazz: Class<T>?): Optional<T> {
-        try {
-            return Optional.of(objectMapper.readValue(json, clazz))
-        } catch (ex: Exception) {
-            log.error("Failed JSON to Object: {}", ex.message)
-            return Optional.empty()
+
+    /**
+     * JSON 문자열을 지정된 클래스 타입의 객체로 역직렬화합니다.
+     * 역직렬화에 실패하면 null을 반환합니다.
+     */
+    fun <T> fromJson(json: String?, clazz: Class<T>): T? {
+        return runCatching {
+            objectMapper.readValue(json, clazz)
+        }.getOrElse {
+            log.error("Failed JSON to Object: {}", it.message)
+            null
         }
     }
 
-    fun toJson(`object`: Any?): Optional<String> {
-        try {
-            return Optional.of(objectMapper.writeValueAsString(`object`))
-        } catch (ex: Exception) {
-            log.error("Failed Object to JSON: {}", ex.message)
-            return Optional.empty()
+    /**
+     * 객체를 JSON 문자열로 직렬화합니다.
+     * 직렬화에 실패하면 null을 반환합니다.
+     */
+    fun toJson(obj: Any?): String? {
+        return runCatching {
+            objectMapper.writeValueAsString(obj)
+        }.getOrElse {
+            log.error("Failed Object to JSON: {}", it.message)
+            null
         }
     }
 

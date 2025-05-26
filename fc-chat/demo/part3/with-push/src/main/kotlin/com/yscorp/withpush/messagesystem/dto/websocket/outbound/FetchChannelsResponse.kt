@@ -1,11 +1,8 @@
 package com.yscorp.withpush.messagesystem.dto.websocket.outbound
 
-import net.prostars.messagesystem.constant.MessageType
+import com.yscorp.withpush.messagesystem.constant.MessageType
+import com.yscorp.withpush.messagesystem.dto.domain.Channel
 
-class FetchChannelsResponse(channels: List<Channel>) : BaseMessage(MessageType.FETCH_CHANNELS_RESPONSE) {
-    private val channels: List<Channel> = channels
 
-    fun getChannels(): List<Channel> {
-        return channels
-    }
+class FetchChannelsResponse(val channels: List<Channel>) : BaseMessage(MessageType.FETCH_CHANNELS_RESPONSE) {
 }

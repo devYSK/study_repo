@@ -1,8 +1,13 @@
 package com.yscorp.withpush.messagesystem.service
 
-import net.prostars.messagesystem.dto.domain.InviteCode
+import com.yscorp.withpush.messagesystem.dto.domain.InviteCode
+import com.yscorp.withpush.messagesystem.dto.domain.User
+import com.yscorp.withpush.messagesystem.dto.domain.UserId
+import com.yscorp.withpush.messagesystem.entity.UserEntity
+import com.yscorp.withpush.messagesystem.repository.UserRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -10,67 +15,53 @@ import java.util.*
 @Service
 class UserService(
     private val sessionService: SessionService,
-    userRepository: UserRepository,
-    passwordEncoder: PasswordEncoder
+    private val userRepository: UserRepository,
+    private val passwordEncoder: PasswordEncoder
 ) {
-    private val userRepository: UserRepository = userRepository
-    private val passwordEncoder: PasswordEncoder = passwordEncoder
 
-    fun getUsername(userId: UserId): Optional<String> {
-        return userRepository.findByUserId(userId.id()).map(UsernameProjection::getUsername)
+    fun getUsername(userId: UserId): String? {
+        return userRepository.findByUserId(userId.id)?.username
     }
 
-    fun getUserId(username: String?): Optional<UserId?> {
-        return userRepository
-            .findByUsername(username)
-            .map { userEntity -> UserId(userEntity.getUserId()) }
+    fun getUserId(username: String): UserId? {
+        return userRepository.findByUsername(username)?.let { UserId(it.userId) }
     }
 
-    fun getUserIds(usernames: List<String?>?): List<UserId> {
-        return userRepository.findByUsernameIn(usernames).stream()
-            .map { projection -> UserId(projection.getUserId()) }
-            .toList()
+    fun getUserIds(usernames: List<String>): List<UserId> {
+        return userRepository.findByUsernameIn(usernames)
+            .map { UserId(it.userId) }
     }
 
-    fun getUser(inviteCode: InviteCode): Optional<User> {
-        return userRepository
-            .findByInviteCode(inviteCode.code())
-            .map { entity -> User(UserId(entity.getUserId()), entity.getUsername()) }
+    fun getUser(inviteCode: InviteCode): User? {
+        return userRepository.findByInviteCode(inviteCode.code)?.let {
+            User(UserId(it.userId), it.username)
+        }
     }
 
-    fun getInviteCode(userId: UserId): Optional<InviteCode> {
-        return userRepository
-            .findInviteCodeByUserId(userId.id())
-            .map { inviteCode -> InviteCode(inviteCode.getInviteCode()) }
+    fun getInviteCode(userId: UserId): InviteCode? {
+        return userRepository.findInviteCodeByUserId(userId.id)?.inviteCode?.let(::InviteCode)
     }
 
-    fun getConnectionCount(userId: UserId): Optional<Int?> {
-        return userRepository.findCountByUserId(userId.id()).map(CountProjection::getConnectionCount)
+    fun getConnectionCount(userId: UserId): Int? {
+        return userRepository.findCountByUserId(userId.id)?.connectionCount
     }
 
     @Transactional
-    fun addUser(username: String?, password: String?): UserId {
-        val userEntity: UserEntity =
-            userRepository.save(UserEntity(username, passwordEncoder.encode(password)))
-        log.info(
-            "User registered. UserId: {}, Username: {}",
-            userEntity.getUserId(),
-            userEntity.getUsername()
-        )
-        return UserId(userEntity.getUserId())
+    fun addUser(username: String, password: String): UserId {
+        val encodedPassword = passwordEncoder.encode(password)
+        val userEntity = userRepository.save(UserEntity(username, encodedPassword))
+
+        log.info("User registered. UserId: {}, Username: {}", userEntity.userId, userEntity.username)
+        return UserId(userEntity.userId)
     }
 
     @Transactional
     fun removeUser() {
         val username = sessionService.username
-        val userEntity: UserEntity = userRepository.findByUsername(username).orElseThrow()
-        userRepository.deleteById(userEntity.getUserId())
+        val userEntity = userRepository.findByUsername(username) ?: throw NoSuchElementException()
+        userRepository.deleteById(userEntity.userId)
 
-        log.info(
-            "User unregistered. UserId: {}, Username: {}",
-            userEntity.getUserId(),
-            userEntity.getUsername()
-        )
+        log.info("User unregistered. UserId: {}, Username: {}", userEntity.userId, userEntity.username)
     }
 
     companion object {

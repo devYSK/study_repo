@@ -1,21 +1,30 @@
 package com.yscorp.withpush.messagesystem.repository
 
-import net.prostars.messagesystem.dto.projection.CountProjection
+import com.yscorp.withpush.messagesystem.dto.projection.CountProjection
+import com.yscorp.withpush.messagesystem.dto.projection.InviteCodeProjection
+import com.yscorp.withpush.messagesystem.dto.projection.UserIdProjection
+import com.yscorp.withpush.messagesystem.dto.projection.UsernameProjection
+import com.yscorp.withpush.messagesystem.entity.UserEntity
+import jakarta.persistence.LockModeType
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
+import org.springframework.stereotype.Repository
 
-@org.springframework.stereotype.Repository
-interface UserRepository : JpaRepository<UserEntity?, Long?> {
-    fun findByUsername(@org.springframework.lang.NonNull username: String?): java.util.Optional<UserEntity?>?
+@Repository
+interface UserRepository : JpaRepository<UserEntity, Long> {
 
-    fun findByUsernameIn(@org.springframework.lang.NonNull usernames: Collection<String?>?): List<UserIdProjection?>?
+    fun findByUsername(username: String): UserEntity?
 
-    fun findByUserId(@org.springframework.lang.NonNull userId: Long?): java.util.Optional<UsernameProjection?>?
+    fun findByUsernameIn(usernames: Collection<String>): List<UserIdProjection>
 
-    fun findByInviteCode(@org.springframework.lang.NonNull inviteCode: String?): java.util.Optional<UserEntity?>?
+    fun findByUserId(userId: Long): UsernameProjection?
 
-    fun findInviteCodeByUserId(@org.springframework.lang.NonNull userId: Long?): java.util.Optional<InviteCodeProjection?>?
+    fun findByInviteCode(inviteCode: String): UserEntity?
 
-    fun findCountByUserId(@org.springframework.lang.NonNull userId: Long?): java.util.Optional<CountProjection?>?
+    fun findInviteCodeByUserId(userId: Long): InviteCodeProjection?
 
-    @org.springframework.data.jpa.repository.Lock(LockModeType.PESSIMISTIC_WRITE)
-    fun findForUpdateByUserId(@org.springframework.lang.NonNull userId: Long?): java.util.Optional<UserEntity?>?
+    fun findCountByUserId(userId: Long): CountProjection?
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    fun findForUpdateByUserId(userId: Long): UserEntity?
 }

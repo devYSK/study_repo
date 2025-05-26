@@ -1,12 +1,8 @@
 package com.yscorp.withpush.messagesystem.dto.websocket.outbound
 
-import net.prostars.messagesystem.constant.MessageType
+import com.yscorp.withpush.messagesystem.constant.MessageType
+import com.yscorp.withpush.messagesystem.dto.domain.ChannelId
 
-class MessageNotification(channelId: ChannelId, val username: String, val content: String) :
+class MessageNotification(val channelId: ChannelId, val username: String, val content: String) :
     BaseMessage(MessageType.NOTIFY_MESSAGE) {
-    private val channelId: ChannelId = channelId
-
-    fun getChannelId(): ChannelId {
-        return channelId
-    }
 }

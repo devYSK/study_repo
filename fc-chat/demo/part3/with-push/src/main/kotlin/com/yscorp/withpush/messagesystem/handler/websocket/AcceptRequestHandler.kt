@@ -1,43 +1,43 @@
 package com.yscorp.withpush.messagesystem.handler.websocket
 
-import net.prostars.messagesystem.constant.IdKey
-import org.springframework.data.util.Pair
+import com.yscorp.withpush.messagesystem.constant.IdKey
+import com.yscorp.withpush.messagesystem.constant.MessageType
+import com.yscorp.withpush.messagesystem.dto.domain.UserId
+import com.yscorp.withpush.messagesystem.dto.websocket.inbound.AcceptRequest
+import com.yscorp.withpush.messagesystem.dto.websocket.outbound.AcceptNotification
+import com.yscorp.withpush.messagesystem.dto.websocket.outbound.AcceptResponse
+import com.yscorp.withpush.messagesystem.dto.websocket.outbound.ErrorResponse
+import com.yscorp.withpush.messagesystem.service.ClientNotificationService
+import com.yscorp.withpush.messagesystem.service.UserConnectionService
 import org.springframework.stereotype.Component
-import java.util.*
-import java.util.function.Consumer
+import org.springframework.web.socket.WebSocketSession
 
 @Component
-@Suppress("unused")
 class AcceptRequestHandler(
-    userConnectionService: UserConnectionService,
-    clientNotificationService: ClientNotificationService
+    private val userConnectionService: UserConnectionService,
+    private val clientNotificationService: ClientNotificationService
 ) : BaseRequestHandler<AcceptRequest> {
-    private val userConnectionService: UserConnectionService = userConnectionService
-    private val clientNotificationService: ClientNotificationService = clientNotificationService
 
     override fun handleRequest(senderSession: WebSocketSession, request: AcceptRequest) {
-        val acceptorUserId: UserId = senderSession.getAttributes().get(IdKey.USER_ID.getValue()) as UserId
-        val result: Pair<Optional<UserId>, String> =
-            userConnectionService.accept(acceptorUserId, request.getUsername())
-        result
-            .first
-            .ifPresentOrElse(
-                Consumer<UserId> { inviterUserId: UserId? ->
-                    clientNotificationService.sendMessage(
-                        senderSession, acceptorUserId, AcceptResponse(request.getUsername())
-                    )
-                    val acceptorUsername = result.second
-                    clientNotificationService.sendMessage(
-                        inviterUserId, AcceptNotification(acceptorUsername)
-                    )
-                },
-                Runnable {
-                    val errorMessage = result.second
-                    clientNotificationService.sendMessage(
-                        senderSession,
-                        acceptorUserId,
-                        ErrorResponse(MessageType.ACCEPT_REQUEST, errorMessage)
-                    )
-                })
+        val acceptorUserId: UserId = senderSession.attributes[IdKey.USER_ID.value] as UserId
+        val (userId, errorMessage) = userConnectionService.accept(acceptorUserId, request.username)
+
+        if (userId == null) {
+            val errorMessage = errorMessage
+
+            clientNotificationService.sendMessage(
+                senderSession,
+                acceptorUserId,
+                ErrorResponse(MessageType.ACCEPT_REQUEST, errorMessage)
+            )
+        } else {
+
+            clientNotificationService.sendMessage(
+                senderSession, acceptorUserId, AcceptResponse(request.username)
+            )
+            clientNotificationService.sendMessage(
+                userId, AcceptNotification(errorMessage)
+            )
+        }
     }
 }

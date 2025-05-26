@@ -1,26 +1,25 @@
 package com.yscorp.withpush.messagesystem.entity
 
+import jakarta.persistence.*
 import java.util.*
 
 @Entity
 @Table(name = "message")
-class MessageEntity : BaseEntity {
+class MessageEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_sequence")
-    val messageSequence: Long? = null
+    val messageSequence: Long? = null,
 
     @Column(name = "user_id", nullable = false)
-    var userId: Long? = null
-        private set
+    var userId: Long? = null,
 
     @Column(name = "content", nullable = false)
-    var content: String? = null
-        private set
+    var content: String? = null,
 
-    constructor()
+    ) : BaseEntity() {
 
-    constructor(userId: Long?, content: String?) {
+    constructor(userId: Long?, content: String?) : this() {
         this.userId = userId
         this.content = content
     }
