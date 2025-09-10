@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: inf-death-spring-batch-mongo
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+  datasource:
+    url: jdbc:h2:file:./build/h2/batch;MODE=MySQL;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    hikari:
+      maximum-pool-size: 5
+  data:
+    mongodb:
+#      uri: mongodb://root:testpassword1234@localhost:27017/inf_death?authSource=admin&authMechanism=SCRAM-SHA-256
+      host: localhost
+      port: 27018
+      database: inf_death
+      username: root
+      password: testpassword1234
+      authentication-database: admin
+  batch:
+    job:
+      enabled: true
+      repository:
+        type: jdbc
+    jdbc:
+      initialize-schema: always
+
+logging:
+  level:
+    org.springframework.data.mongodb: DEBUG
+    com.mongodb: DEBUG
