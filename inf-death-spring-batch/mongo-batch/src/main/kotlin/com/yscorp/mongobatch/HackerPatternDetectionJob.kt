@@ -15,15 +15,14 @@ import org.springframework.batch.item.data.builder.MongoCursorItemReaderBuilder
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.data.annotation.Id
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
-import org.springframework.data.mongodb.core.mapping.Document
+import org.springframework.data.mongodb.core.query.Criteria
+import org.springframework.data.mongodb.core.query.Query
 import org.springframework.transaction.PlatformTransactionManager
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.Date
+import java.util.*
 
 /**
  * 보안 로그에서 해커 패턴을 탐지하는 배치 작업 설정 클래스입니다.
@@ -87,6 +86,40 @@ class HackerPatternDetectionJob(
     }
 
     /**
+     * Query를 직접 작성하여 MongoCursorItemReader를 생성하는 예제입니다.
+     * 이 방법은 복잡한 쿼리를 작성할 때 유용합니다.
+     *  예제의 구성 코드를 보면 한 가지 이상한 점이 있다. Query 객체에서 이미 정렬 조건을 지정했는데도 sorts()메서드로 정렬 조건을 또 한 번 지정하고 있다. 이는 MongoCursorItemReaderBuilder의 코드에 불필요한 검증 로직이 존재하기 때문이다.
+     * 빌더 내부에서는 jsonQuery()나 query()를 사용할 때 반드시 sorts()가 설정되었는지 확인한다.
+     *
+     * 실제로는 Query 객체에 설정된 정렬 조건만 사용되고 sorts에 전달된 정렬 조건은 무시되지만, 빌더의 검증을 통과하기 위해서는 어쩔 수 없이 sorts를 추가로 설정해야 하는 상황이다.
+     */
+    @Bean
+    @StepScope
+    fun securityLogReaderQuery(
+        @Value("#{jobParameters['searchDate']}") searchDate: LocalDate
+    ): MongoCursorItemReader<SecurityLog> {
+        val query = Query()
+            .addCriteria(Criteria.where("label").`is`("PENDING_ANALYSIS"))
+            .addCriteria(
+                Criteria.where("timestamp")
+                    .gte(Date.from(searchDate.atStartOfDay(ZoneId.systemDefault()).toInstant()))
+                    .lt(Date.from(searchDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()))
+            )
+            .with(Sort.by(Sort.Direction.ASC, "timestamp"))
+            .cursorBatchSize(10)
+
+        return MongoCursorItemReaderBuilder<SecurityLog>()
+            .name("securityLogReader")
+            .template(mongoTemplate)
+            .collection("security_logs")
+            .query(query)
+            // MongoCursorItemReaderBuilder 버그 때문에 sort 옵션도 지정 필요
+            .sorts(mapOf("timestamp" to Sort.Direction.ASC))
+            .targetType(SecurityLog::class.java)
+            .build()
+    }
+
+    /**
      * 보안 로그의 명령어를 분석하여 해커 공격 패턴 라벨을 부여하는 프로세서입니다.
      * 탐지 가능한 카테고리는 Lateral_Movement, Privilege_Escalation, Defense_Evasion, UNKNOWN 입니다.
      */
@@ -109,45 +142,5 @@ class HackerPatternDetectionJob(
             }
         }
 
-    /**
-     * 명령어 문자열을 분석하여 공격 패턴 라벨을 반환합니다.
-     *
-     * - "ssh" 또는 "telnet" 포함 시 Lateral_Movement (측면 이동)
-     * - "sudo" 또는 "su " 포함 시 Privilege_Escalation (권한 상승)
-     * - "history -c", "rm /var/log", "killall rsyslog" 포함 시 Defense_Evasion (방어 회피)
-     * - 그 외는 UNKNOWN (알 수 없음)
-     */
-    private fun analyzeAttackPattern(command: String): String {
-        return when {
-            command.contains("ssh", ignoreCase = true) || command.contains("telnet", ignoreCase = true) -> "Lateral_Movement"
-            command.contains("sudo", ignoreCase = true) || command.contains("su ", ignoreCase = true) -> "Privilege_Escalation"
-            command.contains("history -c", ignoreCase = true) ||
-            command.contains("rm /var/log", ignoreCase = true) ||
-            command.contains("killall rsyslog", ignoreCase = true) -> "Defense_Evasion"
-            else -> "UNKNOWN"
-        }
-    }
+
 }
-
-/**
- * 보안 로그 도큐먼트 엔티티입니다.
- *
- * @property id 문서 ID
- * @property attackerId 공격자 ID
- * @property command 실행된 명령어
- * @property timestamp 로그 기록 시간
- * @property label 공격 패턴 라벨 ("PENDING_ANALYSIS" 등)
- */
-@Document(collection = "security_logs")
-data class SecurityLog(
-    @Id
-    var id: String? = null,
-
-    var attackerId: String? = null,
-
-    var command: String = "",
-
-    var timestamp: LocalDateTime = LocalDateTime.MIN,
-
-    var label: String = "PENDING_ANALYSIS"
-)
